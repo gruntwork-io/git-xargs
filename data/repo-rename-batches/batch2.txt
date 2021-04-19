@@ -1,0 +1,10 @@
+gruntwork-io/terraform-aws-ecs
+gruntwork-io/terraform-aws-vpc
+gruntwork-io/terraform-aws-server
+gruntwork-io/terraform-aws-ci
+gruntwork-io/terraform-aws-data-storage
+gruntwork-io/terraform-aws-monitoring
+gruntwork-io/terraform-aws-openvpn
+gruntwork-io/terraform-aws-asg
+gruntwork-io/terraform-aws-security
+gruntwork-io/terraform-aws-cache

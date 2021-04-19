@@ -1,0 +1,8 @@
+gruntwork-io/terraform-kubernetes-helm
+gruntwork-io/cis-compliance-aws
+gruntwork-io/cis-infrastructure-modules-acme
+gruntwork-io/usage-patterns
+gruntwork-io/infrastructure-modules-acme
+gruntwork-io/infrastructure-modules-multi-account-acme
+gruntwork-io/aws-service-catalog
+gruntwork-io/aws-architecture-catalog

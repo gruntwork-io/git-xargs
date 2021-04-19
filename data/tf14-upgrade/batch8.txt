@@ -1,0 +1,5 @@
+gruntwork-io/package-sam
+gruntwork-io/terraform-aws-couchbase
+hashicorp/terraform-aws-consul
+hashicorp/terraform-aws-vault
+hashicorp/terraform-aws-nomad

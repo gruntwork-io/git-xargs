@@ -1,0 +1,80 @@
+defaults: &defaults
+  working_directory: /go/src/github.com/gruntwork-io/git-xargs
+  docker:
+    - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.13
+
+  environment:
+    GRUNTWORK_INSTALLER_VERSION: NONE
+    TERRATEST_LOG_PARSER_VERSION: NONE
+    TERRAFORM_VERSION: NONE
+    TERRAGRUNT_VERSION: NONE
+    PACKER_VERSION: NONE
+    GOLANG_VERSION: 1.14
+install_gruntwork_utils: &install_gruntwork_utils
+  name: install gruntwork utils
+  command: |
+    configure-environment-for-gruntwork-module \
+      --terraform-version ${TERRAFORM_VERSION} \
+      --terragrunt-version ${TERRAGRUNT_VERSION} \
+      --packer-version ${PACKER_VERSION} \
+      --go-version ${GOLANG_VERSION}
+version: 2
+jobs:
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          <<: *install_gruntwork_utils
+      - run:
+          name: run git-args tests
+          command: |
+            run-go-tests --timeout 45m
+          no_output_timeout: 45m
+          when: always
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          <<: *install_gruntwork_utils
+      - run: go get github.com/mitchellh/gox
+      # Build and upload binaries for kubergrunt
+      - run:
+          command: |
+            build-go-binaries \
+              --app-name git-xargs \
+              --src-path ./cmd \
+              --dest-path ./bin \
+              --ld-flags "-X main.VERSION=$CIRCLE_TAG -extldflags '-static'"
+            (cd ./bin && sha256sum * > SHA256SUMS)
+            upload-github-release-assets ./bin/*
+          no_output_timeout: 900s
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+          context:
+            - Gruntwork Admin
+      - build:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+          context:
+            - Gruntwork Admin
+      - deploy:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          context:
+            - Gruntwork Admin
