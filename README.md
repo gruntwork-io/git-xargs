@@ -270,10 +270,7 @@ Flat files contain one repo per line, each repository in the format of `<github-
 |  `--repos` |  If you want to specify many repos and manage them in files (which makes batching and testing easier) then use this flag to pass the filepath to a repos file. See [the repos file format](#option-2-flat-file-of-repository-names) for more information | String  | No  |  
 | `--repo`  | Use this flag to specify a single repo, e.g., `--repo gruntwork-io/cloud-nuke`. Can be passed multiple times to target several repos  | String  | No | 
 | `--github-org` | If you want to target every repo in a Github org that your GITHUB_OAUTH_TOKEN has access to, pass the name of the Organization with this flag, to page through every repo via the Github API and target it | String | No
-| `--commit-message` | The commit message to use when creating commits. If you
-supply this flag, but neither the optional `--pull-request-title` or
-`--pull-request-description` flags, then the commit message will be used for
-all three. | String | No |
+| `--commit-message` | The commit message to use when creating commits. If you supply this flag, but neither the optional `--pull-request-title` or `--pull-request-description` flags, then the commit message value will be used for all three. | String | No |
 | `--skip-pull-requests` | If you don't want any pull requests opened, but would rather have your changes committed directly to your specified branch, pass this flag. Note that it won't work if your Github repo is configured with branch protections on the branch you're trying to commit directly to! | Boolean | No | 
 | `--dry-run` | If you are in the process of testing out `git-xargs` or your intial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run branch. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No |
 
