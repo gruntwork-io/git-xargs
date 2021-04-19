@@ -6,6 +6,8 @@
 
 # Introduction 
 
+![git-xargs to the rescue!](_docs/git-xargs-demo.gif)
+
 ## Overview
 
 ![git-xargs CLI](./docs/git-xargs-banner.png)
