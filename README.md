@@ -6,7 +6,7 @@
 
 # Introduction 
 
-![git-xargs to the rescue!](_docs/git-xargs-demo.gif)
+![git-xargs to the rescue!](docs/git-xargs-demo.gif)
 
 ## Overview
 
