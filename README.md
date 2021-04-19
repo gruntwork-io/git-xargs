@@ -127,7 +127,7 @@ COMMAND SUPPLIED
 
 ### 1. Export a valid Github token
 
-See [Github personal access token](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for information on how to generate one.
+See the guide on [Github personal access tokens](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for information on how to generate one.
 
 ```
 export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
@@ -232,8 +232,6 @@ If you want the tool to find and select every repo in your Github organization, 
 ```
 ./git-xargs \
   --commit-message "Update copyright year" \
-  --pull-request-title "Update copyright year" \
-  --pull-request-description "Update the year to 2021" \
   --github-org <your-github-org> \ 
   "$(pwd)/scripts/update-copyright-year.sh"
 ```
@@ -247,8 +245,6 @@ Oftentimes, you want finer-grained control over the exact repos you are going to
 ```
 ./git-xargs \
   --commit-mesage "Update copyright year" \
-  --pull-request-title "Update copyright year" \
-  --pull-request-description "Update the year to 2021" \
   --repos data/batch2.txt \
   "$(pwd)/scripts/update-copyright-year.sh"
 ```
