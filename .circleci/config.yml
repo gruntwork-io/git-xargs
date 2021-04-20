@@ -4,19 +4,15 @@ defaults: &defaults
     - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.13
 
   environment:
-    GRUNTWORK_INSTALLER_VERSION: NONE
-    TERRATEST_LOG_PARSER_VERSION: NONE
-    TERRAFORM_VERSION: NONE
-    TERRAGRUNT_VERSION: NONE
-    PACKER_VERSION: NONE
+    GRUNTWORK_INSTALLER_VERSION: v0.0.35
+    MODULE_CI_VERSION: v0.33.1
     GOLANG_VERSION: 1.14
 install_gruntwork_utils: &install_gruntwork_utils
   name: install gruntwork utils
   command: |
+    curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "${GRUNTWORK_INSTALLER_VERSION}"
+    gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_VERSION}"
     configure-environment-for-gruntwork-module \
-      --terraform-version ${TERRAFORM_VERSION} \
-      --terragrunt-version ${TERRAGRUNT_VERSION} \
-      --packer-version ${PACKER_VERSION} \
       --go-version ${GOLANG_VERSION}
 version: 2
 jobs:
