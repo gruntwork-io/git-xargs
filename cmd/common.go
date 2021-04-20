@@ -13,7 +13,7 @@ const (
 	PullRequestTitleFlagName       = "pull-request-title"
 	PullRequestDescriptionFlagName = "pull-request-description"
 	DefaultCommitMessage           = "git-xargs programmatic commit"
-	DefaultPullRequestTitle        = "git-xargs programmatic pull requst"
+	DefaultPullRequestTitle        = "git-xargs programmatic pull request"
 	DefaultPullRequestDescription  = "git-xargs programmatic pull request"
 )
 
