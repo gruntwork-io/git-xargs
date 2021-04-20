@@ -37,6 +37,10 @@ As an example, let's use `git-xargs` to create a new file in every repo:
   touch hello-world.txt
 ```
 
+Here's what it looks like in action:
+
+![git-xargs to the rescue!](docs/git-xargs-demo.gif)
+
 In this example, every repo in your org will have a new file named hello-world.txt written to it with the contents "Hello, World!". You'll then receive an easy-to-read printout of exactly what happened on `STDOUT`:
 
 ```
