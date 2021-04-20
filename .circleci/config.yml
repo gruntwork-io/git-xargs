@@ -26,6 +26,9 @@ jobs:
       - checkout
       - run:
           <<: *install_gruntwork_utils
+      - run: 
+          git config --global user.email "grunty@gruntwork.io"
+          git config --global user.name "Grunty"
       - run:
           name: run git-args tests
           command: |
