@@ -1,9 +1,10 @@
+workspace_root: &workspace_root /go/src/github.com/gruntwork-io/terragrunt
 defaults: &defaults
-  working_directory: /go/src/github.com/gruntwork-io/git-xargs
+  working_directory: *workspace_root
   docker:
     - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.13
 
-  environment:
+  environment: 
     TERRATEST_LOG_PARSER_VERSION: NONE
     TERRAFORM_VERSION: NONE
     TERRAGRUNT_VERSION: NONE
@@ -20,42 +21,43 @@ install_gruntwork_utils: &install_gruntwork_utils
     gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_VERSION}"
     configure-environment-for-gruntwork-module \
       --go-version ${GOLANG_VERSION}
+
 version: 2
 jobs:
   test:
     <<: *defaults
     steps:
       - checkout
-      - run:
-          <<: *install_gruntwork_utils
       - run: 
           command: |
+            # The go tests create a disposable local repo at runtime to execute git commands against, so we need to set any arbitrary options here to avoid an error message
             git config --global user.email "grunty@gruntwork.io"
             git config --global user.name "Grunty"
       - run:
           name: run git-xargs tests
-          command: |
-            run-go-tests --timeout 45m
+          command: run-go-tests --timeout 45m
           no_output_timeout: 45m
           when: always
   build:
     <<: *defaults
     steps:
       - checkout
-      - run:
+      - attach_workspace: 
+          at: *workspace_root
+      - run: 
           <<: *install_gruntwork_utils
-      - run: go get github.com/mitchellh/gox
-      # Build and upload binaries for kubergrunt
-      - run:
-          command: |
-            build-go-binaries \
-              --app-name git-xargs \
-              --src-path ./cmd \
-              --dest-path ./bin \
-              --ld-flags "-X main.VERSION=$CIRCLE_TAG -extldflags '-static'"
-            (cd ./bin && sha256sum * > SHA256SUMS)
-            upload-github-release-assets ./bin/*
-          no_output_timeout: 900s
+      - run: build-go-binaries --app-name git-xargs --src-path ./cmd --dest-path bin --ld-flags "-X main.VERSION=$CIRCLE_TAG"
+      - persist_to_workspace: 
+          root: *workspace_root
+          paths: bin
+  deploy: 
+    <<: *defaults
+    steps: 
+      - checkout
+      - attach_workspace: 
+          at: *workspace_root
+      - run: cd bin && sha256sum * > SHA256SUMS
+      - run: upload-github-release-assets bin/* 
 workflows:
   version: 2
   build-and-test:
@@ -73,4 +75,14 @@ workflows:
             tags:
               only: /^v.*/
           context:
+            - Gruntwork Admin
+      - deploy: 
+          requires: 
+            - build
+          filters: 
+            tags: 
+              only: /^v.*/
+            branches: 
+              ignore: /.*/
+          context: 
             - Gruntwork Admin
