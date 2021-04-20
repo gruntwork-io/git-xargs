@@ -6,7 +6,8 @@ defaults: &defaults
   environment:
     GRUNTWORK_INSTALLER_VERSION: v0.0.35
     MODULE_CI_VERSION: v0.33.1
-    GOLANG_VERSION: 1.14
+    GOLANG_VERSION: 1.16
+    GO111MODULE: auto
     CGO_ENABLED: 1
 install_gruntwork_utils: &install_gruntwork_utils
   name: install gruntwork utils
