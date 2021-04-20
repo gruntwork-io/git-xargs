@@ -4,6 +4,11 @@ defaults: &defaults
     - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.13
 
   environment:
+    GRUNTWORK_INSTALLER_VERSION: NONE
+    TERRATEST_LOG_PARSER_VERSION: NONE
+    TERRAFORM_VERSION: NONE
+    TERRAGRUNT_VERSION: NONE
+    PACKER_VERSION: NONE
     GRUNTWORK_INSTALLER_VERSION: v0.0.35
     MODULE_CI_VERSION: v0.33.1
     GOLANG_VERSION: 1.16
