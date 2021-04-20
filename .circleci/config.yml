@@ -70,13 +70,3 @@ workflows:
               only: /^v.*/
           context:
             - Gruntwork Admin
-      - deploy:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-          context:
-            - Gruntwork Admin
