@@ -1,4 +1,4 @@
-workspace_root: &workspace_root /go/src/github.com/gruntwork-io/terragrunt
+workspace_root: &workspace_root /go/src/github.com/gruntwork-io/git-xargs
 defaults: &defaults
   working_directory: *workspace_root
   docker:
@@ -15,13 +15,15 @@ defaults: &defaults
     GO111MODULE: auto
     CGO_ENABLED: 1
 install_gruntwork_utils: &install_gruntwork_utils
-  name: install gruntwork utils
+  name: Install gruntwork utils
   command: |
-    curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "${GRUNTWORK_INSTALLER_VERSION}"
+    curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "${GRUNTWORK_INSTALLER_VERSION}" 
     gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_VERSION}"
     configure-environment-for-gruntwork-module \
-      --go-version ${GOLANG_VERSION}
-
+    --terraform-version ${TERRAFORM_VERSION} \
+    --terragrunt-version ${TERRAGRUNT_VERSION} \
+    --packer-version ${PACKER_VERSION} \
+    --go-version ${GOLANG_VERSION} 
 version: 2
 jobs:
   test:
