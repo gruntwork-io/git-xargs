@@ -30,7 +30,7 @@ You can handle these use cases and many more with a single `git-xargs` command.
 As an example, let's use `git-xargs` to create a new file in every repo:
 
 ```
-./git-xargs \
+git-xargs \
   --branch-name test-branch \
   --github-org <your-github-org> \
   --commit-message "Create hello-world.txt" \
@@ -129,39 +129,42 @@ COMMAND SUPPLIED
 
 ## Getting started
 
-### 1. Export a valid Github token
+1. **Export a valid Github token**. See the guide on [Github personal access 
+   tokens](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) 
+   for information on how to generate one. For example, on Linux or Mac, you'd run:
 
-See the guide on [Github personal access tokens](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for information on how to generate one.
+    ```bash
+    export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
+    ```
 
-```
-export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
-```
+1. **Download the correct binary for your platform**. Visit [the releases 
+   page](https://github.com/gruntwork-io/git-xargs/releases) and download the correct binary depending on your system.
+   Save it to somewhere on your `PATH`, such as `/usr/local/bin/git-xargs`. 
 
-### 2. Download the correct binary for your platform
+1. **Set execute permissions**. For example, on Linux or Mac, you'd run:
 
-Visit [the releases page](https://github.com/gruntwork-io/git-xargs/releases) and download the correct binary depending on your system. For example, you might opt to save it to `/usr/local/bin/git-xargs`. 
+    ```bash
+    chmod u+x /usr/local/bin/git-xargs
+    ```
 
-### 3. Set the correct permissions
+1. **Check it's working**. Run the version command to ensure everything is working properly:
 
-`chmod u+x /usr/local/bin/git-xargs`
+    ```bash
+    git-xargs --version
+    ```
 
-### 4. Run the version command to ensure everything is working properly
+1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in 
+   every repo in your Github organization. Follow the same pattern to start running your own scripts and commands 
+   against your own repos!
 
-```
-git-xargs --version
-```
+    ```bash
+    git-xargs \
+      --branch-name "test-branch" \
+      --commit-message "Testing git-xargs" \
+      --github-org <enter-your-github-org-name> \
+      touch git-xargs-is-awesome.txt
+    ```
 
-### 5. Provide a script or command and target some repos
-
-Here's a simple example of running a touch commnand in every repo in your Github organization. Follow the same pattern to start running your own scripts and commands against your own repos!
-
-```
-git-xargs \
-  --branch-name "test-branch" \
-  --commit-message "Testing git-xargs" \
-  --github-org <enter-your-github-org-name> \
-  touch git-xargs-is-awesome.txt
-```
 # Reference
 
 ## How to supply commands or scripts to run
@@ -169,7 +172,7 @@ git-xargs \
 The API for `git-xargs` is:
 
 ```
-./git-xargs [-flags] <CMD>
+git-xargs [-flags] <CMD>
 ```
 
 Where `CMD` is either the full path to a (Bash, Python, Ruby) etc script on your local system or a binary. Note that, because the tool supports Bash scripts, Ruby scripts, Python scripts, etc, you must include the full filename for any given script, including its file extension.
@@ -177,20 +180,20 @@ Where `CMD` is either the full path to a (Bash, Python, Ruby) etc script on your
 In other words, all the following usages are valid:
 
 ```
-./git-xargs --repo --repo gruntwork-io/cloud-nuke \
+git-xargs --repo --repo gruntwork-io/cloud-nuke \
    --repo gruntwork-io/terraform-aws-eks \
    --branch-name my-branch \
    /usr/local/bin/my-bash-script.sh
 ```
 
 ```
-./git-xargs --repos ./my-repos.txt \
+git-xargs --repos ./my-repos.txt \
   --branch-name my-other-branch \
   touch file1.txt file2.txt
 ```
 
 ```
-./git-xargs --github-org my-github-org \ 
+git-xargs --github-org my-github-org \ 
   --branch-name my-new-branch \
   "$(pwd)/scripts/my-ruby-script.rb"
 ```
@@ -208,7 +211,7 @@ Currently, `git-xargs` will find and add any and all new files, as well as any e
 Scripts may be placed anywhere on your system, but you are responsible for providing absolute paths to your scripts when invoking `git-xargs`:
 
 ```
-./git-xargs \
+git-xargs \
   --branch-name upgrade-tf-14 \
   --commit-message "Update modules to Terraform 0.14" \
   --repos data/batch3.txt \
@@ -217,7 +220,7 @@ Scripts may be placed anywhere on your system, but you are responsible for provi
 or
 
 ```
-./git-xargs \
+git-xargs \
   --branch-name upgrade-tf-14 \
   --commit-message "Update modules to Terraform 0.14" \
   --repos data/batch3.txt \
@@ -235,7 +238,7 @@ the order listed below, with whichever option is found first being used, and all
 If you want the tool to find and select every repo in your Github organization, you can pass the name of your organization via the `--github-org` flag:
 
 ```
-./git-xargs \
+git-xargs \
   --commit-message "Update copyright year" \
   --github-org <your-github-org> \ 
   "$(pwd)/scripts/update-copyright-year.sh"
@@ -248,7 +251,7 @@ This will signal the tool to look up, and page through, every repository in your
 Oftentimes, you want finer-grained control over the exact repos you are going to run your script against. In this case, you can use the `--repos` flag and supply the path to a file defining the exact repos you want the tool to run your selected scripts against, like so:
 
 ```
-./git-xargs \
+git-xargs \
   --commit-mesage "Update copyright year" \
   --repos data/batch2.txt \
   "$(pwd)/scripts/update-copyright-year.sh"
@@ -271,7 +274,7 @@ Another way to get fine-grained control is to pass in the individual repos you w
 arguments:
 
 ```
-./git-xargs \
+git-xargs \
   --commit-mesage "Update copyright year" \
   --repo gruntwork-io/terragrunt \
   --repo gruntwork-io/terratest \
@@ -292,7 +295,7 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
 
 ## Notable flags
 
-`git-xargs` exposes several flags that allow you to customize its behavior to better suit your needs. For the latest info on flags, you should run `./git-xargs --help`. However, a couple of the flags are worth explaining more in depth here:
+`git-xargs` exposes several flags that allow you to customize its behavior to better suit your needs. For the latest info on flags, you should run `git-xargs --help`. However, a couple of the flags are worth explaining more in depth here:
 
 |Flag|Description|Type|Required|
 |---|---|---|---|
