@@ -17,7 +17,8 @@ func TestEnsureValidOptionsPassedRejectsEmptySelectors(t *testing.T) {
 func TestEnsureValidOptionsPassedAcceptsValidGithubOrg(t *testing.T) {
 	t.Parallel()
 	testConfigWithGithubOrg := &GitXargsConfig{
-		GithubOrg: "gruntwork-io",
+		BranchName: "test-branch",
+		GithubOrg:  "gruntwork-io",
 	}
 
 	err := ensureValidOptionsPassed(testConfigWithGithubOrg)
@@ -27,7 +28,8 @@ func TestEnsureValidOptionsPassedAcceptsValidGithubOrg(t *testing.T) {
 func TestEnsureValidOptionsPassedAcceptsValidReposFile(t *testing.T) {
 	t.Parallel()
 	testConfigWithReposFile := &GitXargsConfig{
-		ReposFile: "./my-repos.txt",
+		BranchName: "test-branch",
+		ReposFile:  "./my-repos.txt",
 	}
 
 	err := ensureValidOptionsPassed(testConfigWithReposFile)
@@ -37,7 +39,8 @@ func TestEnsureValidOptionsPassedAcceptsValidReposFile(t *testing.T) {
 func TestEnsureValidOptionsPassedAcceptedValidSingleRepo(t *testing.T) {
 	t.Parallel()
 	testConfigWithExplicitRepos := &GitXargsConfig{
-		RepoSlice: []string{"gruntwork-io/cloud-nuke"},
+		BranchName: "test-branch",
+		RepoSlice:  []string{"gruntwork-io/cloud-nuke"},
 	}
 
 	err := ensureValidOptionsPassed(testConfigWithExplicitRepos)
@@ -47,9 +50,11 @@ func TestEnsureValidOptionsPassedAcceptedValidSingleRepo(t *testing.T) {
 func TestEnsureValidOptionsPassedAcceptsAllFlagsSimultaneously(t *testing.T) {
 	t.Parallel()
 	testConfigWithAllSelectionCriteria := &GitXargsConfig{
-		ReposFile: "./my-repos.txt",
-		RepoSlice: []string{"gruntwork-io/cloud-nuke", "gruntwork-io/fetch"},
-		GithubOrg: "github-org",
+		BranchName:    "test-branch",
+		ReposFile:     "./my-repos.txt",
+		RepoSlice:     []string{"gruntwork-io/cloud-nuke", "gruntwork-io/fetch"},
+		GithubOrg:     "github-org",
+		RepoFromStdIn: []string{"gruntwork-io/terragrunt"},
 	}
 
 	err := ensureValidOptionsPassed(testConfigWithAllSelectionCriteria)

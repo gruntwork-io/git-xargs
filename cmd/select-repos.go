@@ -11,24 +11,29 @@ import (
 type RepoSelectionCriteria string
 
 const (
+	ReposViaStdIn              RepoSelectionCriteria = "repo-stdin"
 	ExplicitReposOnCommandLine RepoSelectionCriteria = "repo-flag"
 	ReposFilePath              RepoSelectionCriteria = "repos-file"
 	GithubOrganization         RepoSelectionCriteria = "github-org"
 )
 
-// getPreferredOrderOfRepoSelections codifies the order in which flags will be preferred when the user supplied more than one:
-// 1. --repo is a string slice flag that can be called multiple times, and is preferred first when present
-// 2. --repos is a string representing a filepath to a repos file and will be accepted if --repo is not passed
-// 3. -- github-org is a string representing the Github org to page through via API for all repos - it will be accepted
-// if the other flags are not passed
+// getPreferredOrderOfRepoSelections codifies the order in which flags will be preferred when the user supplied more
+// than one:
+// 1. --github-org is a string representing the Github org to page through via API for all repos.
+// 2. --repos is a string representing a filepath to a repos file
+// 3. --repo is a string slice flag that can be called multiple times
+// 4. stdin allows you to pipe repos in from other CLI tools
 func getPreferredOrderOfRepoSelections(config *GitXargsConfig) RepoSelectionCriteria {
-	if len(config.RepoSlice) > 0 {
-		return ExplicitReposOnCommandLine
+	if config.GithubOrg != "" {
+		return GithubOrganization
 	}
 	if config.ReposFile != "" {
 		return ReposFilePath
 	}
-	return GithubOrganization
+	if len(config.RepoSlice) > 0 {
+		return ExplicitReposOnCommandLine
+	}
+	return ReposViaStdIn
 }
 
 // RepoSelection is a struct that presents a uniform interface to present to OperateRepos that converts
@@ -87,13 +92,25 @@ func selectReposViaInput(config *GitXargsConfig) (*RepoSelection, error) {
 	case GithubOrganization:
 		return def, nil
 
+	case ReposViaStdIn:
+		allowedRepos, err := selectReposViaRepoFlag(config.RepoFromStdIn)
+		if err != nil {
+			return def, err
+		}
+		return &RepoSelection{
+			SelectionType:          ReposViaStdIn,
+			AllowedRepos:           allowedRepos,
+			GithubOrganizationName: "",
+		}, nil
+
 	default:
 		return def, nil
 	}
 }
 
-// selectReposViaRepoFlag converts the string slice of repo flags provided by invocations of the --repo flag
-// into the internal representation of AllowedRepo that we we use prior to fetching the corresponding repo from Github
+// selectReposViaRepoFlag converts the string slice of repo flags provided via stdin or by invocations of the --repo
+// flag into the internal representation of AllowedRepo that we we use prior to fetching the corresponding repo from
+// Github
 func selectReposViaRepoFlag(inputRepos []string) ([]*AllowedRepo, error) {
 	var allowedRepos []*AllowedRepo
 
@@ -171,8 +188,7 @@ func OperateOnRepos(config *GitXargsConfig) error {
 		// Update count of number of repos the the tool read in from the provided file
 		config.Stats.SetFileProvidedRepos(repoSelection.GetAllowedRepos())
 
-	case ExplicitReposOnCommandLine:
-
+	case ExplicitReposOnCommandLine, ReposViaStdIn:
 		githubRepos, err := fetchUserProvidedReposViaGithubAPI(config.GithubClient, *repoSelection, config.Stats)
 		if err != nil {
 			return err
