@@ -140,6 +140,8 @@ COMMAND SUPPLIED
     export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
     ```
 
+### Installation option 1: Installing published binaries
+
 1. **Download the correct binary for your platform**. Visit [the releases 
    page](https://github.com/gruntwork-io/git-xargs/releases) and download the correct binary depending on your system.
    Save it to somewhere on your `PATH`, such as `/usr/local/bin/git-xargs`. 
@@ -155,6 +157,14 @@ COMMAND SUPPLIED
     ```bash
     git-xargs --version
     ```
+
+### Installion option 2: Run go get 
+
+1. **Run go get to install the latest release of git-xargs**
+
+`go get github.com/gruntwork-io/git-xargs`
+
+### Try it out!
 
 1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in 
    every repo in your Github organization. Follow the same pattern to start running your own scripts and commands 
