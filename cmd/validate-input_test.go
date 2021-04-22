@@ -47,9 +47,10 @@ func TestEnsureValidOptionsPassedAcceptedValidSingleRepo(t *testing.T) {
 func TestEnsureValidOptionsPassedAcceptsAllFlagsSimultaneously(t *testing.T) {
 	t.Parallel()
 	testConfigWithAllSelectionCriteria := &GitXargsConfig{
-		ReposFile: "./my-repos.txt",
-		RepoSlice: []string{"gruntwork-io/cloud-nuke", "gruntwork-io/fetch"},
-		GithubOrg: "github-org",
+		ReposFile:     "./my-repos.txt",
+		RepoSlice:     []string{"gruntwork-io/cloud-nuke", "gruntwork-io/fetch"},
+		GithubOrg:     "github-org",
+		RepoFromStdIn: []string{"gruntwork-io/terragrunt"},
 	}
 
 	err := ensureValidOptionsPassed(testConfigWithAllSelectionCriteria)

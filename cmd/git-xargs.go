@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/urfave/cli"
+	"io"
+	"os"
+	"strings"
 )
 
 // GitXargsConfig is the internal representation of a given git-xargs run as specified by the user
@@ -17,6 +21,7 @@ type GitXargsConfig struct {
 	ReposFile              string
 	GithubOrg              string
 	RepoSlice              []string
+	RepoFromStdIn          []string
 	Args                   []string
 	GithubClient           GithubClient
 	GitClient              GitClient
@@ -35,6 +40,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 		ReposFile:              "",
 		GithubOrg:              "",
 		RepoSlice:              []string{},
+		RepoFromStdIn:          []string{},
 		Args:                   []string{},
 		GithubClient:           configureGithubClient(),
 		GitClient:              NewGitClient(GitProductionProvider{}),
@@ -44,7 +50,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 
 // parseGitXargsConfig accepts a urfave cli context and binds its values
 // to an internal representation of the data supplied by the user
-func parseGitXargsConfig(c *cli.Context) *GitXargsConfig {
+func parseGitXargsConfig(c *cli.Context) (*GitXargsConfig, error) {
 	config := NewGitXargsConfig()
 	config.DryRun = c.Bool("dry-run")
 	config.SkipPullRequests = c.Bool("skip-pull-requests")
@@ -57,7 +63,56 @@ func parseGitXargsConfig(c *cli.Context) *GitXargsConfig {
 	config.RepoSlice = c.StringSlice("repo")
 	config.Args = c.Args()
 
-	return config
+	shouldReadStdIn, err := dataBeingPipedToStdIn()
+	if err != nil {
+		return nil, err
+	}
+	if shouldReadStdIn {
+		repos, err := parseSliceFromStdIn()
+		if err != nil {
+			return nil, err
+		}
+		config.RepoFromStdIn = repos
+	}
+
+	return config, nil
+}
+
+// Return true if there is data being piped to stdin and false otherwise
+// Based on https://stackoverflow.com/a/26567513/483528.
+func dataBeingPipedToStdIn() (bool, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false, err
+	}
+
+	return stat.Mode()&os.ModeCharDevice == 0, nil
+}
+
+// Read the data being passed to stdin and parse it as a slice of strings, where we assume strings are separated by
+// whitespace or newlines. All extra whitespace and empty lines are ignored.
+func parseSliceFromStdIn() ([]string, error) {
+	return parseSliceFromReader(os.Stdin)
+}
+
+// Read the data from the given reader and parse it as a slice of strings, where we assume strings are separated by
+// whitespace or newlines. All extra whitespace and empty lines are ignored.
+func parseSliceFromReader(reader io.Reader) ([]string, error) {
+	out := []string{}
+
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		words := strings.Fields(scanner.Text())
+		for _, word := range words {
+			text := strings.TrimSpace(word)
+			if text != "" {
+				out = append(out, text)
+			}
+		}
+	}
+
+	err := scanner.Err()
+	return out, errors.WithStackTrace(err)
 }
 
 // handleRepoProcessing encapsulates the main processing logic for the supplied repos and printing the run report that
@@ -105,7 +160,10 @@ func runGitXargs(c *cli.Context) error {
 
 	logger.Info("git-xargs running...")
 
-	config := parseGitXargsConfig(c)
+	config, err := parseGitXargsConfig(c)
+	if err != nil {
+		return err
+	}
 
 	if err := sanityCheckInputs(config); err != nil {
 		return err

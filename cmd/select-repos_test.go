@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,18 +17,27 @@ func TestSelectReposViaInput(t *testing.T) {
 
 	repoSelection, err := selectReposViaInput(config)
 
-	assert.NotNil(t, repoSelection)
+	require.NoError(t, err)
+	require.NotNil(t, repoSelection)
 	assert.Equal(t, repoSelection.SelectionType, ExplicitReposOnCommandLine)
-	assert.NoError(t, err)
 
 	configOrg := NewGitXargsTestConfig()
 	configOrg.GithubOrg = "gruntwork-io"
 
 	repoSelectionByOrg, orgErr := selectReposViaInput(configOrg)
 
-	assert.NotNil(t, repoSelectionByOrg)
+	require.NoError(t, orgErr)
+	require.NotNil(t, repoSelectionByOrg)
 	assert.Equal(t, repoSelectionByOrg.SelectionType, GithubOrganization)
-	assert.NoError(t, orgErr)
+
+	configStdin := NewGitXargsTestConfig()
+	configStdin.RepoFromStdIn = []string{"gruntwork-io/terratest", "gruntwork-io/cloud-nuke"}
+
+	repoSelectionByStdin, stdInErr := selectReposViaInput(configStdin)
+
+	require.NoError(t, stdInErr)
+	require.NotNil(t, repoSelectionByStdin)
+	assert.Equal(t, repoSelectionByStdin.SelectionType, ReposViaStdIn)
 }
 
 // TestOperateOnRepos smoke tests the OperateOnRepos method
@@ -55,25 +65,24 @@ func TestOperateOnRepos(t *testing.T) {
 func TestGetPreferredOrderOfRepoSelections(t *testing.T) {
 	t.Parallel()
 
-	configReposOnCommandLine := NewGitXargsTestConfig()
+	config := NewGitXargsTestConfig()
 
-	// Ensure that, for a config with one or more repos defined on the command
-	// line via --repo,
-	// ExplicitReposOnCommandLine is returned
-	configReposOnCommandLine.RepoSlice = []string{"github.com/gruntwork-io/fetch", "github.com/gruntwork-io/cloud-nuke"}
+	config.GithubOrg = "gruntwork-io"
+	config.ReposFile = "repos.txt"
+	config.RepoSlice = []string{"github.com/gruntwork-io/fetch", "github.com/gruntwork-io/cloud-nuke"}
+	config.RepoFromStdIn = []string{"github.com/gruntwork-io/terragrunt", "github.com/gruntwork-io/terratest"}
 
-	selectionCriteria := getPreferredOrderOfRepoSelections(configReposOnCommandLine)
-	assert.Equal(t, selectionCriteria, ExplicitReposOnCommandLine)
+	assert.Equal(t, GithubOrganization, getPreferredOrderOfRepoSelections(config))
 
-	configReposFile := NewGitXargsTestConfig()
-	configReposFile.ReposFile = "./my-test-repos.txt"
+	config.GithubOrg = ""
 
-	selectionCriteria2 := getPreferredOrderOfRepoSelections(configReposFile)
-	assert.Equal(t, selectionCriteria2, ReposFilePath)
+	assert.Equal(t, ReposFilePath, getPreferredOrderOfRepoSelections(config))
 
-	configGithubOrg := NewGitXargsTestConfig()
-	configGithubOrg.GithubOrg = "gruntwork-io"
+	config.ReposFile = ""
 
-	selectionCriteria3 := getPreferredOrderOfRepoSelections(configGithubOrg)
-	assert.Equal(t, selectionCriteria3, GithubOrganization)
+	assert.Equal(t, ExplicitReposOnCommandLine, getPreferredOrderOfRepoSelections(config))
+
+	config.RepoSlice = []string{}
+
+	assert.Equal(t, ReposViaStdIn, getPreferredOrderOfRepoSelections(config))
 }
