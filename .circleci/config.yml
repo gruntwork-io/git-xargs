@@ -43,7 +43,7 @@ jobs:
       - checkout
       - run: 
           <<: *install_gruntwork_utils
-      - run: build-go-binaries --app-name git-xargs --src-path ./cmd --dest-path bin --ld-flags "-X main.VERSION=$CIRCLE_TAG"
+      - run: build-go-binaries --app-name git-xargs --src-path ./cmd/git-xargs --dest-path bin --ld-flags "-X main.VERSION=$CIRCLE_TAG"
       - run: cd bin && sha256sum * > SHA256SUMS
       - run: upload-github-release-assets bin/* 
 workflows:
