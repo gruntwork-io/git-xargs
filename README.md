@@ -228,7 +228,8 @@ If you need to compose more complex behavior into a single pull request, write a
 
 ## How to target repos to run your scripts against
 
-`git-xargs` supports **two** methods of targeting repos to run your selected scripts against. Note that you **must** select one or the other option when running `git-xargs`, meaning you must either pass `--repos` or `--github-org` as demonstrated below:
+`git-xargs` supports **four** methods of targeting repos to run your selected scripts against. They are processed in
+the order listed below, with whichever option is found first being used, and all others after it being ignored.
 
 ### Option #1: Github organization lookup
 If you want the tool to find and select every repo in your Github organization, you can pass the name of your organization via the `--github-org` flag:
@@ -263,6 +264,31 @@ gruntwork-io/infrastructure-modules-multi-account-acme
 ```
 
 Flat files contain one repo per line, each repository in the format of `<github-organization>/<repo-name>`. Commas, trailing or preceding spaces, and quotes are all filtered out at runtime. This is done in case you end up copying your repo list from a JSON list or CSV file.
+
+### Option #3: Pass in repos via command line args
+
+Another way to get fine-grained control is to pass in the individual repos you want to use via one or more `--repo` 
+arguments:
+
+```
+./git-xargs \
+  --commit-mesage "Update copyright year" \
+  --repo gruntwork-io/terragrunt \
+  --repo gruntwork-io/terratest \
+  --repo gruntwork-io/cloud-nuke \
+  "$(pwd)/scripts/update-copyright-year.sh"
+```
+
+### Option #4: Pass in repos via stdin
+
+And one more (Unix-philosophy friendly) way to get fine-grained control is to pass in the individual repos you want to 
+use by piping them in via `stdin`, separating repo names with whitespace or newlines:
+
+```
+echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
+  --commit-mesage "Update copyright year" \
+  "$(pwd)/scripts/update-copyright-year.sh"
+```
 
 ## Notable flags
 
