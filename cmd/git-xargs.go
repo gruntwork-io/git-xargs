@@ -156,6 +156,11 @@ func sanityCheckInputs(config *GitXargsConfig) error {
 
 // runGitXargs is the urfave cli app's Action that is called when the user executes the binary
 func runGitXargs(c *cli.Context) error {
+	// If someone calls us with no args at all, show the help text and exit
+	if !c.Args().Present() {
+		return cli.ShowAppHelp(c)
+	}
+
 	logger := logging.GetLogger("git-xargs")
 
 	logger.Info("git-xargs running...")

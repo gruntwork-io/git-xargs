@@ -44,6 +44,12 @@ func (NoRepoSelectionsMadeErr) Error() string {
 	return fmt.Sprint("You must target some repos for processing either via stdin or by providing one of the --github-org, --repos, or --repo flags")
 }
 
+type NoBranchNameErr struct{}
+
+func (NoBranchNameErr) Error() string {
+	return fmt.Sprint("You must pass a branch name to use via the --branch-name flag")
+}
+
 type NoReposFoundErr struct {
 	GithubOrg string
 }

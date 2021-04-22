@@ -7,5 +7,8 @@ func ensureValidOptionsPassed(config *GitXargsConfig) error {
 	if len(config.RepoSlice) < 1 && config.ReposFile == "" && config.GithubOrg == "" && len(config.RepoFromStdIn) == 0 {
 		return errors.WithStackTrace(NoRepoSelectionsMadeErr{})
 	}
+	if config.BranchName == "" {
+		return errors.WithStackTrace(NoBranchNameErr{})
+	}
 	return nil
 }

@@ -41,7 +41,6 @@ var (
 	genericBranchFlag = cli.StringFlag{
 		Name:     BranchFlagName,
 		Usage:    "The name of the branch on which changes will be made",
-		Required: true,
 	}
 	genericCommitMessageFlag = cli.StringFlag{
 		Name:  CommitMessageFlagName,
