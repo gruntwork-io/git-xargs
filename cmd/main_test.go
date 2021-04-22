@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,13 +14,19 @@ func TestSetupApp(t *testing.T) {
 	assert.NotNil(t, app)
 }
 
-func TestGitXargsRejectsEmptyArgs(t *testing.T) {
+func TestGitXargsShowsHelpTextForEmptyArgs(t *testing.T) {
 	app := setupApp()
+
+	// Capture the app's stdout
+	var stdout strings.Builder
+	app.Writer = &stdout
 
 	emptyFlagSet := flag.NewFlagSet("git-xargs-test", flag.ContinueOnError)
 	emptyTestContext := cli.NewContext(app, emptyFlagSet, nil)
 
 	err := runGitXargs(emptyTestContext)
 
-	assert.Error(t, err)
+	// Make sure we see the help text
+	assert.NoError(t, err)
+	assert.Contains(t, stdout.String(), app.Description)
 }
