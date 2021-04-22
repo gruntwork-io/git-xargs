@@ -166,7 +166,7 @@ COMMAND SUPPLIED
 
 1. **Alternatively, use go get to install a specific release of git-xargs**
 
-`go get github.com/gruntwork-io/git-xargs@v0.0.4`
+`go get github.com/gruntwork-io/git-xargs/cmd/git-xargs@v0.0.4`
 
 ### Try it out!
 
