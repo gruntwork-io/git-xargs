@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/gruntwork-io/git-xargs)](https://goreportcard.com/report/github.com/gruntwork-io/git-xargs)
+
 # Table of contents
 
 * [Introduction](#introduction)
