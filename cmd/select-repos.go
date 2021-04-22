@@ -188,8 +188,7 @@ func OperateOnRepos(config *GitXargsConfig) error {
 		// Update count of number of repos the the tool read in from the provided file
 		config.Stats.SetFileProvidedRepos(repoSelection.GetAllowedRepos())
 
-	case ExplicitReposOnCommandLine:
-
+	case ExplicitReposOnCommandLine, ReposViaStdIn:
 		githubRepos, err := fetchUserProvidedReposViaGithubAPI(config.GithubClient, *repoSelection, config.Stats)
 		if err != nil {
 			return err
