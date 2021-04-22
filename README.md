@@ -369,6 +369,14 @@ Once you've done this, please feel free to open a pull request adding your scrip
 
 Thanks for contributing back! Our hope is that eventually this repo will contain many useful generic scripts for common maintenance and upgrading tasks that everyone can leverage to save time.
 
+## Building the binary from source
+
+Clone this repository and then run the following command from the root of the repository: 
+
+`go build -o git-xargs ./cmd/git-xargs`
+
+The `git-xargs` binary will be present in the repository root. 
+
 ## Running the tool without building the binary
 
 Alternatively, you can run the tool directly without building the binary, like so:
