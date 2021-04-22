@@ -17,7 +17,7 @@ func TestEnsureValidOptionsPassedRejectsEmptySelectors(t *testing.T) {
 func TestEnsureValidOptionsPassedAcceptsValidGithubOrg(t *testing.T) {
 	t.Parallel()
 	testConfigWithGithubOrg := &GitXargsConfig{
-		BranchName: "text-branch",
+		BranchName: "test-branch",
 		GithubOrg:  "gruntwork-io",
 	}
 
