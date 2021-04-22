@@ -164,6 +164,10 @@ COMMAND SUPPLIED
 
 `go get github.com/gruntwork-io/git-xargs`
 
+1. **Alternatively, use go get to install a specific release of git-xargs**
+
+`go get github.com/gruntwork-io/git-xargs@v0.0.4`
+
 ### Try it out!
 
 1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in 
