@@ -89,7 +89,7 @@ func processRepo(config *GitXargsConfig, repo *github.Repository) error {
 		return pushBranchErr
 	}
 
-	// Open a pull request on Github, of the recently pushed branch against master
+	// Open a pull request on Github, of the recently pushed branch against the repository default branch
 	openPullRequestErr := openPullRequest(config, repo, branchName.String())
 	if openPullRequestErr != nil {
 		return openPullRequestErr
