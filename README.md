@@ -162,11 +162,11 @@ COMMAND SUPPLIED
 
 1. **Run go get to install the latest release of git-xargs**
 
-`go get github.com/gruntwork-io/git-xargs/cmd/git-xargs`
+`go get github.com/gruntwork-io/git-xargs`
 
 1. **Alternatively, use go get to install a specific release of git-xargs**
 
-`go get github.com/gruntwork-io/git-xargs/cmd/git-xargs@v0.0.5`
+`go get github.com/gruntwork-io/git-xargs@v0.0.5`
 
 ### Try it out!
 
