@@ -219,6 +219,10 @@ git-xargs --github-org my-github-org \
 
 Passing the `--branch-name` (-b) flag is required when running `git-xargs`. If you specify the name of a branch that exists on your remote, its latest changes will be pulled locally prior to your command or script being run. If you specify the name of a new branch that does not yet exist on your remote, it will be created locally and pushed once your changes are committed.
 
+## Default repository branch 
+
+Any pull requests opened will be opened against the repository's default branch (whether that's `main`, or `master` or something else).
+
 ## Git file staging behavior
 
 Currently, `git-xargs` will find and add any and all new files, as well as any existing files that were modified, within your repo and stage them prior to committing. If your script or command creates a new file, it will be committed. If your script or command edits an existing file, that change will also be committed.
