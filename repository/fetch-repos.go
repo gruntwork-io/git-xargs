@@ -1,9 +1,13 @@
-package main
+package repository
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/gruntwork-io/git-xargs/auth"
+	"github.com/gruntwork-io/git-xargs/config"
+	"github.com/gruntwork-io/git-xargs/stats"
+	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/go-commons/errors"
 
 	"github.com/google/go-github/v32/github"
@@ -12,7 +16,7 @@ import (
 )
 
 // getFileDefinedRepos converts user-supplied repositories to Github API response objects that can be further processed
-func getFileDefinedRepos(GithubClient GithubClient, allowedRepos []*AllowedRepo, stats *RunStats) ([]*github.Repository, error) {
+func getFileDefinedRepos(GithubClient auth.GithubClient, allowedRepos []*types.AllowedRepo, tracker *stats.RunStats) ([]*github.Repository, error) {
 	logger := logging.GetLogger("git-xargs")
 
 	var allRepos []*github.Repository
@@ -42,7 +46,7 @@ func getFileDefinedRepos(GithubClient GithubClient, allowedRepos []*AllowedRepo,
 					Owner: &github.User{Login: github.String(allowedRepo.Organization)},
 					Name:  github.String(allowedRepo.Name),
 				}
-				stats.TrackSingle(RepoNotExists, missingRepo)
+				tracker.TrackSingle(stats.RepoNotExists, missingRepo)
 				continue
 			} else {
 				return allRepos, errors.WithStackTrace(err)
@@ -62,7 +66,7 @@ func getFileDefinedRepos(GithubClient GithubClient, allowedRepos []*AllowedRepo,
 }
 
 // getReposByOrg takes the string name of a Github organization and pages through the API to fetch all of its repositories
-func getReposByOrg(config *GitXargsConfig) ([]*github.Repository, error) {
+func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) {
 
 	logger := logging.GetLogger("git-xargs")
 
@@ -70,7 +74,7 @@ func getReposByOrg(config *GitXargsConfig) ([]*github.Repository, error) {
 	var allRepos []*github.Repository
 
 	if config.GithubOrg == "" {
-		return allRepos, errors.WithStackTrace(NoGithubOrgSuppliedErr{})
+		return allRepos, errors.WithStackTrace(types.NoGithubOrgSuppliedErr{})
 	}
 
 	opt := &github.RepositoryListByOrgOptions{
@@ -94,14 +98,14 @@ func getReposByOrg(config *GitXargsConfig) ([]*github.Repository, error) {
 	repoCount := len(allRepos)
 
 	if repoCount == 0 {
-		return nil, errors.WithStackTrace(NoReposFoundErr{GithubOrg: config.GithubOrg})
+		return nil, errors.WithStackTrace(types.NoReposFoundErr{GithubOrg: config.GithubOrg})
 	}
 
 	logger.WithFields(logrus.Fields{
 		"Repo count": repoCount,
 	}).Debug(fmt.Sprintf("Fetched repos from Github organization: %s", config.GithubOrg))
 
-	config.Stats.TrackMultiple(FetchedViaGithubAPI, allRepos)
+	config.Stats.TrackMultiple(stats.FetchedViaGithubAPI, allRepos)
 
 	return allRepos, nil
 }

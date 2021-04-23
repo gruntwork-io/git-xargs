@@ -1,10 +1,11 @@
-package main
+package repository
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"testing"
 
 	"github.com/google/go-github/v32/github"
 )
@@ -34,7 +35,6 @@ func TestExecuteCommandWithLogger(t *testing.T) {
 
 	cfg := NewGitXargsConfig()
 	cfg.Args = []string{"./_testscripts/test-stdout-stderr.sh"}
-
 	repo := getMockGithubRepo()
 
 	var buffer bytes.Buffer

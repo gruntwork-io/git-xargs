@@ -1,10 +1,11 @@
-package main
+package auth
 
 import (
 	"context"
 	"os"
 
 	"github.com/google/go-github/v32/github"
+	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/go-commons/errors"
 
 	"golang.org/x/oauth2"
@@ -39,7 +40,7 @@ func NewClient(client *github.Client) GithubClient {
 }
 
 // configureGithubClient creates a Github API client using the user-supplied GITHUB_OAUTH_TOKEN and return the configured Github client
-func configureGithubClient() GithubClient {
+func ConfigureGithubClient() GithubClient {
 	// Ensure user provided a GITHUB_OAUTH_TOKEN
 	GithubOauthToken := os.Getenv("GITHUB_OAUTH_TOKEN")
 
@@ -56,9 +57,9 @@ func configureGithubClient() GithubClient {
 }
 
 // ensureGithubOauthTokenSet is a sanity check that a value is exported for GITHUB_OAUTH_TOKEN
-func ensureGithubOauthTokenSet() error {
+func EnsureGithubOauthTokenSet() error {
 	if os.Getenv("GITHUB_OAUTH_TOKEN") == "" {
-		return errors.WithStackTrace(NoGithubOauthTokenProvidedErr{})
+		return errors.WithStackTrace(types.NoGithubOauthTokenProvidedErr{})
 	}
 	return nil
 }

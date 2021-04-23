@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gruntwork-io/git-xargs/cmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 )
@@ -24,7 +25,7 @@ func TestGitXargsShowsHelpTextForEmptyArgs(t *testing.T) {
 	emptyFlagSet := flag.NewFlagSet("git-xargs-test", flag.ContinueOnError)
 	emptyTestContext := cli.NewContext(app, emptyFlagSet, nil)
 
-	err := runGitXargs(emptyTestContext)
+	err := cmd.RunGitXargs(emptyTestContext)
 
 	// Make sure we see the help text
 	assert.NoError(t, err)

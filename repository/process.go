@@ -1,24 +1,25 @@
-package main
+package repository
 
 import (
 	"sync"
 
 	"github.com/google/go-github/v32/github"
+	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/sirupsen/logrus"
 )
 
 // Loop through every repo we've selected and use a WaitGroup so that the processing can happen in parallel
-func processRepos(config *GitXargsConfig, repos []*github.Repository) error {
+func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 	var wg sync.WaitGroup
 	for _, repo := range repos {
 		wg.Add(1)
-		go func(config *GitXargsConfig, repo *github.Repository) error {
+		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
 			defer wg.Done()
 			// For each repo, run the supplied command against it and, if it succeeds without error,
 			// commit the changes, push the local branch to remote and use the Github API to open a pr
-			processErr := processRepo(config, repo)
+			processErr := processRepo(gitxargsConfig, repo)
 			if processErr != nil {
 				logger.WithFields(logrus.Fields{
 					"Repo name": repo.GetName(), "Error": processErr,
@@ -26,7 +27,7 @@ func processRepos(config *GitXargsConfig, repos []*github.Repository) error {
 			}
 			return processErr
 
-		}(config, repo)
+		}(gitxargsConfig, repo)
 	}
 	wg.Wait()
 
@@ -42,7 +43,7 @@ func processRepos(config *GitXargsConfig, repos []*github.Repository) error {
 // 7. Via the Github API, open a pull request of the newly pushed branch against the main branch of the repo
 // 8. Track all successfully opened pull requests via the stats tracker so that we can print them out as part of our final
 // run report that is displayed in table format to the operator following each run
-func processRepo(config *GitXargsConfig, repo *github.Repository) error {
+func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 	// Create a new temporary directory in the default temp directory of the system, but append
 	// git-xargs-<repo-name> to it so that it's easier to find when you're looking for it
 	repositoryDir, localRepository, cloneErr := cloneLocalRepository(config, repo)

@@ -1,7 +1,13 @@
-package main
+package repository
 
 import (
 	"github.com/google/go-github/v32/github"
+	"github.com/gruntwork-io/git-xargs/auth"
+	"github.com/gruntwork-io/git-xargs/config"
+	"github.com/gruntwork-io/git-xargs/io"
+	"github.com/gruntwork-io/git-xargs/stats"
+	"github.com/gruntwork-io/git-xargs/types"
+	"github.com/gruntwork-io/git-xargs/util"
 	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/go-commons/logging"
 
@@ -23,7 +29,7 @@ const (
 // 2. --repos is a string representing a filepath to a repos file
 // 3. --repo is a string slice flag that can be called multiple times
 // 4. stdin allows you to pipe repos in from other CLI tools
-func getPreferredOrderOfRepoSelections(config *GitXargsConfig) RepoSelectionCriteria {
+func getPreferredOrderOfRepoSelections(config *config.GitXargsConfig) RepoSelectionCriteria {
 	if config.GithubOrg != "" {
 		return GithubOrganization
 	}
@@ -41,7 +47,7 @@ func getPreferredOrderOfRepoSelections(config *GitXargsConfig) RepoSelectionCrit
 // pass into processRepos which does the git cloning, command execution, comitting and pull request opening
 type RepoSelection struct {
 	SelectionType          RepoSelectionCriteria
-	AllowedRepos           []*AllowedRepo
+	AllowedRepos           []*types.AllowedRepo
 	GithubOrganizationName string
 }
 
@@ -49,7 +55,7 @@ func (r RepoSelection) GetCriteria() RepoSelectionCriteria {
 	return r.SelectionType
 }
 
-func (r RepoSelection) GetAllowedRepos() []*AllowedRepo {
+func (r RepoSelection) GetAllowedRepos() []*types.AllowedRepo {
 	return r.AllowedRepos
 }
 
@@ -58,11 +64,11 @@ func (r RepoSelection) GetGithubOrg() string {
 }
 
 // selectReposViaInput will examine the various repo and github-org flags to determine which should be selected and processed (only one at a time is used)
-func selectReposViaInput(config *GitXargsConfig) (*RepoSelection, error) {
+func selectReposViaInput(config *config.GitXargsConfig) (*RepoSelection, error) {
 
 	def := &RepoSelection{
 		SelectionType:          GithubOrganization,
-		AllowedRepos:           []*AllowedRepo{},
+		AllowedRepos:           []*types.AllowedRepo{},
 		GithubOrganizationName: config.GithubOrg,
 	}
 
@@ -79,7 +85,7 @@ func selectReposViaInput(config *GitXargsConfig) (*RepoSelection, error) {
 		}, nil
 
 	case ReposFilePath:
-		allowedRepos, err := processAllowedRepos(config.ReposFile)
+		allowedRepos, err := io.ProcessAllowedRepos(config.ReposFile)
 		if err != nil {
 			return def, err
 		}
@@ -111,24 +117,24 @@ func selectReposViaInput(config *GitXargsConfig) (*RepoSelection, error) {
 // selectReposViaRepoFlag converts the string slice of repo flags provided via stdin or by invocations of the --repo
 // flag into the internal representation of AllowedRepo that we we use prior to fetching the corresponding repo from
 // Github
-func selectReposViaRepoFlag(inputRepos []string) ([]*AllowedRepo, error) {
-	var allowedRepos []*AllowedRepo
+func selectReposViaRepoFlag(inputRepos []string) ([]*types.AllowedRepo, error) {
+	var allowedRepos []*types.AllowedRepo
 
 	for _, repoInput := range inputRepos {
-		allowedRepo := convertStringToAllowedRepo(repoInput)
+		allowedRepo := util.ConvertStringToAllowedRepo(repoInput)
 		if allowedRepo != nil {
 			allowedRepos = append(allowedRepos, allowedRepo)
 		}
 	}
 	if len(allowedRepos) < 1 {
-		return allowedRepos, errors.WithStackTrace(NoRepoSelectionsMadeErr{})
+		return allowedRepos, errors.WithStackTrace(types.NoRepoSelectionsMadeErr{})
 	}
 
 	return allowedRepos, nil
 }
 
 // fetchUserProvidedReposViaGithub converts repos provided as strings, already validated as being well-formed, into Github API repo objects that can be further processed
-func fetchUserProvidedReposViaGithubAPI(githubClient GithubClient, rs RepoSelection, stats *RunStats) ([]*github.Repository, error) {
+func fetchUserProvidedReposViaGithubAPI(githubClient auth.GithubClient, rs RepoSelection, stats *stats.RunStats) ([]*github.Repository, error) {
 	ar := rs.GetAllowedRepos()
 	return getFileDefinedRepos(githubClient, ar, stats)
 
@@ -145,7 +151,7 @@ func fetchUserProvidedReposViaGithubAPI(githubClient GithubClient, rs RepoSelect
 // for dealing with a repo throughout this tool, and that is the *github.Repository type provided by the go-github
 // library. Therefore, this function serves the purpose of creating that uniform interface, by looking up flatfile-provided
 // repos via go-github, so that we're only ever dealing with pointers to github.Repositories going forward
-func OperateOnRepos(config *GitXargsConfig) error {
+func OperateOnRepos(config *config.GitXargsConfig) error {
 
 	logger := logging.GetLogger("git-xargs")
 
@@ -199,11 +205,11 @@ func OperateOnRepos(config *GitXargsConfig) error {
 
 	default:
 		// We've got no repos to iterate on, so return an error
-		return errors.WithStackTrace(NoValidReposFoundAfterFilteringErr{})
+		return errors.WithStackTrace(types.NoValidReposFoundAfterFilteringErr{})
 	}
 
 	// Track the repos selected for processing
-	config.Stats.TrackMultiple(ReposSelected, reposToIterate)
+	config.Stats.TrackMultiple(stats.ReposSelected, reposToIterate)
 
 	// Print out the repos that we've filtered for processing in debug mode
 	for _, repo := range reposToIterate {
@@ -213,7 +219,7 @@ func OperateOnRepos(config *GitXargsConfig) error {
 	}
 	// Now that we've gathered up the repos we're going to operate on, do the actual processing by running the
 	// user-defined scripts against each repo and handling the resulting git operations that follow
-	if err := processRepos(config, reposToIterate); err != nil {
+	if err := ProcessRepos(config, reposToIterate); err != nil {
 		return err
 	}
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/gruntwork-io/git-xargs/cmd"
+	"github.com/gruntwork-io/git-xargs/common"
 	"github.com/gruntwork-io/go-commons/entrypoint"
 	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/go-commons/logging"
@@ -17,7 +19,7 @@ import (
 var VERSION string
 
 var (
-	logLevelFlag = cli.StringFlag{
+	LogLevelFlag = cli.StringFlag{
 		Name:  "loglevel",
 		Value: logrus.InfoLevel.String(),
 	}
@@ -27,7 +29,7 @@ var (
 // code, such as setting up the logger with the appropriate log level.
 func initCli(cliContext *cli.Context) error {
 	// Set logging level
-	logLevel := cliContext.String(logLevelFlag.Name)
+	logLevel := cliContext.String(LogLevelFlag.Name)
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
 		return errors.WithStackTrace(err)
@@ -58,19 +60,19 @@ func setupApp() *cli.App {
 	app.Before = initCli
 
 	app.Flags = []cli.Flag{
-		logLevelFlag,
-		genericGithubOrgFlag,
-		genericDryRunFlag,
-		genericSkipPullRequestFlag,
-		genericRepoFlag,
-		genericRepoFileFlag,
-		genericBranchFlag,
-		genericCommitMessageFlag,
-		genericPullRequestTitleFlag,
-		genericPullRequestDescriptionFlag,
+		LogLevelFlag,
+		common.GenericGithubOrgFlag,
+		common.GenericDryRunFlag,
+		common.GenericSkipPullRequestFlag,
+		common.GenericRepoFlag,
+		common.GenericRepoFileFlag,
+		common.GenericBranchFlag,
+		common.GenericCommitMessageFlag,
+		common.GenericPullRequestTitleFlag,
+		common.GenericPullRequestDescriptionFlag,
 	}
 
-	app.Action = runGitXargs
+	app.Action = cmd.RunGitXargs
 
 	return app
 }

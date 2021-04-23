@@ -1,10 +1,12 @@
-package main
+package io
 
 import (
 	"bufio"
 	"os"
 	"strings"
 
+	"github.com/gruntwork-io/git-xargs/types"
+	"github.com/gruntwork-io/git-xargs/util"
 	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/sirupsen/logrus"
 )
@@ -12,10 +14,10 @@ import (
 // This utility function accepts a path to the flatfile in which the user has defined their explicitly allowed repos
 // It expects repos to be defined one per line in the following format: `gruntwork-io/cloud-nuke` with optional commas
 // Stray single and double quotes are also handled and stripped out if they are encountered, and spacing is irrelevant
-func processAllowedRepos(filepath string) ([]*AllowedRepo, error) {
+func ProcessAllowedRepos(filepath string) ([]*types.AllowedRepo, error) {
 	logger := logging.GetLogger("git-xargs")
 
-	var allowedRepos []*AllowedRepo
+	var allowedRepos []*types.AllowedRepo
 
 	filepath = strings.TrimSpace(strings.Trim(filepath, "\n"))
 
@@ -45,7 +47,7 @@ func processAllowedRepos(filepath string) ([]*AllowedRepo, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 
-		allowedRepo := convertStringToAllowedRepo(scanner.Text())
+		allowedRepo := util.ConvertStringToAllowedRepo(scanner.Text())
 
 		if allowedRepo != nil {
 			allowedRepos = append(allowedRepos, allowedRepo)
