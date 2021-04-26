@@ -1,10 +1,11 @@
-package main
+package mocks
 
 import (
 	"context"
 	"net/http"
 
 	"github.com/google/go-github/v32/github"
+	"github.com/gruntwork-io/git-xargs/auth"
 )
 
 // Mock *github.Repository slice that is returned from the mock Repositories service in test
@@ -18,7 +19,7 @@ var repoURL1 = "https://github.com/gruntwork-io/terragrunt"
 var repoURL2 = "https://github.com/gruntwork-io/terratest"
 var repoURL3 = "https://github.com/gruntwork-io/fetch"
 
-var mockGithubRepositories = []*github.Repository{
+var MockGithubRepositories = []*github.Repository{
 	&github.Repository{
 		Owner: &github.User{
 			Login: &ownerName,
@@ -68,18 +69,18 @@ func (m mockGithubRepositoriesService) ListByOrg(ctx context.Context, org string
 }
 
 // A convenience method to return a valid GithubClient configured for testing purposes, complete with the mocked services
-func configureMockGithubClient() GithubClient {
+func ConfigureMockGithubClient() auth.GithubClient {
 	// Call the same NewClient method that is used by the actual CLI to obtain a Github client that calls the
 	// Github API. In testing, however, we just implement the mock services above to satisfy the interfaces required
 	// by the GithubClient. GithubClient is used uniformly between production and test code, with the only difference
 	// being that in test we do not actually execute API calls to Github
-	client := NewClient(github.NewClient(nil))
+	client := auth.NewClient(github.NewClient(nil))
 
 	testHTMLUrl := "https://github.com/gruntwork-io/test/pull/1"
 
 	client.Repositories = mockGithubRepositoriesService{
-		Repository:   mockGithubRepositories[0],
-		Repositories: mockGithubRepositories,
+		Repository:   MockGithubRepositories[0],
+		Repositories: MockGithubRepositories,
 		Response: &github.Response{
 
 			Response: &http.Response{
@@ -104,4 +105,22 @@ func configureMockGithubClient() GithubClient {
 	}
 
 	return client
+}
+
+func GetMockGithubRepo() *github.Repository {
+	userLogin := "gruntwork-io"
+	user := &github.User{
+		Login: &userLogin,
+	}
+
+	repoName := "terragrunt"
+	cloneURL := "https://github.com/gruntwork-io/terragrunt"
+
+	repo := &github.Repository{
+		Owner:    user,
+		Name:     &repoName,
+		CloneURL: &cloneURL,
+	}
+
+	return repo
 }

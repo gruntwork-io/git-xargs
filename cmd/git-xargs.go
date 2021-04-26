@@ -1,57 +1,25 @@
-package main
+package cmd
 
 import (
 	"bufio"
-	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/go-commons/logging"
-	"github.com/urfave/cli"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/gruntwork-io/git-xargs/auth"
+	"github.com/gruntwork-io/git-xargs/config"
+	gitxargs_io "github.com/gruntwork-io/git-xargs/io"
+	"github.com/gruntwork-io/git-xargs/repository"
+	"github.com/gruntwork-io/git-xargs/types"
+	"github.com/gruntwork-io/go-commons/errors"
+	"github.com/gruntwork-io/go-commons/logging"
+	"github.com/urfave/cli"
 )
-
-// GitXargsConfig is the internal representation of a given git-xargs run as specified by the user
-type GitXargsConfig struct {
-	DryRun                 bool
-	SkipPullRequests       bool
-	BranchName             string
-	CommitMessage          string
-	PullRequestTitle       string
-	PullRequestDescription string
-	ReposFile              string
-	GithubOrg              string
-	RepoSlice              []string
-	RepoFromStdIn          []string
-	Args                   []string
-	GithubClient           GithubClient
-	GitClient              GitClient
-	Stats                  *RunStats
-}
-
-// NewGitXargsConfig sets reasonable defaults for a GitXargsConfig and returns a pointer to a the config
-func NewGitXargsConfig() *GitXargsConfig {
-	return &GitXargsConfig{
-		DryRun:                 false,
-		SkipPullRequests:       false,
-		BranchName:             "",
-		CommitMessage:          DefaultCommitMessage,
-		PullRequestTitle:       DefaultPullRequestTitle,
-		PullRequestDescription: DefaultPullRequestDescription,
-		ReposFile:              "",
-		GithubOrg:              "",
-		RepoSlice:              []string{},
-		RepoFromStdIn:          []string{},
-		Args:                   []string{},
-		GithubClient:           configureGithubClient(),
-		GitClient:              NewGitClient(GitProductionProvider{}),
-		Stats:                  NewStatsTracker(),
-	}
-}
 
 // parseGitXargsConfig accepts a urfave cli context and binds its values
 // to an internal representation of the data supplied by the user
-func parseGitXargsConfig(c *cli.Context) (*GitXargsConfig, error) {
-	config := NewGitXargsConfig()
+func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
+	config := config.NewGitXargsConfig()
 	config.DryRun = c.Bool("dry-run")
 	config.SkipPullRequests = c.Bool("skip-pull-requests")
 	config.BranchName = c.String("branch-name")
@@ -117,14 +85,14 @@ func parseSliceFromReader(reader io.Reader) ([]string, error) {
 
 // handleRepoProcessing encapsulates the main processing logic for the supplied repos and printing the run report that
 // is built up throughout the processing
-func handleRepoProcessing(config *GitXargsConfig) error {
+func handleRepoProcessing(config *config.GitXargsConfig) error {
 	// Track whether or not pull requests were skipped
 	config.Stats.SetSkipPullRequests(config.SkipPullRequests)
 
 	// Update raw command supplied
 	config.Stats.SetCommand(config.Args)
 
-	if err := OperateOnRepos(config); err != nil {
+	if err := repository.OperateOnRepos(config); err != nil {
 		return err
 	}
 
@@ -138,16 +106,16 @@ func handleRepoProcessing(config *GitXargsConfig) error {
 // 1. An exported GITHUB_OAUTH_TOKEN
 // 2. Arguments passed to the binary itself which should be executed against the targeted repos
 // 3. At least one of the three valid methods for selecting repositories
-func sanityCheckInputs(config *GitXargsConfig) error {
-	if err := ensureGithubOauthTokenSet(); err != nil {
+func sanityCheckInputs(config *config.GitXargsConfig) error {
+	if err := auth.EnsureGithubOauthTokenSet(); err != nil {
 		return err
 	}
 
 	if len(config.Args) < 1 {
-		return errors.WithStackTrace(NoArgumentsPassedErr{})
+		return errors.WithStackTrace(types.NoArgumentsPassedErr{})
 	}
 
-	if err := ensureValidOptionsPassed(config); err != nil {
+	if err := gitxargs_io.EnsureValidOptionsPassed(config); err != nil {
 		return errors.WithStackTrace(err)
 	}
 
@@ -155,7 +123,7 @@ func sanityCheckInputs(config *GitXargsConfig) error {
 }
 
 // runGitXargs is the urfave cli app's Action that is called when the user executes the binary
-func runGitXargs(c *cli.Context) error {
+func RunGitXargs(c *cli.Context) error {
 	// If someone calls us with no args at all, show the help text and exit
 	if !c.Args().Present() {
 		return cli.ShowAppHelp(c)

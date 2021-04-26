@@ -1,12 +1,13 @@
-package main
+package types
 
-import "fmt"
+import (
+	"fmt"
 
-// AllowedRepo represents a single repository under a Github organization that this tool may operate on
-type AllowedRepo struct {
-	Organization string `header:"Organization name"`
-	Name         string `header:"URL"`
-}
+	"github.com/google/go-github/v32/github"
+)
+
+// Event is a generic tracking ocurrence that RunStats manages
+type Event string
 
 // ReducedRepo is a simplified form of the github.Repository struct
 type ReducedRepo struct {
@@ -14,16 +15,30 @@ type ReducedRepo struct {
 	URL  string `header:"Repo url"`
 }
 
-// OpenedPullRequest is a simple two column representation of the repo name and its PR url
-type PullRequest struct {
-	Repo string `header:"Repo name"`
-	URL  string `header:"PR URL"`
+type RunReport struct {
+	Repos             map[Event][]*github.Repository
+	Command           []string
+	RuntimeSeconds    int
+	FileProvidedRepos []*AllowedRepo
+	PullRequests      map[string]string
 }
 
 // AnnotatedEvent is used in printing the final report. It contains the info to print a section's table - both it's Event for looking up the tagged repos, and the human-legible decommandion for printing above the table
 type AnnotatedEvent struct {
 	Event       Event
 	Description string
+}
+
+// AllowedRepo represents a single repository under a Github organization that this tool may operate on
+type AllowedRepo struct {
+	Organization string `header:"Organization name"`
+	Name         string `header:"URL"`
+}
+
+// OpenedPullRequest is a simple two column representation of the repo name and its PR url
+type PullRequest struct {
+	Repo string `header:"Repo name"`
+	URL  string `header:"PR URL"`
 }
 
 type NoArgumentsPassedErr struct{}

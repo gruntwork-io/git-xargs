@@ -1,8 +1,11 @@
-package main
+package repository
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/git-xargs/config"
+	"github.com/gruntwork-io/git-xargs/mocks"
+	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,19 +14,19 @@ import (
 func TestGetFileDefinedRepos(t *testing.T) {
 	t.Parallel()
 
-	config := NewGitXargsTestConfig()
-	config.GithubClient = configureMockGithubClient()
+	config := config.NewGitXargsTestConfig()
+	config.GithubClient = mocks.ConfigureMockGithubClient()
 
-	allowedRepos := []*AllowedRepo{
-		&AllowedRepo{
+	allowedRepos := []*types.AllowedRepo{
+		&types.AllowedRepo{
 			Organization: "gruntwork-io",
 			Name:         "cloud-nuke",
 		},
-		&AllowedRepo{
+		&types.AllowedRepo{
 			Organization: "gruntwork-io",
 			Name:         "fetch",
 		},
-		&AllowedRepo{
+		&types.AllowedRepo{
 			Organization: "gruntwork-io",
 			Name:         "terratest",
 		},
@@ -31,7 +34,7 @@ func TestGetFileDefinedRepos(t *testing.T) {
 
 	githubRepos, reposLookupErr := getFileDefinedRepos(config.GithubClient, allowedRepos, config.Stats)
 
-	assert.Equal(t, len(githubRepos), len(mockGithubRepositories))
+	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories))
 	assert.NoError(t, reposLookupErr)
 }
 
@@ -39,12 +42,12 @@ func TestGetFileDefinedRepos(t *testing.T) {
 func TestGetReposByOrg(t *testing.T) {
 	t.Parallel()
 
-	config := NewGitXargsTestConfig()
+	config := config.NewGitXargsTestConfig()
 	config.GithubOrg = "gruntwork-io"
-	config.GithubClient = configureMockGithubClient()
+	config.GithubClient = mocks.ConfigureMockGithubClient()
 
 	githubRepos, reposByOrgLookupErr := getReposByOrg(config)
 
-	assert.Equal(t, len(githubRepos), len(mockGithubRepositories))
+	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories))
 	assert.NoError(t, reposByOrgLookupErr)
 }

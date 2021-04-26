@@ -1,9 +1,12 @@
-package main
+package cmd
 
 import (
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/gruntwork-io/git-xargs/config"
+	"github.com/gruntwork-io/git-xargs/mocks"
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -13,13 +16,13 @@ import (
 func TestHandleRepoProcessing(t *testing.T) {
 	t.Parallel()
 
-	config := NewGitXargsTestConfig()
-	config.ReposFile = "./_testdata/good-test-repos.txt"
-	config.BranchName = "test-branch-name"
-	config.CommitMessage = "test-commit-name"
-	config.Args = []string{"touch", "test.txt"}
-	config.GithubClient = configureMockGithubClient()
-	err := handleRepoProcessing(config)
+	testConfig := config.NewGitXargsTestConfig()
+	testConfig.ReposFile = "../data/test/good-test-repos.txt"
+	testConfig.BranchName = "test-branch-name"
+	testConfig.CommitMessage = "test-commit-name"
+	testConfig.Args = []string{"touch", "test.txt"}
+	testConfig.GithubClient = mocks.ConfigureMockGithubClient()
+	err := handleRepoProcessing(testConfig)
 
 	assert.NoError(t, err)
 }

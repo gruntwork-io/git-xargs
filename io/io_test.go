@@ -1,4 +1,4 @@
-package main
+package io
 
 import (
 	"testing"
@@ -9,8 +9,8 @@ import (
 func TestProcessAllowedReposErrsOnBadFilepath(t *testing.T) {
 	t.Parallel()
 
-	intentionallyBadFilepath := "_testdata/i-am-not-really-here.sh"
-	allowedRepos, err := processAllowedRepos(intentionallyBadFilepath)
+	intentionallyBadFilepath := "../data/test/i-am-not-really-here.sh"
+	allowedRepos, err := ProcessAllowedRepos(intentionallyBadFilepath)
 
 	assert.Error(t, err)
 	assert.Equal(t, len(allowedRepos), 0)
@@ -19,8 +19,8 @@ func TestProcessAllowedReposErrsOnBadFilepath(t *testing.T) {
 func TestProcessAllowedReposCorrectlyParsesValidReposFile(t *testing.T) {
 	t.Parallel()
 
-	filepathToValidReposFile := "_testdata/good-test-repos.txt"
-	allowedRepos, err := processAllowedRepos(filepathToValidReposFile)
+	filepathToValidReposFile := "../data/test/good-test-repos.txt"
+	allowedRepos, err := ProcessAllowedRepos(filepathToValidReposFile)
 
 	assert.NoError(t, err)
 	assert.Equal(t, len(allowedRepos), 3)
@@ -47,9 +47,9 @@ func TestProcessAllowedReposCorrectlyParsesValidReposFile(t *testing.T) {
 func TestProcessAllowedReposCorrectlyFiltersMalformedInput(t *testing.T) {
 	t.Parallel()
 
-	filepathToReposFileWithSomeMalformedRepos := "_testdata/mixed-test-repos.txt"
+	filepathToReposFileWithSomeMalformedRepos := "../data/test/mixed-test-repos.txt"
 
-	allowedRepos, err := processAllowedRepos(filepathToReposFileWithSomeMalformedRepos)
+	allowedRepos, err := ProcessAllowedRepos(filepathToReposFileWithSomeMalformedRepos)
 	assert.NoError(t, err)
 
 	// There are 3 valid repos defined in this test file, and 3 intentionally malformed repos, so only 3 should

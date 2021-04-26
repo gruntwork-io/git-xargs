@@ -3,11 +3,11 @@
 
 # Table of contents
 
-* [Introduction](#introduction)
-* [Reference](#reference)
-* [Contributing](#contributing)
+- [Introduction](#introduction)
+- [Reference](#reference)
+- [Contributing](#contributing)
 
-# Introduction 
+# Introduction
 
 ## Overview
 
@@ -19,6 +19,7 @@
 2. a list of repos
 
 and `git-xargs` will:
+
 1. clone each repo
 1. run your specified script or command against it
 1. commit any changes
@@ -132,41 +133,57 @@ COMMAND SUPPLIED
 
 ## Getting started
 
-1. **Export a valid Github token**. See the guide on [Github personal access 
-   tokens](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) 
-   for information on how to generate one. For example, on Linux or Mac, you'd run:
+### Installation option 1: Installing published binaries
 
-    ```bash
-    export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
-    ```
-
-1. **Download the correct binary for your platform**. Visit [the releases 
+1. **Download the correct binary for your platform**. Visit [the releases
    page](https://github.com/gruntwork-io/git-xargs/releases) and download the correct binary depending on your system.
-   Save it to somewhere on your `PATH`, such as `/usr/local/bin/git-xargs`. 
+   Save it to somewhere on your `PATH`, such as `/usr/local/bin/git-xargs`.
 
 1. **Set execute permissions**. For example, on Linux or Mac, you'd run:
 
-    ```bash
-    chmod u+x /usr/local/bin/git-xargs
-    ```
+      ```bash
+      chmod u+x /usr/local/bin/git-xargs
+      ```
 
 1. **Check it's working**. Run the version command to ensure everything is working properly:
 
-    ```bash
-    git-xargs --version
-    ```
+      ```bash
+      git-xargs --version
+      ```
 
-1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in 
-   every repo in your Github organization. Follow the same pattern to start running your own scripts and commands 
+### Installion option 2: Run go get
+
+1. Ensure you have Golang installed and working properly on your system. [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
+
+1. **Run go get to install the latest release of git-xargs**
+
+`go get github.com/gruntwork-io/git-xargs`
+
+1. **Alternatively, use go get to install a specific release of git-xargs**
+
+`go get github.com/gruntwork-io/git-xargs@v0.0.5`
+
+### Try it out!
+
+1. **Export a valid Github token**. See the guide on [Github personal access
+   tokens](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
+   for information on how to generate one. For example, on Linux or Mac, you'd run:
+
+      ```bash
+      export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
+      ```
+
+1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in
+   every repo in your Github organization. Follow the same pattern to start running your own scripts and commands
    against your own repos!
 
-    ```bash
-    git-xargs \
-      --branch-name "test-branch" \
-      --commit-message "Testing git-xargs" \
-      --github-org <enter-your-github-org-name> \
-      touch git-xargs-is-awesome.txt
-    ```
+      ```bash
+      git-xargs \
+        --branch-name "test-branch" \
+        --commit-message "Testing git-xargs" \
+        --github-org <enter-your-github-org-name> \
+        touch git-xargs-is-awesome.txt
+      ```
 
 # Reference
 
@@ -196,7 +213,7 @@ git-xargs --repos ./my-repos.txt \
 ```
 
 ```
-git-xargs --github-org my-github-org \ 
+git-xargs --github-org my-github-org \
   --branch-name my-new-branch \
   "$(pwd)/scripts/my-ruby-script.rb"
 ```
@@ -204,6 +221,10 @@ git-xargs --github-org my-github-org \
 ## Branch behavior
 
 Passing the `--branch-name` (-b) flag is required when running `git-xargs`. If you specify the name of a branch that exists on your remote, its latest changes will be pulled locally prior to your command or script being run. If you specify the name of a new branch that does not yet exist on your remote, it will be created locally and pushed once your changes are committed.
+
+## Default repository branch
+
+Any pull requests opened will be opened against the repository's default branch (whether that's `main`, or `master` or something else).
 
 ## Git file staging behavior
 
@@ -220,6 +241,7 @@ git-xargs \
   --repos data/batch3.txt \
   $(pwd)/scripts/my-ruby-script.rb
 ```
+
 or
 
 ```
@@ -238,12 +260,13 @@ If you need to compose more complex behavior into a single pull request, write a
 the order listed below, with whichever option is found first being used, and all others after it being ignored.
 
 ### Option #1: Github organization lookup
+
 If you want the tool to find and select every repo in your Github organization, you can pass the name of your organization via the `--github-org` flag:
 
 ```
 git-xargs \
   --commit-message "Update copyright year" \
-  --github-org <your-github-org> \ 
+  --github-org <your-github-org> \
   "$(pwd)/scripts/update-copyright-year.sh"
 ```
 
@@ -261,6 +284,7 @@ git-xargs \
 ```
 
 In this example, batch2.txt looks like this:
+
 ```
 gruntwork-io/infrastructure-as-code-training
 gruntwork-io/infrastructure-live-acme
@@ -273,7 +297,7 @@ Flat files contain one repo per line, each repository in the format of `<github-
 
 ### Option #3: Pass in repos via command line args
 
-Another way to get fine-grained control is to pass in the individual repos you want to use via one or more `--repo` 
+Another way to get fine-grained control is to pass in the individual repos you want to use via one or more `--repo`
 arguments:
 
 ```
@@ -287,7 +311,7 @@ git-xargs \
 
 ### Option #4: Pass in repos via stdin
 
-And one more (Unix-philosophy friendly) way to get fine-grained control is to pass in the individual repos you want to 
+And one more (Unix-philosophy friendly) way to get fine-grained control is to pass in the individual repos you want to
 use by piping them in via `stdin`, separating repo names with whitespace or newlines:
 
 ```
@@ -300,15 +324,15 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
 
 `git-xargs` exposes several flags that allow you to customize its behavior to better suit your needs. For the latest info on flags, you should run `git-xargs --help`. However, a couple of the flags are worth explaining more in depth here:
 
-|Flag|Description|Type|Required|
-|---|---|---|---|
-|`--branch-name`|  You must specify the name of the branch to make your local and remote changes on. You can further control branching behavior via `--skip-pull-requests` as explained below | String  | Yes  | 
-|  `--repos` |  If you want to specify many repos and manage them in files (which makes batching and testing easier) then use this flag to pass the filepath to a repos file. See [the repos file format](#option-2-flat-file-of-repository-names) for more information | String  | No  |  
-| `--repo`  | Use this flag to specify a single repo, e.g., `--repo gruntwork-io/cloud-nuke`. Can be passed multiple times to target several repos  | String  | No | 
-| `--github-org` | If you want to target every repo in a Github org that your GITHUB_OAUTH_TOKEN has access to, pass the name of the Organization with this flag, to page through every repo via the Github API and target it | String | No
-| `--commit-message` | The commit message to use when creating commits. If you supply this flag, but neither the optional `--pull-request-title` or `--pull-request-description` flags, then the commit message value will be used for all three. | String | No |
-| `--skip-pull-requests` | If you don't want any pull requests opened, but would rather have your changes committed directly to your specified branch, pass this flag. Note that it won't work if your Github repo is configured with branch protections on the branch you're trying to commit directly to! | Boolean | No | 
-| `--dry-run` | If you are in the process of testing out `git-xargs` or your intial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run branch. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No |
+| Flag                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                    | Type    | Required |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------- |
+| `--branch-name`        | You must specify the name of the branch to make your local and remote changes on. You can further control branching behavior via `--skip-pull-requests` as explained below                                                                                                                                                                                                                                                     | String  | Yes      |
+| `--repos`              | If you want to specify many repos and manage them in files (which makes batching and testing easier) then use this flag to pass the filepath to a repos file. See [the repos file format](#option-2-flat-file-of-repository-names) for more information                                                                                                                                                                        | String  | No       |
+| `--repo`               | Use this flag to specify a single repo, e.g., `--repo gruntwork-io/cloud-nuke`. Can be passed multiple times to target several repos                                                                                                                                                                                                                                                                                           | String  | No       |
+| `--github-org`         | If you want to target every repo in a Github org that your GITHUB_OAUTH_TOKEN has access to, pass the name of the Organization with this flag, to page through every repo via the Github API and target it                                                                                                                                                                                                                     | String  | No       |
+| `--commit-message`     | The commit message to use when creating commits. If you supply this flag, but neither the optional `--pull-request-title` or `--pull-request-description` flags, then the commit message value will be used for all three.                                                                                                                                                                                                     | String  | No       |
+| `--skip-pull-requests` | If you don't want any pull requests opened, but would rather have your changes committed directly to your specified branch, pass this flag. Note that it won't work if your Github repo is configured with branch protections on the branch you're trying to commit directly to!                                                                                                                                               | Boolean | No       |
+| `--dry-run`            | If you are in the process of testing out `git-xargs` or your intial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run branch. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
 
 ## Best practices, tips and tricks
 
@@ -330,27 +354,28 @@ By breaking your target repos into separate batches, (batch1.txt, batch2.txt, ba
 This section provides a more in-depth look at how the `git-xargs` tool works under the hood.
 
 1. git-xargs will clone each of your selected repos to your machine to the `/tmp/` directory of your local machine. The name of each repo, plus a random number each run, are concatenated together to form the local clone name to make the local repo easier to find in case you need to debug your script locally, e.g., `terraform-aws-module-security3978298`.
-1. it will checkout a local branch (whose name  you can optionally specify with the `--branch-name` flag)
-1. it will run all your selected scripts against your selected repos 
+1. it will checkout a local branch (whose name you can optionally specify with the `--branch-name` flag)
+1. it will run all your selected scripts against your selected repos
 1. it will commit any changes in each of the repos (with a commit message you can optionally specify via the `--commit-message` flag)
-1. it will push your local branch with your new commits to your repo's remote 
+1. it will push your local branch with your new commits to your repo's remote
 1. it will call the Github API to open a pull request with a title and description that you can optionally specify via the `--pull-request-title` and `--pull-request-description` flags, respectively), unless you pass the `--skip-pull-requests` flag
 1. it will print out a detailed run summary to STDOUT that explains exactly what happened with each repo and provide links to successfully opened pull requests that you can quickly follow from your terminal. If any repos encountered errors at runtime (whether they weren't able to be cloned, or script errors were encountered during processing, etc) all of this will be spelled out in detail in the final report so you know exactly what succeeded and what went wrong.
 
 ## Tasks this tool is well-suited for
+
 The following is a non-exhaustive list of potential use cases for `git-xargs`:
 
-* Add a LICENSE file to all of your GitHub repos, interpolating the correct year and company name into the file
-* For every existing LICENSE file across all your repos, update their copyright date to the current year
-* Update the CI build configuration in all of your repos by modifying the `.circleci/config.yml` file in each repo using a tool such as `yq`
-* Run `sed` commands to update or replace information across README files
-* Add new files to repos
-* Delete specific files, when present, from repos
-* Modify `package.json` files in-place across repos to bump a node.js dependency using `jq` https://stedolan.github.io/jq/
-* Update your Terraform module library from Terraform 0.13 to 0.14 . 
-* Remove stray files of any kind, when found, across repos using `find` and its `exec` option
-* Add baseline tests to repos that are missing them by copying over a common local folder where they are defined
-* Refactor multiple Golang tools to use new libraries by executing `go get` to install and uninstall packages, and modify the source code files' import references
+- Add a LICENSE file to all of your GitHub repos, interpolating the correct year and company name into the file
+- For every existing LICENSE file across all your repos, update their copyright date to the current year
+- Update the CI build configuration in all of your repos by modifying the `.circleci/config.yml` file in each repo using a tool such as `yq`
+- Run `sed` commands to update or replace information across README files
+- Add new files to repos
+- Delete specific files, when present, from repos
+- Modify `package.json` files in-place across repos to bump a node.js dependency using `jq` https://stedolan.github.io/jq/
+- Update your Terraform module library from Terraform 0.13 to 0.14 .
+- Remove stray files of any kind, when found, across repos using `find` and its `exec` option
+- Add baseline tests to repos that are missing them by copying over a common local folder where they are defined
+- Refactor multiple Golang tools to use new libraries by executing `go get` to install and uninstall packages, and modify the source code files' import references
 
 _If you can instrument the logic in a script, you can use `git-xargs` to run it across your repos!_
 
@@ -362,12 +387,22 @@ We hope that this tool will help save you some time as you apply it to your own 
 
 Initially, we'll add these scripts to the `./scripts` directory in this repository and will eventually organize them into sub-folders depending on their purposes / use cases. If you would like to have your script considered for inclusion in this repo, please first ensure that it is:
 
-* **High quality**: meaning free of typos, any obvious bugs or security issues
-* **Generic**: meaning that it is likely to be of general use to many different people and organizations, and free of any proprietary tooling or secrets
+- **High quality**: meaning free of typos, any obvious bugs or security issues
+- **Generic**: meaning that it is likely to be of general use to many different people and organizations, and free of any proprietary tooling or secrets
 
 Once you've done this, please feel free to open a pull request adding your script to the `./scripts` directory for consideration.
 
 Thanks for contributing back! Our hope is that eventually this repo will contain many useful generic scripts for common maintenance and upgrading tasks that everyone can leverage to save time.
+
+## Building the binary from source
+
+Clone this repository and then run the following command from the root of the repository:
+
+```
+go build
+```
+
+The `git-xargs` binary will be present in the repository root.
 
 ## Running the tool without building the binary
 
@@ -380,15 +415,15 @@ Alternatively, you can run the tool directly without building the binary, like s
   --repos data/test-repos.txt \
   $(pwd)/scripts/add-license.sh
 ```
-This is especially helpful if you are developing against the tool and want to quickly verify your changes.
 
+This is especially helpful if you are developing against the tool and want to quickly verify your changes.
 
 ## Running tests
 
-Tests are included under the `/cmd` directory. There is a mixture of unit tests as well as CLI interface tests that verify certain flags are required, error messages are returned as expected when invalid input is provided, etc.
+Tests are included within their respective packages.
 
 ```
-go test -v ./cmd
+go test -v ./...
 ```
 
 ## License

@@ -1,55 +1,56 @@
-package main
+package io
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEnsureValidOptionsPassedRejectsEmptySelectors(t *testing.T) {
 	t.Parallel()
-	emptyTestConfig := &GitXargsConfig{}
+	emptyTestConfig := &config.GitXargsConfig{}
 
-	err := ensureValidOptionsPassed(emptyTestConfig)
+	err := EnsureValidOptionsPassed(emptyTestConfig)
 	assert.Error(t, err)
 }
 
 func TestEnsureValidOptionsPassedAcceptsValidGithubOrg(t *testing.T) {
 	t.Parallel()
-	testConfigWithGithubOrg := &GitXargsConfig{
+	testConfigWithGithubOrg := &config.GitXargsConfig{
 		BranchName: "test-branch",
 		GithubOrg:  "gruntwork-io",
 	}
 
-	err := ensureValidOptionsPassed(testConfigWithGithubOrg)
+	err := EnsureValidOptionsPassed(testConfigWithGithubOrg)
 	assert.NoError(t, err)
 }
 
 func TestEnsureValidOptionsPassedAcceptsValidReposFile(t *testing.T) {
 	t.Parallel()
-	testConfigWithReposFile := &GitXargsConfig{
+	testConfigWithReposFile := &config.GitXargsConfig{
 		BranchName: "test-branch",
 		ReposFile:  "./my-repos.txt",
 	}
 
-	err := ensureValidOptionsPassed(testConfigWithReposFile)
+	err := EnsureValidOptionsPassed(testConfigWithReposFile)
 	assert.NoError(t, err)
 }
 
 func TestEnsureValidOptionsPassedAcceptedValidSingleRepo(t *testing.T) {
 	t.Parallel()
-	testConfigWithExplicitRepos := &GitXargsConfig{
+	testConfigWithExplicitRepos := &config.GitXargsConfig{
 		BranchName: "test-branch",
 		RepoSlice:  []string{"gruntwork-io/cloud-nuke"},
 	}
 
-	err := ensureValidOptionsPassed(testConfigWithExplicitRepos)
+	err := EnsureValidOptionsPassed(testConfigWithExplicitRepos)
 	assert.NoError(t, err)
 }
 
 func TestEnsureValidOptionsPassedAcceptsAllFlagsSimultaneously(t *testing.T) {
 	t.Parallel()
-	testConfigWithAllSelectionCriteria := &GitXargsConfig{
+	testConfigWithAllSelectionCriteria := &config.GitXargsConfig{
 		BranchName:    "test-branch",
 		ReposFile:     "./my-repos.txt",
 		RepoSlice:     []string{"gruntwork-io/cloud-nuke", "gruntwork-io/fetch"},
@@ -57,6 +58,6 @@ func TestEnsureValidOptionsPassedAcceptsAllFlagsSimultaneously(t *testing.T) {
 		RepoFromStdIn: []string{"gruntwork-io/terragrunt"},
 	}
 
-	err := ensureValidOptionsPassed(testConfigWithAllSelectionCriteria)
+	err := EnsureValidOptionsPassed(testConfigWithAllSelectionCriteria)
 	assert.NoError(t, err)
 }

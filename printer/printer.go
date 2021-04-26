@@ -1,4 +1,4 @@
-package main
+package printer
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/kataras/tablewriter"
 	"github.com/landoop/tableprinter"
 )
@@ -21,11 +22,11 @@ func configurePrinterStyling(printer *tableprinter.Printer) {
 	printer.HeaderFgColor = tablewriter.FgGreenColor
 }
 
-func printRepoReport(allEvents []AnnotatedEvent, r *RunStats) {
+func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunReport) {
 	fmt.Print("\n\n")
 	fmt.Println("*****************************************************************")
 	fmt.Printf("  GIT-XARGS RUN SUMMARY @ %v\n", time.Now().UTC())
-	fmt.Printf("  Runtime in seconds: %v\n", r.GetTotalRunSeconds())
+	fmt.Printf("  Runtime in seconds: %v\n", runReport.RuntimeSeconds)
 	fmt.Println("*****************************************************************")
 
 	// If there were any allowed repos provided via file, print out the list of them
@@ -36,24 +37,24 @@ func printRepoReport(allEvents []AnnotatedEvent, r *RunStats) {
 
 	fmt.Println("COMMAND SUPPLIED")
 	fmt.Println()
-	fmt.Println(r.command)
+	fmt.Println(runReport.Command)
 	fmt.Println()
 
 	// If the user selected repos via flatfile, print a table showing which repos they were
-	if len(r.fileProvidedRepos) > 0 {
+	if len(runReport.FileProvidedRepos) > 0 {
 		fmt.Println(" REPOS SUPPLIED VIA --repos FILE FLAG")
-		fileProvidedReposPrinter.Print(r.fileProvidedRepos)
+		fileProvidedReposPrinter.Print(runReport.FileProvidedRepos)
 	}
 	// For each event type, print a summary of the repos in that category
 	for _, ae := range allEvents {
 
-		var reducedRepos []ReducedRepo
+		var reducedRepos []types.ReducedRepo
 
 		printer := tableprinter.New(os.Stdout)
 		configurePrinterStyling(printer)
 
-		for _, repo := range r.repos[ae.Event] {
-			rr := ReducedRepo{
+		for _, repo := range runReport.Repos[ae.Event] {
+			rr := types.ReducedRepo{
 				Name: repo.GetName(),
 				URL:  repo.GetHTMLURL(),
 			}
@@ -68,10 +69,10 @@ func printRepoReport(allEvents []AnnotatedEvent, r *RunStats) {
 		}
 	}
 
-	var pullRequests []PullRequest
+	var pullRequests []types.PullRequest
 
-	for repoName, prURL := range r.pulls {
-		pr := PullRequest{
+	for repoName, prURL := range runReport.PullRequests {
+		pr := types.PullRequest{
 			Repo: repoName,
 			URL:  prURL,
 		}

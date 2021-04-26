@@ -1,8 +1,11 @@
-package main
+package repository
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/gruntwork-io/git-xargs/config"
+	"github.com/gruntwork-io/git-xargs/mocks"
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -12,16 +15,16 @@ import (
 func TestSelectReposViaInput(t *testing.T) {
 	t.Parallel()
 
-	config := NewGitXargsTestConfig()
-	config.RepoSlice = []string{"gruntwork-io/terratest", "gruntwork-io/cloud-nuke"}
+	testConfig := config.NewGitXargsTestConfig()
+	testConfig.RepoSlice = []string{"gruntwork-io/terratest", "gruntwork-io/cloud-nuke"}
 
-	repoSelection, err := selectReposViaInput(config)
+	repoSelection, err := selectReposViaInput(testConfig)
 
 	require.NoError(t, err)
 	require.NotNil(t, repoSelection)
 	assert.Equal(t, repoSelection.SelectionType, ExplicitReposOnCommandLine)
 
-	configOrg := NewGitXargsTestConfig()
+	configOrg := config.NewGitXargsTestConfig()
 	configOrg.GithubOrg = "gruntwork-io"
 
 	repoSelectionByOrg, orgErr := selectReposViaInput(configOrg)
@@ -30,7 +33,7 @@ func TestSelectReposViaInput(t *testing.T) {
 	require.NotNil(t, repoSelectionByOrg)
 	assert.Equal(t, repoSelectionByOrg.SelectionType, GithubOrganization)
 
-	configStdin := NewGitXargsTestConfig()
+	configStdin := config.NewGitXargsTestConfig()
 	configStdin.RepoFromStdIn = []string{"gruntwork-io/terratest", "gruntwork-io/cloud-nuke"}
 
 	repoSelectionByStdin, stdInErr := selectReposViaInput(configStdin)
@@ -44,15 +47,15 @@ func TestSelectReposViaInput(t *testing.T) {
 func TestOperateOnRepos(t *testing.T) {
 	t.Parallel()
 
-	config := NewGitXargsTestConfig()
-	config.GithubOrg = "gruntwork-io"
-	config.GithubClient = configureMockGithubClient()
+	testConfig := config.NewGitXargsTestConfig()
+	testConfig.GithubOrg = "gruntwork-io"
+	testConfig.GithubClient = mocks.ConfigureMockGithubClient()
 
-	err := OperateOnRepos(config)
+	err := OperateOnRepos(testConfig)
 	assert.NoError(t, err)
 
-	configReposOnCommandLine := NewGitXargsTestConfig()
-	configReposOnCommandLine.GithubClient = configureMockGithubClient()
+	configReposOnCommandLine := config.NewGitXargsTestConfig()
+	configReposOnCommandLine.GithubClient = mocks.ConfigureMockGithubClient()
 
 	configReposOnCommandLine.RepoSlice = []string{"gruntwork-io/fetch", "gruntwork-io/cloud-nuke"}
 
@@ -65,24 +68,24 @@ func TestOperateOnRepos(t *testing.T) {
 func TestGetPreferredOrderOfRepoSelections(t *testing.T) {
 	t.Parallel()
 
-	config := NewGitXargsTestConfig()
+	testConfig := config.NewGitXargsTestConfig()
 
-	config.GithubOrg = "gruntwork-io"
-	config.ReposFile = "repos.txt"
-	config.RepoSlice = []string{"github.com/gruntwork-io/fetch", "github.com/gruntwork-io/cloud-nuke"}
-	config.RepoFromStdIn = []string{"github.com/gruntwork-io/terragrunt", "github.com/gruntwork-io/terratest"}
+	testConfig.GithubOrg = "gruntwork-io"
+	testConfig.ReposFile = "repos.txt"
+	testConfig.RepoSlice = []string{"github.com/gruntwork-io/fetch", "github.com/gruntwork-io/cloud-nuke"}
+	testConfig.RepoFromStdIn = []string{"github.com/gruntwork-io/terragrunt", "github.com/gruntwork-io/terratest"}
 
-	assert.Equal(t, GithubOrganization, getPreferredOrderOfRepoSelections(config))
+	assert.Equal(t, GithubOrganization, getPreferredOrderOfRepoSelections(testConfig))
 
-	config.GithubOrg = ""
+	testConfig.GithubOrg = ""
 
-	assert.Equal(t, ReposFilePath, getPreferredOrderOfRepoSelections(config))
+	assert.Equal(t, ReposFilePath, getPreferredOrderOfRepoSelections(testConfig))
 
-	config.ReposFile = ""
+	testConfig.ReposFile = ""
 
-	assert.Equal(t, ExplicitReposOnCommandLine, getPreferredOrderOfRepoSelections(config))
+	assert.Equal(t, ExplicitReposOnCommandLine, getPreferredOrderOfRepoSelections(testConfig))
 
-	config.RepoSlice = []string{}
+	testConfig.RepoSlice = []string{}
 
-	assert.Equal(t, ReposViaStdIn, getPreferredOrderOfRepoSelections(config))
+	assert.Equal(t, ReposViaStdIn, getPreferredOrderOfRepoSelections(testConfig))
 }

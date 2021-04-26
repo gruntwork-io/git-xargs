@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"os"
@@ -11,7 +11,7 @@ import (
 func TestConfigureGithubClient(t *testing.T) {
 	t.Parallel()
 
-	client := configureGithubClient()
+	client := ConfigureGithubClient()
 	assert.NotNil(t, client)
 }
 
@@ -24,6 +24,6 @@ func TestNoGithubOAuthTokenPassed(t *testing.T) {
 
 	os.Setenv("GITHUB_OAUTH_TOKEN", "")
 
-	err := ensureGithubOauthTokenSet()
+	err := EnsureGithubOauthTokenSet()
 	assert.Error(t, err)
 }
