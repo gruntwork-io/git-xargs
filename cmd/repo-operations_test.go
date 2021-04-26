@@ -1,10 +1,11 @@
 package main
 
 import (
-	"os"
+	"bytes"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/google/go-github/v32/github"
 )
 
@@ -26,25 +27,25 @@ func getMockGithubRepo() *github.Repository {
 	return repo
 }
 
-func cloneLocalTestRepo(t *testing.T) (string, *git.Repository) {
+// Test that we can execute a script and that the expected stdout and stderr get written to the logger, even if that
+// script exits with an error (exit status 1).
+func TestExecuteCommandWithLogger(t *testing.T) {
+	t.Parallel()
+
+	cfg := NewGitXargsConfig()
+	cfg.Args = []string{"./_testscripts/test-stdout-stderr.sh"}
+
 	repo := getMockGithubRepo()
 
-	config := NewGitXargsTestConfig()
-
-	localPath, localRepo, err := cloneLocalRepository(config, repo)
-
-	if err != nil {
-		t.Logf("Could not clone local repo to localPath: %s\n", localPath)
-		t.Fail()
+	var buffer bytes.Buffer
+	logger := &logrus.Logger{
+		Out:       &buffer,
+		Level:     logrus.TraceLevel,
+		Formatter: new(logrus.TextFormatter),
 	}
 
-	return localPath, localRepo
-}
-
-func cleanupLocalTestRepo(t *testing.T, localPath string) error {
-	removeErr := os.RemoveAll(localPath)
-	if removeErr != nil {
-		t.Logf("Error cleaning up test repo at path: %s err: %+v\n", localPath, removeErr)
-	}
-	return removeErr
+	err := executeCommandWithLogger(cfg, ".", repo, logger)
+	assert.Errorf(t, err, "exit status 1")
+	assert.Contains(t, buffer.String(), "Hello, from STDOUT")
+	assert.Contains(t, buffer.String(), "Hello, from STDERR")
 }
