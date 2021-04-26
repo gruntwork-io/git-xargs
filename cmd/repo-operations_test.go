@@ -33,7 +33,7 @@ func TestExecuteCommandWithLogger(t *testing.T) {
 	t.Parallel()
 
 	cfg := NewGitXargsConfig()
-	cfg.Args = []string{"./_testscripts/test-stdout-stderr.rb"}
+	cfg.Args = []string{"./_testscripts/test-stdout-stderr.sh"}
 
 	repo := getMockGithubRepo()
 
