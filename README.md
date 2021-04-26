@@ -420,10 +420,10 @@ This is especially helpful if you are developing against the tool and want to qu
 
 ## Running tests
 
-Tests are included under the `/cmd` directory. There is a mixture of unit tests as well as CLI interface tests that verify certain flags are required, error messages are returned as expected when invalid input is provided, etc.
+Tests are included within their respective packages.
 
 ```
-go test -v ./cmd/git-xargs
+go test -v ./...
 ```
 
 ## License
