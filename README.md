@@ -398,7 +398,9 @@ Thanks for contributing back! Our hope is that eventually this repo will contain
 
 Clone this repository and then run the following command from the root of the repository:
 
-`go build -o git-xargs ./cmd/git-xargs`
+```
+go build
+```
 
 The `git-xargs` binary will be present in the repository root.
 
