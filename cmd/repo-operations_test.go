@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"os"
 	"testing"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/google/go-github/v32/github"
 )
 
@@ -27,29 +25,6 @@ func getMockGithubRepo() *github.Repository {
 	}
 
 	return repo
-}
-
-func cloneLocalTestRepo(t *testing.T) (string, *git.Repository) {
-	repo := getMockGithubRepo()
-
-	config := NewGitXargsTestConfig()
-
-	localPath, localRepo, err := cloneLocalRepository(config, repo)
-
-	if err != nil {
-		t.Logf("Could not clone local repo to localPath: %s\n", localPath)
-		t.Fail()
-	}
-
-	return localPath, localRepo
-}
-
-func cleanupLocalTestRepo(t *testing.T, localPath string) error {
-	removeErr := os.RemoveAll(localPath)
-	if removeErr != nil {
-		t.Logf("Error cleaning up test repo at path: %s err: %+v\n", localPath, removeErr)
-	}
-	return removeErr
 }
 
 // Test that we can execute a script and that the expected stdout and stderr get written to the logger
