@@ -362,11 +362,13 @@ func openPullRequest(config *GitXargsConfig, repo *github.Repository, branch str
 		}
 	}
 
+	repoDefaultBranch := repo.GetDefaultBranch()
+
 	// Configure pull request options that the Github client accepts when making calls to open new pull requests
 	newPR := &github.NewPullRequest{
 		Title:               github.String(titleToUse),
 		Head:                github.String(branch),
-		Base:                github.String("master"),
+		Base:                github.String(repoDefaultBranch),
 		Body:                github.String(descriptionToUse),
 		MaintainerCanModify: github.Bool(true),
 	}
@@ -378,7 +380,7 @@ func openPullRequest(config *GitXargsConfig, repo *github.Repository, branch str
 		logger.WithFields(logrus.Fields{
 			"Error": err,
 			"Head":  branch,
-			"Base":  "master",
+			"Base":  repoDefaultBranch,
 			"Body":  descriptionToUse,
 		}).Debug("Error opening Pull request")
 
