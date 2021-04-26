@@ -153,6 +153,8 @@ COMMAND SUPPLIED
 
 ### Installion option 2: Run go get
 
+1. Ensure you have Golang installed and working properly on your system. [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
+
 1. **Run go get to install the latest release of git-xargs**
 
 `go get github.com/gruntwork-io/git-xargs`
