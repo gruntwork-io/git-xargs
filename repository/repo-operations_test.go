@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
@@ -33,8 +34,8 @@ func getMockGithubRepo() *github.Repository {
 func TestExecuteCommandWithLogger(t *testing.T) {
 	t.Parallel()
 
-	cfg := NewGitXargsConfig()
-	cfg.Args = []string{"./_testscripts/test-stdout-stderr.sh"}
+	cfg := config.NewGitXargsConfig()
+	cfg.Args = []string{"../data/test/_testscripts/test-stdout-stderr.sh"}
 	repo := getMockGithubRepo()
 
 	var buffer bytes.Buffer
