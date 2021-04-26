@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/google/go-github/v32/github"
@@ -27,7 +27,8 @@ func getMockGithubRepo() *github.Repository {
 	return repo
 }
 
-// Test that we can execute a script and that the expected stdout and stderr get written to the logger
+// Test that we can execute a script and that the expected stdout and stderr get written to the logger, even if that
+// script exits with an error (exit status 1).
 func TestExecuteCommandWithLogger(t *testing.T) {
 	t.Parallel()
 
@@ -44,7 +45,7 @@ func TestExecuteCommandWithLogger(t *testing.T) {
 	}
 
 	err := executeCommandWithLogger(cfg, ".", repo, logger)
-	require.NoError(t, err)
-	require.Contains(t, buffer.String(), "Hello, from STDOUT")
-	require.Contains(t, buffer.String(), "Hello, from STDERR")
+	assert.Errorf(t, err, "exit status 1")
+	assert.Contains(t, buffer.String(), "Hello, from STDOUT")
+	assert.Contains(t, buffer.String(), "Hello, from STDERR")
 }
