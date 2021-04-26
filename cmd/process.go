@@ -72,13 +72,13 @@ func processRepo(config *GitXargsConfig, repo *github.Repository) error {
 	}
 
 	//Run the specified command
-	commandErr := executeCommand(config, repositoryDir, repo, worktree)
+	commandErr := executeCommand(config, repositoryDir, repo)
 	if commandErr != nil {
 		return commandErr
 	}
 
 	// Commit any untracked files, modified or deleted files that resulted from script execution
-	commitErr := commitLocalChanges(config, worktree, repo, localRepository)
+	commitErr := commitLocalChanges(config, repositoryDir, worktree, repo, localRepository)
 	if commitErr != nil {
 		return commitErr
 	}

@@ -82,11 +82,14 @@ func getLocalRepoHeadRef(config *GitXargsConfig, localRepository *git.Repository
 	return ref, nil
 }
 
-// executeCommand runs the user-supplied command and runs it against the given repository, adding any git changes that may occur
-func executeCommand(config *GitXargsConfig, repositoryDir string, repo *github.Repository, worktree *git.Worktree) error {
+// executeCommand runs the user-supplied command against the given repository
+func executeCommand(config *GitXargsConfig, repositoryDir string, repo *github.Repository) error {
+	return executeCommandWithLogger(config, repositoryDir, repo, logging.GetLogger("git-xargs"))
+}
 
-	logger := logging.GetLogger("git-xargs")
-
+// executeCommandWithLogger runs the user-supplied command against the given repository, and sends the log output
+// to the given logger
+func executeCommandWithLogger(config *GitXargsConfig, repositoryDir string, repo *github.Repository, logger *logrus.Logger) error {
 	if len(config.Args) < 1 {
 		return errors.WithStackTrace(NoCommandSuppliedErr{})
 	}
@@ -104,6 +107,10 @@ func executeCommand(config *GitXargsConfig, repositoryDir string, repo *github.R
 
 	stdoutStdErr, err := cmd.CombinedOutput()
 
+	logger.WithFields(logrus.Fields{
+		"CombinedOutput": string(stdoutStdErr),
+	}).Debug("Received output of command run")
+
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"Error": err,
@@ -111,58 +118,6 @@ func executeCommand(config *GitXargsConfig, repositoryDir string, repo *github.R
 		// Track the command error against the repo
 		config.Stats.TrackSingle(CommandErrorOccurredDuringExecution, repo)
 		return errors.WithStackTrace(err)
-	}
-
-	logger.WithFields(logrus.Fields{
-		"CombinedOutput": string(stdoutStdErr),
-	}).Debug("Received output of command run")
-
-	status, statusErr := worktree.Status()
-
-	if statusErr != nil {
-		logger.WithFields(logrus.Fields{
-			"Error": statusErr,
-			"Repo":  repo.GetName(),
-			"Dir":   repositoryDir,
-		}).Debug("Error looking up worktree status")
-
-		// Track the status check failure
-		config.Stats.TrackSingle(WorktreeStatusCheckFailedCommand, repo)
-		return errors.WithStackTrace(statusErr)
-	}
-
-	// If the supplied command resulted in any changes, we need to stage, add and commit them
-	if !status.IsClean() {
-		logger.WithFields(logrus.Fields{
-			"Repo": repo.GetName(),
-		}).Debug("Local repository worktree no longer clean, will stage and add new files and commit changes")
-
-		// Track the fact that worktree changes were made following execution
-		config.Stats.TrackSingle(WorktreeStatusDirty, repo)
-
-		for filepath := range status {
-			if status.IsUntracked(filepath) {
-				fmt.Printf("Found untracked file %s. Adding to stage", filepath)
-				_, addErr := worktree.Add(filepath)
-				if addErr != nil {
-					logger.WithFields(logrus.Fields{
-						"Error":    addErr,
-						"Filepath": filepath,
-					}).Debug("Error adding file to git stage")
-					// Track the file staging failure
-					config.Stats.TrackSingle(WorktreeAddFileFailed, repo)
-					return errors.WithStackTrace(addErr)
-				}
-			}
-		}
-
-	} else {
-		logger.WithFields(logrus.Fields{
-			"Repo": repo.GetName(),
-		}).Debug("Local repository status is clean - nothing to stage or commit")
-
-		// Track the fact that repo had no file changes post command execution
-		config.Stats.TrackSingle(WorktreeStatusClean, repo)
 	}
 
 	return nil
@@ -251,11 +206,60 @@ func checkoutLocalBranch(config *GitXargsConfig, ref *plumbing.Reference, worktr
 	return branchName, nil
 }
 
-// commitLocalChanges will create a commit using the supplied or default commit message and will add any untracked, deleted
-// or modified files that resulted from script execution
-func commitLocalChanges(config *GitXargsConfig, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository) error {
-
+// commitLocalChanges will check for any changes in worktree as a result of script execution, and if any are present,
+// add any untracked, deleted or modified files and create a commit using the supplied or default commit message.
+func commitLocalChanges(config *GitXargsConfig, repositoryDir string, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository) error {
 	logger := logging.GetLogger("git-xargs")
+
+	status, statusErr := worktree.Status()
+
+	if statusErr != nil {
+		logger.WithFields(logrus.Fields{
+			"Error": statusErr,
+			"Repo":  remoteRepository.GetName(),
+			"Dir":   repositoryDir,
+		}).Debug("Error looking up worktree status")
+
+		// Track the status check failure
+		config.Stats.TrackSingle(WorktreeStatusCheckFailedCommand, remoteRepository)
+		return errors.WithStackTrace(statusErr)
+	}
+
+	// If there are no changes, we log it, track it, and return
+	if status.IsClean() {
+		logger.WithFields(logrus.Fields{
+			"Repo": remoteRepository.GetName(),
+		}).Debug("Local repository status is clean - nothing to stage or commit")
+
+		// Track the fact that repo had no file changes post command execution
+		config.Stats.TrackSingle(WorktreeStatusClean, remoteRepository)
+
+		return nil
+	}
+
+	// If there are changes, we need to stage, add and commit them
+	logger.WithFields(logrus.Fields{
+		"Repo": remoteRepository.GetName(),
+	}).Debug("Local repository worktree no longer clean, will stage and add new files and commit changes")
+
+	// Track the fact that worktree changes were made following execution
+	config.Stats.TrackSingle(WorktreeStatusDirty, remoteRepository)
+
+	for filepath := range status {
+		if status.IsUntracked(filepath) {
+			fmt.Printf("Found untracked file %s. Adding to stage", filepath)
+			_, addErr := worktree.Add(filepath)
+			if addErr != nil {
+				logger.WithFields(logrus.Fields{
+					"Error":    addErr,
+					"Filepath": filepath,
+				}).Debug("Error adding file to git stage")
+				// Track the file staging failure
+				config.Stats.TrackSingle(WorktreeAddFileFailed, remoteRepository)
+				return errors.WithStackTrace(addErr)
+			}
+		}
+	}
 
 	// With all our untracked files staged, we can now create a commit, passing the All
 	// option when configuring our commit option so that all modified and deleted files
