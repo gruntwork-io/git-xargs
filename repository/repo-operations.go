@@ -400,6 +400,9 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 			"Head": branch,
 			"Base": repoDefaultBranch,
 		}).Debug("Pull request already exists for this branch, so skipping opening a pull request!")
+
+		// Track that we skipped opening a pull request
+		config.Stats.TrackSingle(stats.PullRequestAlreadyExists, repo)
 		return nil
 	}
 

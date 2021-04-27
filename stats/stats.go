@@ -54,6 +54,8 @@ const (
 	RepoNotExists types.Event = "repo-not-exists"
 	// PullRequestOpenErr denotes a repo whose pull request containing config changes could not be made successfully
 	PullRequestOpenErr types.Event = "pull-request-open-error"
+	// PullRequestAlreadyExists denotes a repo where the pull request already exists for the requested branch, so we didn't open a new one
+	PullRequestAlreadyExists types.Event = "pull-request-already-exists"
 	// CommitsMadeDirectlyToBranch denotes a repo whose local worktree changes were committed directly to the specified branch because the --skip-pull-requests flag was passed
 	CommitsMadeDirectlyToBranch types.Event = "commits-made-directly-to-branch"
 	//DirectCommitsPushedToRemoteBranch denotes a repo whose changes were pushed to the remote specified branch because the --skip-pull-requests flag was passed
@@ -84,6 +86,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: PushBranchSkipped, Description: "Repos whose local branch was not pushed because the --dry-run flag was set"},
 	{Event: RepoNotExists, Description: "Repos that were supplied by user but don't exist (404'd) via Github API"},
 	{Event: PullRequestOpenErr, Description: "Repos against which pull requests failed to be opened"},
+	{Event: PullRequestAlreadyExists, Description: "Repos where opening a pull request was skipped because a pull request was already open"},
 	{Event: CommitsMadeDirectlyToBranch, Description: "Repos whose local changes were committed directly to the specified branch because --skip-pull-requests was passed"},
 	{Event: DirectCommitsPushedToRemoteBranch, Description: "Repos whose changes were pushed directly to the remote branch because --skip-pull-requests was passed"},
 	{Event: BranchRemotePullFailed, Description: "Repos whose remote branches could not be successfully pulled"},
