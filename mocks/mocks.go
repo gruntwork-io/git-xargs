@@ -53,6 +53,10 @@ func (m mockGithubPullRequestService) Create(ctx context.Context, owner, name st
 	return m.PullRequest, m.Response, nil
 }
 
+func (m mockGithubPullRequestService) List(ctx context.Context, owner string, repo string, opts *github.PullRequestListOptions) ([]*github.PullRequest, *github.Response, error) {
+	return []*github.PullRequest{m.PullRequest}, m.Response, nil
+}
+
 // This mocks the Repositories service in go-github that is used in production to call the associated Github endpoint
 type mockGithubRepositoriesService struct {
 	Repository   *github.Repository
