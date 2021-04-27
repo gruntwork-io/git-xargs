@@ -457,7 +457,9 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 // Returns true if a pull request already exists in the given repo for the given branch
 func pullRequestAlreadyExistsForBranch(config *config.GitXargsConfig, repo *github.Repository, branch string, repoDefaultBranch string) (bool, error) {
 	opts := &github.PullRequestListOptions{
-		Head: branch,
+		// Filter pulls by head user or head organization and branch name in the format of user:ref-name or organization:ref-name
+		// https://docs.github.com/en/rest/reference/pulls#list-pull-requests
+		Head: fmt.Sprintf("%s:%s", *repo.Owner.Login, branch),
 		Base: repoDefaultBranch,
 	}
 
