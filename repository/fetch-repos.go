@@ -84,11 +84,28 @@ func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) 
 	}
 
 	for {
+		var reposToAdd []*github.Repository
 		repos, resp, err := config.GithubClient.Repositories.ListByOrg(context.Background(), config.GithubOrg, opt)
 		if err != nil {
 			return allRepos, errors.WithStackTrace(err)
 		}
-		allRepos = append(allRepos, repos...)
+
+		// github.RepositoryListByOrgOptions doesn't seem to be able to filter out archived repos
+		// So re-slice the repos list if --skip-archived-repos is passed and the repository is in archived/read-only state
+		for i, repo := range repos {
+			if config.SkipArchivedRepos && repo.GetArchived() {
+				logger.WithFields(logrus.Fields{
+					"Name": repo.GetFullName(),
+				}).Debug("Skipping archived repository")
+
+				reposToAdd = append(repos[:i], repos[i+1:]...)
+			} else {
+				reposToAdd = repos
+			}
+		}
+
+		allRepos = append(allRepos, reposToAdd...)
+
 		if resp.NextPage == 0 {
 			break
 		}

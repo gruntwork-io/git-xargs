@@ -14,6 +14,7 @@ import (
 type GitXargsConfig struct {
 	DryRun                 bool
 	SkipPullRequests       bool
+	SkipArchivedRepos      bool
 	BranchName             string
 	CommitMessage          string
 	PullRequestTitle       string
@@ -33,6 +34,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 	return &GitXargsConfig{
 		DryRun:                 false,
 		SkipPullRequests:       false,
+		SkipArchivedRepos:      false,
 		BranchName:             "",
 		CommitMessage:          common.DefaultCommitMessage,
 		PullRequestTitle:       common.DefaultPullRequestTitle,
