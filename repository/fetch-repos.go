@@ -98,6 +98,9 @@ func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) 
 					"Name": repo.GetFullName(),
 				}).Debug("Skipping archived repository")
 
+				// Track repos to skip because of archived status for our final run report
+				config.Stats.TrackSingle(stats.ReposArchivedSkipped, repo)
+
 				reposToAdd = append(repos[:i], repos[i+1:]...)
 			} else {
 				reposToAdd = repos
