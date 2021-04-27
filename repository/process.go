@@ -78,22 +78,9 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 		return commandErr
 	}
 
-	// Commit any untracked files, modified or deleted files that resulted from script execution
-	commitErr := commitLocalChanges(config, repositoryDir, worktree, repo, localRepository)
-	if commitErr != nil {
-		return commitErr
-	}
-
-	// Push the local branch containing all of our changes from executing the supplied command
-	pushBranchErr := pushLocalBranch(config, repo, localRepository)
-	if pushBranchErr != nil {
-		return pushBranchErr
-	}
-
-	// Open a pull request on Github, of the recently pushed branch against the repository default branch
-	openPullRequestErr := openPullRequest(config, repo, branchName.String())
-	if openPullRequestErr != nil {
-		return openPullRequestErr
+	// Commit and push the changes to Git and open a PR
+	if err := updateRepo(config, repositoryDir, worktree, repo, localRepository, branchName.String()); err != nil {
+		return err
 	}
 
 	return nil

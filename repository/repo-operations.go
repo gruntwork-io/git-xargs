@@ -210,9 +210,10 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 	return branchName, nil
 }
 
-// commitLocalChanges will check for any changes in worktree as a result of script execution, and if any are present,
-// add any untracked, deleted or modified files and create a commit using the supplied or default commit message.
-func commitLocalChanges(config *config.GitXargsConfig, repositoryDir string, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository) error {
+// updateRepo will check for any changes in worktree as a result of script execution, and if any are present,
+// add any untracked, deleted or modified files, create a commit using the supplied or default commit message,
+// push the code to the remote repo, and open a pull request.
+func updateRepo(config *config.GitXargsConfig, repositoryDir string, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository, branchName string) error {
 	logger := logging.GetLogger("git-xargs")
 
 	status, statusErr := worktree.Status()
@@ -240,6 +241,32 @@ func commitLocalChanges(config *config.GitXargsConfig, repositoryDir string, wor
 
 		return nil
 	}
+
+	// Commit any untracked files, modified or deleted files that resulted from script execution
+	commitErr := commitLocalChanges(status, config, repositoryDir, worktree, remoteRepository, localRepository)
+	if commitErr != nil {
+		return commitErr
+	}
+
+	// Push the local branch containing all of our changes from executing the supplied command
+	pushBranchErr := pushLocalBranch(config, remoteRepository, localRepository)
+	if pushBranchErr != nil {
+		return pushBranchErr
+	}
+
+	// Open a pull request on Github, of the recently pushed branch against the repository default branch
+	openPullRequestErr := openPullRequest(config, remoteRepository, branchName)
+	if openPullRequestErr != nil {
+		return openPullRequestErr
+	}
+
+	return nil
+}
+
+// commitLocalChanges will check for any changes in worktree as a result of script execution, and if any are present,
+// add any untracked, deleted or modified files and create a commit using the supplied or default commit message.
+func commitLocalChanges(status git.Status, config *config.GitXargsConfig, repositoryDir string, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository) error {
+	logger := logging.GetLogger("git-xargs")
 
 	// If there are changes, we need to stage, add and commit them
 	logger.WithFields(logrus.Fields{
@@ -343,13 +370,36 @@ func pushLocalBranch(config *config.GitXargsConfig, remoteRepository *github.Rep
 // Attempt to open a pull request via the Github API, of the supplied branch specific to this tool, against the main
 // branch for the remote origin
 func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, branch string) error {
-
 	logger := logging.GetLogger("git-xargs")
 
 	if config.DryRun || config.SkipPullRequests {
 		logger.WithFields(logrus.Fields{
 			"Repo": repo.GetName(),
 		}).Debug("--dry-run and / or --skip-pull-requests is set to true, so skipping opening a pull request!")
+		return nil
+	}
+
+	repoDefaultBranch := repo.GetDefaultBranch()
+	pullRequestAlreadyExists, err := pullRequestAlreadyExistsForBranch(config, repo, branch, repoDefaultBranch)
+
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"Error": err,
+			"Head":  branch,
+			"Base":  repoDefaultBranch,
+		}).Debug("Error listing pull requests")
+
+		// Track pull request open failure
+		config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
+		return errors.WithStackTrace(err)
+	}
+
+	if pullRequestAlreadyExists {
+		logger.WithFields(logrus.Fields{
+			"Repo": repo.GetName(),
+			"Head": branch,
+			"Base": repoDefaultBranch,
+		}).Debug("Pull request already exists for this branch, so skipping opening a pull request!")
 		return nil
 	}
 
@@ -369,8 +419,6 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 			descriptionToUse = commitMessage
 		}
 	}
-
-	repoDefaultBranch := repo.GetDefaultBranch()
 
 	// Configure pull request options that the Github client accepts when making calls to open new pull requests
 	newPR := &github.NewPullRequest{
@@ -404,4 +452,19 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 	// Track successful opening of the pull request, extracting the HTML url to the PR itself for easier review
 	config.Stats.TrackPullRequest(repo.GetName(), pr.GetHTMLURL())
 	return nil
+}
+
+// Returns true if a pull request already exists in the given repo for the given branch
+func pullRequestAlreadyExistsForBranch(config *config.GitXargsConfig, repo *github.Repository, branch string, repoDefaultBranch string) (bool, error) {
+	opts := &github.PullRequestListOptions{
+		Head: branch,
+		Base: repoDefaultBranch,
+	}
+
+	prs, _, err := config.GithubClient.PullRequests.List(context.Background(), *repo.GetOwner().Login, repo.GetName(), opts)
+	if err != nil {
+		return false, errors.WithStackTrace(err)
+	}
+
+	return len(prs) > 0, nil
 }
