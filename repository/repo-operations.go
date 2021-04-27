@@ -459,7 +459,7 @@ func pullRequestAlreadyExistsForBranch(config *config.GitXargsConfig, repo *gith
 	opts := &github.PullRequestListOptions{
 		// Filter pulls by head user or head organization and branch name in the format of user:ref-name or organization:ref-name
 		// https://docs.github.com/en/rest/reference/pulls#list-pull-requests
-		Head: fmt.Sprintf("%s:%s", *repo.Owner.Login, branch),
+		Head: fmt.Sprintf("%s:%s", *repo.GetOwner().Login, branch),
 		Base: repoDefaultBranch,
 	}
 
