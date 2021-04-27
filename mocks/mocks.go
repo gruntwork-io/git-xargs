@@ -14,10 +14,14 @@ var ownerName = "gruntwork-io"
 var repoName1 = "terragrunt"
 var repoName2 = "terratest"
 var repoName3 = "fetch"
+var repoName4 = "terraform-kubernetes-helm"
 
 var repoURL1 = "https://github.com/gruntwork-io/terragrunt"
 var repoURL2 = "https://github.com/gruntwork-io/terratest"
 var repoURL3 = "https://github.com/gruntwork-io/fetch"
+var repoURL4 = "https://github.com/gruntwork-io/terraform-kubernetes-helm"
+
+var archivedFlag = true
 
 var MockGithubRepositories = []*github.Repository{
 	&github.Repository{
@@ -40,6 +44,14 @@ var MockGithubRepositories = []*github.Repository{
 		},
 		Name:    &repoName3,
 		HTMLURL: &repoURL3,
+	},
+	&github.Repository{
+		Owner: &github.User{
+		Login: &ownerName,
+		},
+		Name:    &repoName4,
+		HTMLURL: &repoURL4,
+		Archived: &archivedFlag,
 	},
 }
 
