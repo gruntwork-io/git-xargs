@@ -34,7 +34,7 @@ func TestGetFileDefinedRepos(t *testing.T) {
 
 	githubRepos, reposLookupErr := getFileDefinedRepos(config.GithubClient, allowedRepos, config.Stats)
 
-	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories))
+	assert.Equal(t, len(githubRepos), len(allowedRepos))
 	assert.NoError(t, reposLookupErr)
 }
 
