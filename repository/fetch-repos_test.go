@@ -34,7 +34,7 @@ func TestGetFileDefinedRepos(t *testing.T) {
 
 	githubRepos, reposLookupErr := getFileDefinedRepos(config.GithubClient, allowedRepos, config.Stats)
 
-	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories))
+	assert.Equal(t, len(githubRepos), len(allowedRepos))
 	assert.NoError(t, reposLookupErr)
 }
 
@@ -49,5 +49,20 @@ func TestGetReposByOrg(t *testing.T) {
 	githubRepos, reposByOrgLookupErr := getReposByOrg(config)
 
 	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories))
+	assert.NoError(t, reposByOrgLookupErr)
+}
+
+// TestSkipArchivedRepos ensures that you can filter out archived repositories
+func TestSkipArchivedRepos(t *testing.T) {
+	t.Parallel()
+
+	config := config.NewGitXargsTestConfig()
+	config.GithubOrg = "gruntwork-io"
+	config.SkipArchivedRepos = true
+	config.GithubClient = mocks.ConfigureMockGithubClient()
+
+	githubRepos, reposByOrgLookupErr := getReposByOrg(config)
+
+	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories) -1)
 	assert.NoError(t, reposByOrgLookupErr)
 }

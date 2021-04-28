@@ -22,6 +22,7 @@ func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config := config.NewGitXargsConfig()
 	config.DryRun = c.Bool("dry-run")
 	config.SkipPullRequests = c.Bool("skip-pull-requests")
+	config.SkipArchivedRepos = c.Bool("skip-archived-repos")
 	config.BranchName = c.String("branch-name")
 	config.CommitMessage = c.String("commit-message")
 	config.PullRequestTitle = c.String("pull-request-title")

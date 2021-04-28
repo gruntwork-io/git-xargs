@@ -64,6 +64,7 @@ func setupApp() *cli.App {
 		common.GenericGithubOrgFlag,
 		common.GenericDryRunFlag,
 		common.GenericSkipPullRequestFlag,
+		common.GenericSkipArchivedReposFlag,
 		common.GenericRepoFlag,
 		common.GenericRepoFileFlag,
 		common.GenericBranchFlag,

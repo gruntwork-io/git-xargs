@@ -6,6 +6,7 @@ const (
 	GithubOrgFlagName              = "github-org"
 	DryRunFlagName                 = "dry-run"
 	SkipPullRequestsFlagName       = "skip-pull-requests"
+	SkipArchivedReposFlagName      = "skip-archived-repos"
 	RepoFlagName                   = "repo"
 	ReposFileFlagName              = "repos"
 	CommitMessageFlagName          = "commit-message"
@@ -29,6 +30,10 @@ var (
 	GenericSkipPullRequestFlag = cli.BoolFlag{
 		Name:  SkipPullRequestsFlagName,
 		Usage: "When skip-pull-requests is set to true, no pull requests will be opened. All changes will be committed and pushed to the specified branch directly.",
+	}
+	GenericSkipArchivedReposFlag = cli.BoolFlag{
+		Name:  SkipArchivedReposFlagName,
+		Usage: "Used in conjunction with github-org, will exclude archived repositories.",
 	}
 	GenericRepoFlag = cli.StringSliceFlag{
 		Name:  RepoFlagName,

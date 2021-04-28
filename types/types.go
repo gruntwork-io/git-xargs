@@ -17,6 +17,7 @@ type ReducedRepo struct {
 
 type RunReport struct {
 	Repos             map[Event][]*github.Repository
+	SkippedRepos      map[Event][]*github.Repository
 	Command           []string
 	RuntimeSeconds    int
 	FileProvidedRepos []*AllowedRepo

@@ -14,6 +14,8 @@ const (
 	DryRunSet types.Event = "dry-run-set-no-changes-made"
 	// ReposSelected denotes all the repositories that were targeted for processing by this tool AFTER filtering was applied to determine valid repos
 	ReposSelected types.Event = "repos-selected-pre-processing"
+	// ReposArchivedSkipped denotes all the repositories that were skipped from the list of repos to clone because the skip-archived-repos was set to true
+	ReposArchivedSkipped types.Event = "repos-archived-skipped"
 	// TargetBranchNotFound denotes the special branch used by this tool to make changes on was not found on lookup, suggesting it should be created
 	TargetBranchNotFound types.Event = "target-branch-not-found"
 	// TargetBranchAlreadyExists denotes the special branch used by this tool was already found (so it was likely already created by a previous run)
@@ -70,6 +72,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: FetchedViaGithubAPI, Description: "Repos successfully fetched via Github API"},
 	{Event: DryRunSet, Description: "Repos that were not modified in any way because this was a dry-run"},
 	{Event: ReposSelected, Description: "All repos that were targeted for processing AFTER filtering missing / malformed repos"},
+	{Event: ReposArchivedSkipped, Description: "All repos that were filtered out with the --skip-archived-repos flag"},
 	{Event: TargetBranchNotFound, Description: "Repos whose target branch was not found"},
 	{Event: TargetBranchAlreadyExists, Description: "Repos whose target branch already existed"},
 	{Event: TargetBranchLookupErr, Description: "Repos whose target branches could not be looked up due to an API error"},
@@ -96,6 +99,7 @@ var allEvents = []types.AnnotatedEvent{
 // RunStats will be a stats-tracker class that keeps score of which repos were touched, which were considered for update, which had branches made, PRs made, which were missing workflows or contexts, or had out of date workflows syntax values, etc
 type RunStats struct {
 	repos                 map[types.Event][]*github.Repository
+	skippedArchivedRepos  map[types.Event][]*github.Repository
 	pulls                 map[string]string
 	command               []string
 	fileProvidedRepos     []*types.AllowedRepo
@@ -112,6 +116,7 @@ func NewStatsTracker() *RunStats {
 
 	t := &RunStats{
 		repos:                 make(map[types.Event][]*github.Repository),
+		skippedArchivedRepos:  make(map[types.Event][]*github.Repository),
 		pulls:                 make(map[string]string),
 		command:               []string{},
 		fileProvidedRepos:     fileProvidedRepos,
@@ -132,6 +137,11 @@ func (r *RunStats) GetTotalRunSeconds() int {
 // GetRepos returns the inner map of events to *github.Repositories that the RunStats maintains throughout the lifecycle of a given command run
 func (r *RunStats) GetRepos() map[types.Event][]*github.Repository {
 	return r.repos
+}
+
+// GetSkippedArchivedRepos returns the inner map of events to *github.Repositories that are excluded from the targeted repos list
+func (r *RunStats) GetSkippedArchivedRepos() map[types.Event][]*github.Repository {
+	return r.skippedArchivedRepos
 }
 
 // GetPullRequests returns the inner representation of the pull requests that were opened during the lifecycle of a given run
@@ -211,6 +221,7 @@ func (r *RunStats) TrackMultiple(event types.Event, repos []*github.Repository) 
 func (r *RunStats) GenerateRunReport() *types.RunReport {
 	return &types.RunReport{
 		Repos:          r.GetRepos(),
+		SkippedRepos:   r.GetSkippedArchivedRepos(),
 		Command:        r.command,
 		RuntimeSeconds: r.GetTotalRunSeconds(), FileProvidedRepos: r.GetFileProvidedRepos(),
 		PullRequests: r.GetPullRequests(),
