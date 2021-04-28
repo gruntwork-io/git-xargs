@@ -111,9 +111,7 @@ func executeCommandWithLogger(config *config.GitXargsConfig, repositoryDir strin
 
 	stdoutStdErr, err := cmd.CombinedOutput()
 
-	logger.WithFields(logrus.Fields{
-		"CombinedOutput": string(stdoutStdErr),
-	}).Debug("Received output of command run")
+	logger.Debugf("Output of command %v for repo %s in directory %s:\n%s", config.Args, repo.GetName(), repositoryDir, string(stdoutStdErr))
 
 	if err != nil {
 		logger.WithFields(logrus.Fields{
