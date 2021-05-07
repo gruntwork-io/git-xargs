@@ -12,7 +12,10 @@ import (
 func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 
-	wg := sizedwaitgroup.New(100)
+	// Limit the number of concurrent goroutines using the MaxConcurrentRepos config value
+	// MaxConcurrentRepos == 0 will fallback to unlimited (previous default behavior)
+	wg := sizedwaitgroup.New(gitxargsConfig.MaxConcurrentRepos)
+
 	for _, repo := range repos {
 		wg.Add()
 		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
