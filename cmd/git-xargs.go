@@ -30,6 +30,7 @@ func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config.ReposFile = c.String("repos")
 	config.GithubOrg = c.String("github-org")
 	config.RepoSlice = c.StringSlice("repo")
+	config.MaxConcurrentRepos = c.Int("max-concurrent-repos")
 	config.Args = c.Args()
 
 	shouldReadStdIn, err := dataBeingPipedToStdIn()

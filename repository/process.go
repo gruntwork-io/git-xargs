@@ -1,20 +1,23 @@
 package repository
 
 import (
-	"sync"
-
 	"github.com/google/go-github/v32/github"
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/go-commons/logging"
+	"github.com/remeh/sizedwaitgroup"
 	"github.com/sirupsen/logrus"
 )
 
 // Loop through every repo we've selected and use a WaitGroup so that the processing can happen in parallel
 func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
-	var wg sync.WaitGroup
+
+	// Limit the number of concurrent goroutines using the MaxConcurrentRepos config value
+	// MaxConcurrentRepos == 0 will fallback to unlimited (previous default behavior)
+	wg := sizedwaitgroup.New(gitxargsConfig.MaxConcurrentRepos)
+
 	for _, repo := range repos {
-		wg.Add(1)
+		wg.Add()
 		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
 			defer wg.Done()
 			// For each repo, run the supplied command against it and, if it succeeds without error,
