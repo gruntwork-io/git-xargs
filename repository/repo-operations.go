@@ -287,7 +287,10 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 
 	for filepath := range status {
 		if status.IsUntracked(filepath) {
-			fmt.Printf("Found untracked file %s. Adding to stage", filepath)
+			logger.WithFields(logrus.Fields{
+				"Filepath": filepath,
+			}).Debug("Found untracked file. Adding to stage")
+
 			_, addErr := worktree.Add(filepath)
 			if addErr != nil {
 				logger.WithFields(logrus.Fields{
