@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -41,14 +42,19 @@ func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository
 		return repositoryDir, nil, errors.WithStackTrace(tmpDirErr)
 	}
 
+	gitProgressBuffer := bytes.NewBuffer(nil)
 	localRepository, err := config.GitClient.PlainClone(repositoryDir, false, &git.CloneOptions{
 		URL:      repo.GetCloneURL(),
-		Progress: os.Stdout,
+		Progress: gitProgressBuffer,
 		Auth: &http.BasicAuth{
 			Username: repo.GetOwner().GetLogin(),
 			Password: os.Getenv("GITHUB_OAUTH_TOKEN"),
 		},
 	})
+
+	logger.WithFields(logrus.Fields{
+		"Repo":  repo.GetName(),
+	}).Debug(gitProgressBuffer)
 
 	if err != nil {
 		logger.WithFields(logrus.Fields{
@@ -178,6 +184,7 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 	}
 
 	// Pull latest code from remote branch if it exists to avoid fast-forwarding errors
+	gitProgressBuffer := bytes.NewBuffer(nil)
 	po := &git.PullOptions{
 		RemoteName:    "origin",
 		ReferenceName: branchName,
@@ -185,8 +192,12 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 			Username: remoteRepository.GetOwner().GetLogin(),
 			Password: os.Getenv("GITHUB_OAUTH_TOKEN"),
 		},
-		Progress: os.Stdout,
+		Progress: gitProgressBuffer,
 	}
+
+	logger.WithFields(logrus.Fields{
+		"Repo":  remoteRepository.GetName(),
+	}).Debug(gitProgressBuffer)
 
 	pullErr := worktree.Pull(po)
 
@@ -276,7 +287,10 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 
 	for filepath := range status {
 		if status.IsUntracked(filepath) {
-			fmt.Printf("Found untracked file %s. Adding to stage", filepath)
+			logger.WithFields(logrus.Fields{
+				"Filepath": filepath,
+			}).Debug("Found untracked file. Adding to stage")
+
 			_, addErr := worktree.Add(filepath)
 			if addErr != nil {
 				logger.WithFields(logrus.Fields{

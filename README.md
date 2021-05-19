@@ -151,7 +151,7 @@ COMMAND SUPPLIED
       git-xargs --version
       ```
 
-### Installion option 2: Run go get
+### Installation option 2: Run go get
 
 1. Ensure you have Golang installed and working properly on your system. [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
 
@@ -333,14 +333,14 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
 | `--commit-message`       | The commit message to use when creating commits. If you supply this flag, but neither the optional `--pull-request-title` or `--pull-request-description` flags, then the commit message value will be used for all three.                                                                                                                                                                                                     | String  | No       |
 | `--skip-pull-requests`   | If you don't want any pull requests opened, but would rather have your changes committed directly to your specified branch, pass this flag. Note that it won't work if your Github repo is configured with branch protections on the branch you're trying to commit directly to!                                                                                                                                               | Boolean | No       |
 | `--skip-archived-repos`  | If you want to exclude archived (read-only) repositories from the list of targeted repos, pass this flag.                                                                                                                                                                                                                                                                                                                      | Boolean | No       |
-| `--dry-run`              | If you are in the process of testing out `git-xargs` or your intial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run branch. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
+| `--dry-run`              | If you are in the process of testing out `git-xargs` or your initial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run branch. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
 | `--max-concurrent-repos` | Limits the number of concurrent processed repositories. This is only useful if you encounter issues and need throttling when running on a very large number of repos.  Default is `0` (Unlimited)                                                                                                                                                                                                                              | Integer | No       |
 
 ## Best practices, tips and tricks
 
 ### Write your script to run against a single repo
 
-Write your script as if its operating on a single repo, then target many repos with `git-xargs`. Remember that at runtime, each of the scripts you select will be run, in the order you specify, once per repo that you've targeted.
+Write your script as if it's operating on a single repo, then target many repos with `git-xargs`. Remember that at runtime, each of the scripts you select will be run, in the order you specify, once per repo that you've targeted.
 
 ### Handling prerequisites and third party binaries
 
@@ -360,7 +360,7 @@ This section provides a more in-depth look at how the `git-xargs` tool works und
 1. it will run all your selected scripts against your selected repos
 1. it will commit any changes in each of the repos (with a commit message you can optionally specify via the `--commit-message` flag)
 1. it will push your local branch with your new commits to your repo's remote
-1. it will call the Github API to open a pull request with a title and description that you can optionally specify via the `--pull-request-title` and `--pull-request-description` flags, respectively), unless you pass the `--skip-pull-requests` flag
+1. it will call the Github API to open a pull request with a title and description that you can optionally specify via the `--pull-request-title` and `--pull-request-description` flags, respectively, unless you pass the `--skip-pull-requests` flag
 1. it will print out a detailed run summary to STDOUT that explains exactly what happened with each repo and provide links to successfully opened pull requests that you can quickly follow from your terminal. If any repos encountered errors at runtime (whether they weren't able to be cloned, or script errors were encountered during processing, etc) all of this will be spelled out in detail in the final report so you know exactly what succeeded and what went wrong.
 
 ## Tasks this tool is well-suited for
@@ -374,7 +374,7 @@ The following is a non-exhaustive list of potential use cases for `git-xargs`:
 - Add new files to repos
 - Delete specific files, when present, from repos
 - Modify `package.json` files in-place across repos to bump a node.js dependency using `jq` https://stedolan.github.io/jq/
-- Update your Terraform module library from Terraform 0.13 to 0.14 .
+- Update your Terraform module library from Terraform 0.13 to 0.14.
 - Remove stray files of any kind, when found, across repos using `find` and its `exec` option
 - Add baseline tests to repos that are missing them by copying over a common local folder where they are defined
 - Refactor multiple Golang tools to use new libraries by executing `go get` to install and uninstall packages, and modify the source code files' import references
