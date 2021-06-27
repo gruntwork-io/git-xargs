@@ -163,6 +163,14 @@ COMMAND SUPPLIED
 
 `go get github.com/gruntwork-io/git-xargs@v0.0.5`
 
+
+### Installation option 3: Homebrew
+
+If you are [Homebrew](https://brew.sh/) user, you can install by running
+
+```bash
+$ brew install git-xargs
+```
 ### Try it out!
 
 1. **Export a valid Github token**. See the guide on [Github personal access
