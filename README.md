@@ -220,6 +220,33 @@ git-xargs --github-org my-github-org \
   "$(pwd)/scripts/my-ruby-script.rb"
 ```
 
+## Debugging runtime errors
+
+By default, `git-xargs` will conceal runtime errors as they occur because its log level setting is `INFO` if not overridden by the `--loglevel` flag.
+
+To see all errors your script or command may be generating, be sure to pass `--loglevel debug` when running your `git-xargs` command, like so:
+
+```
+git-xargs --loglevel debug \
+	--repo zack-test-org/terraform-aws-eks \
+	--branch-name master \
+	--commit-message "add blank file" \
+	--skip-pull-requests touch foo.txt
+```
+
+When the log level is set to `debug` you should see new error output similar to the following:
+
+```
+Total 195 (delta 159), reused 27 (delta 11), pack-reused 17  Repo=terraform-aws-eks
+[git-xargs] DEBU[2021-06-29T12:11:31-04:00] Created branch                                Branc
+h Name=refs/heads/master Repo=terraform-aws-eks
+[git-xargs] DEBU[2021-06-29T12:11:31-04:00] Error creating new branch                     Error
+="a branch named \"refs/heads/master\" already exists" Repo=terraform-aws-eks
+[git-xargs] DEBU[2021-06-29T12:11:31-04:00] Error encountered while processing repo       Error
+="a branch named \"refs/heads/master\" already exists" Repo name=terraform-aws-eks
+
+```
+
 ## Branch behavior
 
 Passing the `--branch-name` (-b) flag is required when running `git-xargs`. If you specify the name of a branch that exists on your remote, its latest changes will be pulled locally prior to your command or script being run. If you specify the name of a new branch that does not yet exist on your remote, it will be created locally and pushed once your changes are committed.
