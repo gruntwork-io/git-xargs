@@ -134,7 +134,15 @@ COMMAND SUPPLIED
 
 ## Getting started
 
-### Installation option 1: Installing published binaries
+### Installation option 1: Homebrew
+
+If you are [Homebrew](https://brew.sh/) user, you can install by running
+
+```bash
+$ brew install git-xargs
+```
+
+### Installation option 2: Installing published binaries
 
 1. **Download the correct binary for your platform**. Visit [the releases
    page](https://github.com/gruntwork-io/git-xargs/releases) and download the correct binary depending on your system.
@@ -152,7 +160,7 @@ COMMAND SUPPLIED
       git-xargs --version
       ```
 
-### Installation option 2: Run go get
+### Installation option 3: Run go get
 
 1. Ensure you have Golang installed and working properly on your system. [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
 
@@ -164,14 +172,6 @@ COMMAND SUPPLIED
 
 `go get github.com/gruntwork-io/git-xargs@v0.0.5`
 
-
-### Installation option 3: Homebrew
-
-If you are [Homebrew](https://brew.sh/) user, you can install by running
-
-```bash
-$ brew install git-xargs
-```
 ### Try it out!
 
 1. **Export a valid Github token**. See the guide on [Github personal access
