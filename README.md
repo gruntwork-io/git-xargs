@@ -1,5 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/gruntwork-io/git-xargs)](https://goreportcard.com/report/github.com/gruntwork-io/git-xargs)
 [![gruntwork-io](https://circleci.com/gh/gruntwork-io/git-xargs.svg?style=svg)](https://circleci.com/gh/gruntwork-io/git-xargs)
+[![Homebrew](https://img.shields.io/badge/dynamic/json.svg?url=https://formulae.brew.sh/api/formula/git-xargs.json&query=$.versions.stable&label=homebrew)](https://formulae.brew.sh/formula/git-xargs)
 
 # Table of contents
 
@@ -135,7 +136,15 @@ COMMAND SUPPLIED
 
 ## Getting started
 
-### Installation option 1: Installing published binaries
+### Installation option 1: Homebrew
+
+If you are [Homebrew](https://brew.sh/) user, you can install by running
+
+```bash
+$ brew install git-xargs
+```
+
+### Installation option 2: Installing published binaries
 
 1. **Download the correct binary for your platform**. Visit [the releases
    page](https://github.com/gruntwork-io/git-xargs/releases) and download the correct binary depending on your system.
@@ -153,7 +162,7 @@ COMMAND SUPPLIED
       git-xargs --version
       ```
 
-### Installation option 2: Run go get
+### Installation option 3: Run go get
 
 1. Ensure you have Golang installed and working properly on your system. [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
 
