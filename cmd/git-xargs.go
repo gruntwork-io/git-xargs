@@ -20,8 +20,8 @@ import (
 // to an internal representation of the data supplied by the user
 func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config := config.NewGitXargsConfig()
-	config.DryRun = c.Bool("dry-run")
 	config.Draft = c.Bool("draft")
+	config.DryRun = c.Bool("dry-run")
 	config.SkipPullRequests = c.Bool("skip-pull-requests")
 	config.SkipArchivedRepos = c.Bool("skip-archived-repos")
 	config.BranchName = c.String("branch-name")
