@@ -316,7 +316,7 @@ Oftentimes, you want finer-grained control over the exact repos you are going to
 
 ```
 git-xargs \
-  --commit-mesage "Update copyright year" \
+  --commit-message "Update copyright year" \
   --repos data/batch2.txt \
   "$(pwd)/scripts/update-copyright-year.sh"
 ```
@@ -340,7 +340,7 @@ arguments:
 
 ```
 git-xargs \
-  --commit-mesage "Update copyright year" \
+  --commit-message "Update copyright year" \
   --repo gruntwork-io/terragrunt \
   --repo gruntwork-io/terratest \
   --repo gruntwork-io/cloud-nuke \
@@ -354,7 +354,7 @@ use by piping them in via `stdin`, separating repo names with whitespace or newl
 
 ```
 echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
-  --commit-mesage "Update copyright year" \
+  --commit-message "Update copyright year" \
   "$(pwd)/scripts/update-copyright-year.sh"
 ```
 
@@ -374,6 +374,7 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
 | `--skip-archived-repos`  | If you want to exclude archived (read-only) repositories from the list of targeted repos, pass this flag.                                                                                                                                                                                                                                                                                                                      | Boolean | No       |
 | `--dry-run`              | If you are in the process of testing out `git-xargs` or your intial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run branch. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
 | `--max-concurrent-repos` | Limits the number of concurrent processed repositories. This is only useful if you encounter issues and need throttling when running on a very large number of repos. Default is `0` (Unlimited)                                                                                                                                                                                                                               | Integer | No       |
+| `--draft` | Whether to open pull requests in draft mode. Draft pull requests are available for public GitHub repositories and private repositories in GitHub tiered accounts. See [Draft Pull Requests](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests) for more details.  | Boolean | No |
 
 ## Best practices, tips and tricks
 

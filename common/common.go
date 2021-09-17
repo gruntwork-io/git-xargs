@@ -4,6 +4,7 @@ import "github.com/urfave/cli"
 
 const (
 	GithubOrgFlagName              = "github-org"
+	DraftPullRequestFlagName       = "draft"
 	DryRunFlagName                 = "dry-run"
 	SkipPullRequestsFlagName       = "skip-pull-requests"
 	SkipArchivedReposFlagName      = "skip-archived-repos"
@@ -24,6 +25,10 @@ var (
 	GenericGithubOrgFlag = cli.StringFlag{
 		Name:  GithubOrgFlagName,
 		Usage: "The Github organization to fetch all repositories from.",
+	}
+	GenericDraftPullRequestFlag = cli.BoolFlag{
+		Name:  DraftPullRequestFlagName,
+		Usage: "Whether to open pull requests in draft mode",
 	}
 	GenericDryRunFlag = cli.BoolFlag{
 		Name:  DryRunFlagName,
