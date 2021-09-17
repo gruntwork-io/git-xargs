@@ -435,8 +435,6 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		}
 	}
 
-	draft := config.Draft
-
 	// Configure pull request options that the Github client accepts when making calls to open new pull requests
 	newPR := &github.NewPullRequest{
 		Title:               github.String(titleToUse),
@@ -444,7 +442,7 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		Base:                github.String(repoDefaultBranch),
 		Body:                github.String(descriptionToUse),
 		MaintainerCanModify: github.Bool(true),
-		Draft:               github.Bool(draft),
+		Draft:               github.Bool(config.Draft),
 	}
 
 	// Make a pull request via the Github API
@@ -456,7 +454,6 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 			"Head":  branch,
 			"Base":  repoDefaultBranch,
 			"Body":  descriptionToUse,
-			"Draft": draft,
 		}).Debug("Error opening Pull request")
 
 		// Track pull request open failure
