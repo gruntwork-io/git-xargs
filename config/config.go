@@ -15,7 +15,7 @@ type GitXargsConfig struct {
 	DryRun                 bool
 	SkipPullRequests       bool
 	SkipArchivedRepos      bool
-	MaxConcurrentRepos	   int
+	MaxConcurrentRepos     int
 	BranchName             string
 	CommitMessage          string
 	PullRequestTitle       string

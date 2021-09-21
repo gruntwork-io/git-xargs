@@ -53,7 +53,7 @@ func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository
 	})
 
 	logger.WithFields(logrus.Fields{
-		"Repo":  repo.GetName(),
+		"Repo": repo.GetName(),
 	}).Debug(gitProgressBuffer)
 
 	if err != nil {
@@ -196,7 +196,7 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 	}
 
 	logger.WithFields(logrus.Fields{
-		"Repo":  remoteRepository.GetName(),
+		"Repo": remoteRepository.GetName(),
 	}).Debug(gitProgressBuffer)
 
 	pullErr := worktree.Pull(po)

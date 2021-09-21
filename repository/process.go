@@ -48,7 +48,7 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 // run report that is displayed in table format to the operator following each run
 func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
-	
+
 	// Create a new temporary directory in the default temp directory of the system, but append
 	// git-xargs-<repo-name> to it so that it's easier to find when you're looking for it
 	repositoryDir, localRepository, cloneErr := cloneLocalRepository(config, repo)
