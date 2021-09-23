@@ -47,10 +47,10 @@ var MockGithubRepositories = []*github.Repository{
 	},
 	&github.Repository{
 		Owner: &github.User{
-		Login: &ownerName,
+			Login: &ownerName,
 		},
-		Name:    &repoName4,
-		HTMLURL: &repoURL4,
+		Name:     &repoName4,
+		HTMLURL:  &repoURL4,
 		Archived: &archivedFlag,
 	},
 }
