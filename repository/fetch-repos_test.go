@@ -38,7 +38,7 @@ func TestGetFileDefinedRepos(t *testing.T) {
 	assert.NoError(t, reposLookupErr)
 }
 
-// TestGetReposByOrg ensures that you can pass a configuration specifying repo look up by Github Org to getReposByOrg
+// TestGetReposByOrg ensures that you can pass a configuration specifying repo look up by GitHub Org to getReposByOrg
 func TestGetReposByOrg(t *testing.T) {
 	t.Parallel()
 

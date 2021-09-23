@@ -49,6 +49,6 @@ func cleanupLocalTestRepoChanges(t *testing.T, config *config.GitXargsConfig) {
 	if err != nil {
 		t.Logf("cleanupLocalTestRepoChanges error deleting test branches: %+v\n", err)
 	} else {
-		t.Log("cleanupLocalTestRepoChanges succesfully deleted branches in local test repo")
+		t.Log("cleanupLocalTestRepoChanges successfully deleted branches in local test repo")
 	}
 }

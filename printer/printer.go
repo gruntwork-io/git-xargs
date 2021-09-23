@@ -40,7 +40,7 @@ func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunRepor
 	fmt.Println(runReport.Command)
 	fmt.Println()
 
-	// If the user selected repos via flatfile, print a table showing which repos they were
+	// If the user selected repos via a flat file, print a table showing which repos they were
 	if len(runReport.FileProvidedRepos) > 0 {
 		fmt.Println(" REPOS SUPPLIED VIA --repos FILE FLAG")
 		fileProvidedReposPrinter.Print(runReport.FileProvidedRepos)

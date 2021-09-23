@@ -63,7 +63,7 @@ func TestOperateOnRepos(t *testing.T) {
 	assert.NoError(t, cmdLineErr)
 }
 
-// TestGetpreferredOrderOfRepoSelections ensures the getPreferredOrderOfRepoSelections returns the expected method
+// TestGetPreferredOrderOfRepoSelections ensures the getPreferredOrderOfRepoSelections returns the expected method
 // for fetching repos given the three possible means of targeting repositories for processing
 func TestGetPreferredOrderOfRepoSelections(t *testing.T) {
 	t.Parallel()

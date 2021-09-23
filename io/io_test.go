@@ -25,7 +25,7 @@ func TestProcessAllowedReposCorrectlyParsesValidReposFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(allowedRepos), 3)
 
-	// Test that repo names are correctly parsed from the flat file by initiallly setting a map of each repo name
+	// Test that repo names are correctly parsed from the flat file by initially setting a map of each repo name
 	// to false, and then updating each entry to true as we find them in the flat file. At the end, all map entries should be true / seen
 	mapOfExpectedRepoNames := make(map[string]bool)
 	mapOfExpectedRepoNames["fetch"] = false
@@ -56,7 +56,7 @@ func TestProcessAllowedReposCorrectlyFiltersMalformedInput(t *testing.T) {
 	// be returned by the function as valid repos to operate on
 	assert.Equal(t, len(allowedRepos), 3)
 
-	// Test that repo names are correctly parsed from the flat file by initiallly setting a map of each repo name
+	// Test that repo names are correctly parsed from the flat file by initially setting a map of each repo name
 	// to false, and then updating each entry to true as we find them in the flat file. At the end, all map entries should be true / seen
 	mapOfExpectedRepoNames := make(map[string]bool)
 	mapOfExpectedRepoNames["fetch"] = false

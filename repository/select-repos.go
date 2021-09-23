@@ -25,7 +25,7 @@ const (
 
 // getPreferredOrderOfRepoSelections codifies the order in which flags will be preferred when the user supplied more
 // than one:
-// 1. --github-org is a string representing the Github org to page through via API for all repos.
+// 1. --github-org is a string representing the GitHub org to page through via API for all repos.
 // 2. --repos is a string representing a filepath to a repos file
 // 3. --repo is a string slice flag that can be called multiple times
 // 4. stdin allows you to pipe repos in from other CLI tools
@@ -43,8 +43,8 @@ func getPreferredOrderOfRepoSelections(config *config.GitXargsConfig) RepoSelect
 }
 
 // RepoSelection is a struct that presents a uniform interface to present to OperateRepos that converts
-// user-supplied repos in the format of <org-name>/<repo-name> to Github API response objects that we actually
-// pass into processRepos which does the git cloning, command execution, comitting and pull request opening
+// user-supplied repos in the format of <org-name>/<repo-name> to GitHub API response objects that we actually
+// pass into processRepos which does the git cloning, command execution, committing and pull request opening
 type RepoSelection struct {
 	SelectionType          RepoSelectionCriteria
 	AllowedRepos           []*types.AllowedRepo
@@ -115,8 +115,8 @@ func selectReposViaInput(config *config.GitXargsConfig) (*RepoSelection, error) 
 }
 
 // selectReposViaRepoFlag converts the string slice of repo flags provided via stdin or by invocations of the --repo
-// flag into the internal representation of AllowedRepo that we we use prior to fetching the corresponding repo from
-// Github
+// flag into the internal representation of AllowedRepo that we use prior to fetching the corresponding repo from
+// GitHub
 func selectReposViaRepoFlag(inputRepos []string) ([]*types.AllowedRepo, error) {
 	var allowedRepos []*types.AllowedRepo
 
@@ -133,29 +133,29 @@ func selectReposViaRepoFlag(inputRepos []string) ([]*types.AllowedRepo, error) {
 	return allowedRepos, nil
 }
 
-// fetchUserProvidedReposViaGithub converts repos provided as strings, already validated as being well-formed, into Github API repo objects that can be further processed
+// fetchUserProvidedReposViaGithub converts repos provided as strings, already validated as being well-formed, into GitHub API repo objects that can be further processed
 func fetchUserProvidedReposViaGithubAPI(githubClient auth.GithubClient, rs RepoSelection, stats *stats.RunStats) ([]*github.Repository, error) {
 	ar := rs.GetAllowedRepos()
 	return getFileDefinedRepos(githubClient, ar, stats)
 
 }
 
-// There are three ways to select repos to operate on via this tool:
-// 1. the --repo flag, which specifies a single repo, and which can be passed multiple times, e.g., --repo gruntwork-io/fetch --repo gruntwork-io/cloud-nuke, etc
-// 2. the --repos flag which specifies the path to the user-defined flatfile of repos in the format of 'gruntwork-io/cloud-nuke', one repo per line
-// 3. the --github-org flag which specifies the Github organization that should have all its repos fetched via API
+// OperateOnRepos acts as a switch, depending upon whether the user provided an explicit list of repos to operate.
 //
-// This function acts as a switch, depending upon whether or not the user provided an explicit list of repos to operate
+// There are three ways to select repos to operate on via this tool:
+// 1. the --repo flag, which specifies a single repo, and which can be passed multiple times, e.g., --repo gruntwork-io/fetch --repo gruntwork-io/cloud-nuke, etc.
+// 2. the --repos flag which specifies the path to the user-defined flat file of repos in the format of 'gruntwork-io/cloud-nuke', one repo per line.
+// 3. the --github-org flag which specifies the GitHub organization that should have all its repos fetched via API.
 //
 // However, even though there are two methods for users to select repos, we still only want a single uniform interface
 // for dealing with a repo throughout this tool, and that is the *github.Repository type provided by the go-github
-// library. Therefore, this function serves the purpose of creating that uniform interface, by looking up flatfile-provided
-// repos via go-github, so that we're only ever dealing with pointers to github.Repositories going forward
+// library. Therefore, this function serves the purpose of creating that uniform interface, by looking up flat file-provided
+// repos via go-github, so that we're only ever dealing with pointers to github.Repositories going forward.
 func OperateOnRepos(config *config.GitXargsConfig) error {
 
 	logger := logging.GetLogger("git-xargs")
 
-	// The set of github repositories the tool will actually process
+	// The set of GitHub repositories the tool will actually process
 	var reposToIterate []*github.Repository
 
 	// repoSelection is a representations of the user-supplied input, containing the repo organization and name
@@ -168,8 +168,8 @@ func OperateOnRepos(config *config.GitXargsConfig) error {
 	switch repoSelection.GetCriteria() {
 
 	case GithubOrganization:
-		// If githubOrganization is set, the user did not provide a flatfile or explicit repos via the -repo(s) flags, so we're just looking up all the Github
-		// repos via their Organization name via the Github API
+		// If githubOrganization is set, the user did not provide a flat file or explicit repos via the -repo(s) flags, so we're just looking up all the GitHub
+		// repos via their Organization name via the GitHub API
 		reposFetchedFromGithubAPI, err := getReposByOrg(config)
 		if err != nil {
 			logger.WithFields(logrus.Fields{
@@ -178,7 +178,7 @@ func OperateOnRepos(config *config.GitXargsConfig) error {
 			}).Debug("Failure looking up repos for organization")
 			return err
 		}
-		// We gather all the repos by fetching them from the Github API, paging through the results of the supplied organization
+		// We gather all the repos by fetching them from the GitHub API, paging through the results of the supplied organization
 		reposToIterate = reposFetchedFromGithubAPI
 
 		logger.Debugf("Using Github org: %s as source of repositories. Paging through Github API for repos.", config.GithubOrg)
@@ -191,7 +191,7 @@ func OperateOnRepos(config *config.GitXargsConfig) error {
 
 		reposToIterate = githubRepos
 
-		// Update count of number of repos the the tool read in from the provided file
+		// Update count of number of repos the tool read in from the provided file
 		config.Stats.SetFileProvidedRepos(repoSelection.GetAllowedRepos())
 
 	case ExplicitReposOnCommandLine, ReposViaStdIn:
@@ -217,7 +217,7 @@ func OperateOnRepos(config *config.GitXargsConfig) error {
 			"Repository": repo.GetName(),
 		}).Debug("Repo will have all targeted scripts run against it")
 	}
-	// Now that we've gathered up the repos we're going to operate on, do the actual processing by running the
+	// Now that we've gathered the repos we're going to operate on, do the actual processing by running the
 	// user-defined scripts against each repo and handling the resulting git operations that follow
 	if err := ProcessRepos(config, reposToIterate); err != nil {
 		return err

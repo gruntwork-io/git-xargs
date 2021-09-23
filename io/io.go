@@ -11,9 +11,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// This utility function accepts a path to the flatfile in which the user has defined their explicitly allowed repos
-// It expects repos to be defined one per line in the following format: `gruntwork-io/cloud-nuke` with optional commas
-// Stray single and double quotes are also handled and stripped out if they are encountered, and spacing is irrelevant
+// ProcessAllowedRepos accepts a path to the flat file in which the user has defined their explicitly allowed repos.
+// It expects repos to be defined one per line in the following format: `gruntwork-io/cloud-nuke` with optional commas.
+// Stray single and double quotes are also handled and stripped out if they are encountered, and spacing is irrelevant.
 func ProcessAllowedRepos(filepath string) ([]*types.AllowedRepo, error) {
 	logger := logging.GetLogger("git-xargs")
 

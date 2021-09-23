@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// getFileDefinedRepos converts user-supplied repositories to Github API response objects that can be further processed
+// getFileDefinedRepos converts user-supplied repositories to GitHub API response objects that can be further processed
 func getFileDefinedRepos(GithubClient auth.GithubClient, allowedRepos []*types.AllowedRepo, tracker *stats.RunStats) ([]*github.Repository, error) {
 	logger := logging.GetLogger("git-xargs")
 
@@ -41,7 +41,7 @@ func getFileDefinedRepos(GithubClient auth.GithubClient, allowedRepos []*types.A
 			if resp.StatusCode == 404 {
 				// This repo does not exist / could not be fetched as named, so we won't include it in the list of repos to process
 
-				// create an empty github repo object to satisfy the stats tracking interface
+				// create an empty GitHub repo object to satisfy the stats tracking interface
 				missingRepo := &github.Repository{
 					Owner: &github.User{Login: github.String(allowedRepo.Organization)},
 					Name:  github.String(allowedRepo.Name),
@@ -65,7 +65,7 @@ func getFileDefinedRepos(GithubClient auth.GithubClient, allowedRepos []*types.A
 	return allRepos, nil
 }
 
-// getReposByOrg takes the string name of a Github organization and pages through the API to fetch all of its repositories
+// getReposByOrg takes the string name of a GitHub organization and pages through the API to fetch all of its repositories
 func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) {
 
 	logger := logging.GetLogger("git-xargs")
