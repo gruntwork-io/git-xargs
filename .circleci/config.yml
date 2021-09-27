@@ -23,6 +23,17 @@ install_gruntwork_utils: &install_gruntwork_utils
     --go-version ${GOLANG_VERSION} 
 version: 2
 jobs:
+  pre-commit:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          command: |
+            pip install pre-commit
+            go get golang.org/x/tools/cmd/goimports
+            export GOPATH=~/go/bin && export PATH=$PATH:$GOPATH
+            pre-commit install
+            pre-commit run --all-files
   test:
     <<: *defaults
     steps:
@@ -50,7 +61,15 @@ workflows:
   version: 2
   build-and-test:
     jobs:
+      - pre-commit:
+          filters:
+            tags:
+              only: /^v.*/
+          context:
+            - Gruntwork Admin
       - test:
+          requires:
+            - pre-commit
           filters:
             tags:
               only: /^v.*/

@@ -13,10 +13,10 @@ import (
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-// convertStringToAllowedRepo accepts a user-supplied repo in the format of <github-organization>/<repo-name>
-// It trims out stray characters that we might expect in a repos file that was copy-pasted from json or an array
+// ConvertStringToAllowedRepo accepts a user-supplied repo in the format of <github-organization>/<repo-name>.
+// It trims out stray characters that we might expect in a repos file that was copy-pasted from json or an array,
 // and it only returns an AllowedRepo if the user-supplied input looks valid. Note this does not actually look
-// up the repo via the Github API because that's slow and we do it later when converting repo names to Github reponse structs
+// up the repo via the GitHub API because that's slow, and we do it later when converting repo names to GitHub response structs.
 func ConvertStringToAllowedRepo(repoInput string) *types.AllowedRepo {
 
 	logger := logging.GetLogger("git-xargs")

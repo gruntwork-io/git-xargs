@@ -14,7 +14,7 @@
 
 ![git-xargs CLI](./docs/git-xargs-banner.png)
 
-`git-xargs` is a command-line tool (CLI) for making updates across multiple Github repositories with a single command. You give `git-xargs`:
+`git-xargs` is a command-line tool (CLI) for making updates across multiple GitHub repositories with a single command. You give `git-xargs`:
 
 1. a script or a command to run
 2. a list of repos
@@ -32,7 +32,7 @@ Git-xargs leverages goroutines to perform the repo-updating work in parallel, so
 For example, have you ever needed to add a particular file across many repos at once? Or to run a search and replace to change your company or product name across 150 repos with one command? What about upgrading Terraform modules to all use the latest syntax? How about adding a CI/CD configuration file, if it doesn't already exist, or modifying it in place if it does, but only on a subset of repositories you select?
 You can handle these use cases and many more with a single `git-xargs` command.
 
-## Example: writing a new file to every repo in your github organization
+## Example: writing a new file to every repo in your GitHub organization
 
 As an example, let's use `git-xargs` to create a new file in every repo:
 
@@ -164,19 +164,22 @@ $ brew install git-xargs
 
 ### Installation option 3: Run go get
 
-1. Ensure you have Golang installed and working properly on your system. [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
+1. **Ensure you have Golang installed and working properly on your system.** [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
 
-1. **Run go get to install the latest release of git-xargs**
+1. **Run go get to install the latest release of git-xargs**:
+     ```bash
+     go get github.com/gruntwork-io/git-xargs
+     ```
 
-`go get github.com/gruntwork-io/git-xargs`
+1. **Alternatively, use go get to install a specific release of git-xargs**:
 
-1. **Alternatively, use go get to install a specific release of git-xargs**
-
-`go get github.com/gruntwork-io/git-xargs@v0.0.5`
+     ```bash
+     go get github.com/gruntwork-io/git-xargs@v0.0.5
+     ```
 
 ### Try it out!
 
-1. **Export a valid Github token**. See the guide on [Github personal access
+1. **Export a valid GitHub token**. See the guide on [Github personal access
    tokens](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
    for information on how to generate one. For example, on Linux or Mac, you'd run:
 
@@ -185,7 +188,7 @@ $ brew install git-xargs
       ```
 
 1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in
-   every repo in your Github organization. Follow the same pattern to start running your own scripts and commands
+   every repo in your GitHub organization. Follow the same pattern to start running your own scripts and commands
    against your own repos!
 
       ```bash
@@ -206,12 +209,12 @@ The API for `git-xargs` is:
 git-xargs [-flags] <CMD>
 ```
 
-Where `CMD` is either the full path to a (Bash, Python, Ruby) etc script on your local system or a binary. Note that, because the tool supports Bash scripts, Ruby scripts, Python scripts, etc, you must include the full filename for any given script, including its file extension.
+Where `CMD` is either the full path to a (Bash, Python, Ruby, etc) script on your local system or a binary. Note that, because the tool supports Bash scripts, Ruby scripts, Python scripts, etc, you must include the full filename for any given script, including its file extension.
 
 In other words, all the following usages are valid:
 
 ```
-git-xargs --repo --repo gruntwork-io/cloud-nuke \
+git-xargs --repo gruntwork-io/cloud-nuke \
    --repo gruntwork-io/terraform-aws-eks \
    --branch-name my-branch \
    /usr/local/bin/my-bash-script.sh
@@ -258,7 +261,7 @@ h Name=refs/heads/master Repo=terraform-aws-eks
 
 ## Branch behavior
 
-Passing the `--branch-name` (-b) flag is required when running `git-xargs`. If you specify the name of a branch that exists on your remote, its latest changes will be pulled locally prior to your command or script being run. If you specify the name of a new branch that does not yet exist on your remote, it will be created locally and pushed once your changes are committed.
+Passing the `--branch-name` (`-b`) flag is required when running `git-xargs`. If you specify the name of a branch that exists on your remote, its latest changes will be pulled locally prior to your command or script being run. If you specify the name of a new branch that does not yet exist on your remote, it will be created locally and pushed once your changes are committed.
 
 ## Default repository branch
 
@@ -297,9 +300,9 @@ If you need to compose more complex behavior into a single pull request, write a
 `git-xargs` supports **four** methods of targeting repos to run your selected scripts against. They are processed in
 the order listed below, with whichever option is found first being used, and all others after it being ignored.
 
-### Option #1: Github organization lookup
+### Option #1: GitHub organization lookup
 
-If you want the tool to find and select every repo in your Github organization, you can pass the name of your organization via the `--github-org` flag:
+If you want the tool to find and select every repo in your GitHub organization, you can pass the name of your organization via the `--github-org` flag:
 
 ```
 git-xargs \
@@ -308,7 +311,7 @@ git-xargs \
   "$(pwd)/scripts/update-copyright-year.sh"
 ```
 
-This will signal the tool to look up, and page through, every repository in your Github organization and execute the scripts you passed via the `--scripts` flag.
+This will signal the tool to look up, and page through, every repository in your GitHub organization and execute the scripts you passed.
 
 ### Option #2: Flat file of repository names
 
@@ -362,19 +365,20 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
 
 `git-xargs` exposes several flags that allow you to customize its behavior to better suit your needs. For the latest info on flags, you should run `git-xargs --help`. However, a couple of the flags are worth explaining more in depth here:
 
-| Flag                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                    | Type    | Required |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------- |
-| `--branch-name`          | You must specify the name of the branch to make your local and remote changes on. You can further control branching behavior via `--skip-pull-requests` as explained below                                                                                                                                                                                                                                                     | String  | Yes      |
-| `--loglevel`             | Specify the log level of messages git-xargs should print to STDOUT at runtime. By default, this is INFO - so only INFO level messages will be visible. Pass DEBUG to see runtime errors encountered by your scripts or commands. Accepted levels are TRACE, DEBUG, INFO, WARNING, ERROR, FATAL and PANIC. Default: `INFO`.                                                                                                                       | String  | Yes      |
-| `--repos`                | If you want to specify many repos and manage them in files (which makes batching and testing easier) then use this flag to pass the filepath to a repos file. See [the repos file format](#option-2-flat-file-of-repository-names) for more information                                                                                                                                                                        | String  | No       |
-| `--repo`                 | Use this flag to specify a single repo, e.g., `--repo gruntwork-io/cloud-nuke`. Can be passed multiple times to target several repos                                                                                                                                                                                                                                                                                           | String  | No       |
-| `--github-org`           | If you want to target every repo in a Github org that your GITHUB_OAUTH_TOKEN has access to, pass the name of the Organization with this flag, to page through every repo via the Github API and target it                                                                                                                                                                                                                     | String  | No       |
-| `--commit-message`       | The commit message to use when creating commits. If you supply this flag, but neither the optional `--pull-request-title` or `--pull-request-description` flags, then the commit message value will be used for all three.                                                                                                                                                                                                     | String  | No       |
-| `--skip-pull-requests`   | If you don't want any pull requests opened, but would rather have your changes committed directly to your specified branch, pass this flag. Note that it won't work if your Github repo is configured with branch protections on the branch you're trying to commit directly to!                                                                                                                                               | Boolean | No       |
-| `--skip-archived-repos`  | If you want to exclude archived (read-only) repositories from the list of targeted repos, pass this flag.                                                                                                                                                                                                                                                                                                                      | Boolean | No       |
-| `--dry-run`              | If you are in the process of testing out `git-xargs` or your intial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run branch. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
-| `--max-concurrent-repos` | Limits the number of concurrent processed repositories. This is only useful if you encounter issues and need throttling when running on a very large number of repos. Default is `0` (Unlimited)                                                                                                                                                                                                                               | Integer | No       |
+| Flag                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                   | Type    | Required |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------- |
+| `--branch-name`          | You must specify the name of the branch to make your local and remote changes on. You can further control branching behavior via `--skip-pull-requests` as explained below                                                                                                                                                                                                                                                    | String  | Yes      |
+| `--loglevel`             | Specify the log level of messages git-xargs should print to STDOUT at runtime. By default, this is INFO - so only INFO level messages will be visible. Pass DEBUG to see runtime errors encountered by your scripts or commands. Accepted levels are TRACE, DEBUG, INFO, WARNING, ERROR, FATAL and PANIC. Default: `INFO`.                                                                                                    | String  | No       |
+| `--repos`                | If you want to specify many repos and manage them in files (which makes batching and testing easier) then use this flag to pass the filepath to a repos file. See [the repos file format](#option-2-flat-file-of-repository-names) for more information                                                                                                                                                                       | String  | No       |
+| `--repo`                 | Use this flag to specify a single repo, e.g., `--repo gruntwork-io/cloud-nuke`. Can be passed multiple times to target several repos                                                                                                                                                                                                                                                                                          | String  | No       |
+| `--github-org`           | If you want to target every repo in a Github org that your GITHUB_OAUTH_TOKEN has access to, pass the name of the Organization with this flag, to page through every repo via the Github API and target it                                                                                                                                                                                                                    | String  | No       |
+| `--commit-message`       | The commit message to use when creating commits. If you supply this flag, but neither the optional `--pull-request-title` or `--pull-request-description` flags, then the commit message value will be used for all three.                                                                                                                                                                                                    | String  | No       |
+| `--skip-pull-requests`   | If you don't want any pull requests opened, but would rather have your changes committed directly to your specified branch, pass this flag. Note that it won't work if your Github repo is configured with branch protections on the branch you're trying to commit directly to!                                                                                                                                              | Boolean | No       |
+| `--skip-archived-repos`  | If you want to exclude archived (read-only) repositories from the list of targeted repos, pass this flag.                                                                                                                                                                                                                                                                                                                     | Boolean | No       |
+| `--dry-run`              | If you are in the process of testing out `git-xargs` or your initial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run flag. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
+| `--max-concurrent-repos` | Limits the number of concurrent processed repositories. This is only useful if you encounter issues and need throttling when running on a very large number of repos. Default is `0` (Unlimited)                                                                                                                                                                                                                              | Integer | No       |
 | `--draft` | Whether to open pull requests in draft mode. Draft pull requests are available for public GitHub repositories and private repositories in GitHub tiered accounts. See [Draft Pull Requests](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests) for more details.  | Boolean | No |
+
 
 ## Best practices, tips and tricks
 
@@ -384,7 +388,7 @@ Write your script as if it's operating on a single repo, then target many repos 
 
 ### Handling prerequisites and third party binaries
 
-It is currently assumed that bash script authors will be responsible for checking for prequisites within their own scripts. If you are adding a new bash script to accomplish some new task across repos, consider using the [Gruntwork bash-commons assert_is_installed pattern](https://github.com/gruntwork-io/bash-commons/blob/3cb3c7160fb72b7411af184300bf077caede37e4/modules/bash-commons/src/assert.sh#L15) to ensure the operator has any required binaries installed.
+It is currently assumed that bash script authors will be responsible for checking for prerequisites within their own scripts. If you are adding a new bash script to accomplish some new task across repos, consider using the [Gruntwork bash-commons assert_is_installed pattern](https://github.com/gruntwork-io/bash-commons/blob/3cb3c7160fb72b7411af184300bf077caede37e4/modules/bash-commons/src/assert.sh#L15) to ensure the operator has any required binaries installed.
 
 ### Grouping your repos into separate batches
 
@@ -396,12 +400,12 @@ By breaking your target repos into separate batches, (batch1.txt, batch2.txt, ba
 This section provides a more in-depth look at how the `git-xargs` tool works under the hood.
 
 1. git-xargs will clone each of your selected repos to your machine to the `/tmp/` directory of your local machine. The name of each repo, plus a random number each run, are concatenated together to form the local clone name to make the local repo easier to find in case you need to debug your script locally, e.g., `terraform-aws-module-security3978298`.
-1. it will checkout a local branch (whose name you can optionally specify with the `--branch-name` flag)
+1. it will checkout a local branch (whose name you must specify with the `--branch-name` flag)
 1. it will run all your selected scripts against your selected repos
 1. it will commit any changes in each of the repos (with a commit message you can optionally specify via the `--commit-message` flag)
 1. it will push your local branch with your new commits to your repo's remote
-1. it will call the Github API to open a pull request with a title and description that you can optionally specify via the `--pull-request-title` and `--pull-request-description` flags, respectively, unless you pass the `--skip-pull-requests` flag
-1. it will print out a detailed run summary to STDOUT that explains exactly what happened with each repo and provide links to successfully opened pull requests that you can quickly follow from your terminal. If any repos encountered errors at runtime (whether they weren't able to be cloned, or script errors were encountered during processing, etc) all of this will be spelled out in detail in the final report so you know exactly what succeeded and what went wrong.
+1. it will call the GitHub API to open a pull request with a title and description that you can optionally specify via the `--pull-request-title` and `--pull-request-description` flags, respectively, unless you pass the `--skip-pull-requests` flag
+1. it will print out a detailed run summary to STDOUT that explains exactly what happened with each repo and provide links to successfully opened pull requests that you can quickly follow from your terminal. If any repos encountered errors at runtime (whether they weren't able to be cloned, or script errors were encountered during processing, etc) all of this will be spelled out in detail in the final report, so you know exactly what succeeded and what went wrong.
 
 ## Tasks this tool is well-suited for
 

@@ -31,7 +31,7 @@ type GitXargsConfig struct {
 	Stats                  *stats.RunStats
 }
 
-// NewGitXargsConfig sets reasonable defaults for a GitXargsConfig and returns a pointer to a the config
+// NewGitXargsConfig sets reasonable defaults for a GitXargsConfig and returns a pointer to the config
 func NewGitXargsConfig() *GitXargsConfig {
 	return &GitXargsConfig{
 		Draft:                  false,

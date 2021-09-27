@@ -89,7 +89,7 @@ func parseSliceFromReader(reader io.Reader) ([]string, error) {
 // handleRepoProcessing encapsulates the main processing logic for the supplied repos and printing the run report that
 // is built up throughout the processing
 func handleRepoProcessing(config *config.GitXargsConfig) error {
-	// Track whether or not pull requests were skipped
+	// Track whether pull requests were skipped
 	config.Stats.SetSkipPullRequests(config.SkipPullRequests)
 
 	// Update raw command supplied
@@ -125,7 +125,7 @@ func sanityCheckInputs(config *config.GitXargsConfig) error {
 	return nil
 }
 
-// runGitXargs is the urfave cli app's Action that is called when the user executes the binary
+// RunGitXargs is the urfave cli app's Action that is called when the user executes the binary
 func RunGitXargs(c *cli.Context) error {
 	// If someone calls us with no args at all, show the help text and exit
 	if !c.Args().Present() {

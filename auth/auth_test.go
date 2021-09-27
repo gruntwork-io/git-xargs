@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestConfigureGithubClient performs a sanity check that you can configure a production Github API client
+// TestConfigureGithubClient performs a sanity check that you can configure a production GitHub API client
 func TestConfigureGithubClient(t *testing.T) {
 	t.Parallel()
 
@@ -16,7 +16,7 @@ func TestConfigureGithubClient(t *testing.T) {
 }
 
 // TestNoGithubOauthTokenPassed temporarily drops the existing GITHUB_OAUTH_TOKEN env var to ensure that the validation
-// code throws an error when it is mising. It then replaces it. This is therefore the one test that cannot be run in
+// code throws an error when it is missing. It then replaces it. This is therefore the one test that cannot be run in
 // parallel.
 func TestNoGithubOAuthTokenPassed(t *testing.T) {
 	token := os.Getenv("GITHUB_OAUTH_TOKEN")

@@ -8,12 +8,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Loop through every repo we've selected and use a WaitGroup so that the processing can happen in parallel
+// ProcessRepos loops through every repo we've selected and use a WaitGroup so that the processing can happen in parallel
 func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 
 	// Limit the number of concurrent goroutines using the MaxConcurrentRepos config value
-	// MaxConcurrentRepos == 0 will fallback to unlimited (previous default behavior)
+	// MaxConcurrentRepos == 0 will fall back to unlimited (previous default behavior)
 	wg := sizedwaitgroup.New(gitxargsConfig.MaxConcurrentRepos)
 
 	for _, repo := range repos {
@@ -21,7 +21,7 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
 			defer wg.Done()
 			// For each repo, run the supplied command against it and, if it succeeds without error,
-			// commit the changes, push the local branch to remote and use the Github API to open a pr
+			// commit the changes, push the local branch to remote and use the GitHub API to open a pr
 			processErr := processRepo(gitxargsConfig, repo)
 			if processErr != nil {
 				logger.WithFields(logrus.Fields{
@@ -43,12 +43,12 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 // 4. Look up any worktree changes (deleted files, modified files, new and untracked files) and ADD THEM ALL to the git stage
 // 5. Commit these changes with the optionally configurable git commit message, or fall back to the default if it was not provided by the user
 // 6. Push the branch containing the new commit to the remote origin
-// 7. Via the Github API, open a pull request of the newly pushed branch against the main branch of the repo
+// 7. Via the GitHub API, open a pull request of the newly pushed branch against the main branch of the repo
 // 8. Track all successfully opened pull requests via the stats tracker so that we can print them out as part of our final
 // run report that is displayed in table format to the operator following each run
 func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
-	
+
 	// Create a new temporary directory in the default temp directory of the system, but append
 	// git-xargs-<repo-name> to it so that it's easier to find when you're looking for it
 	repositoryDir, localRepository, cloneErr := cloneLocalRepository(config, repo)
@@ -63,7 +63,7 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 		return headRefErr
 	}
 
-	// Get the worktree for the given local repository so we can examine any changes made by script operations
+	// Get the worktree for the given local repository, so we can examine any changes made by script operations
 	worktree, worktreeErr := getLocalWorkTree(repositoryDir, localRepository, repo)
 
 	if worktreeErr != nil {

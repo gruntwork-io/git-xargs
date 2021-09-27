@@ -38,7 +38,7 @@ func TestGetFileDefinedRepos(t *testing.T) {
 	assert.NoError(t, reposLookupErr)
 }
 
-// TestGetReposByOrg ensures that you can pass a configuration specifying repo look up by Github Org to getReposByOrg
+// TestGetReposByOrg ensures that you can pass a configuration specifying repo look up by GitHub Org to getReposByOrg
 func TestGetReposByOrg(t *testing.T) {
 	t.Parallel()
 
@@ -63,6 +63,6 @@ func TestSkipArchivedRepos(t *testing.T) {
 
 	githubRepos, reposByOrgLookupErr := getReposByOrg(config)
 
-	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories) -1)
+	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories)-1)
 	assert.NoError(t, reposByOrgLookupErr)
 }
