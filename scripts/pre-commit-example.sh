@@ -18,7 +18,7 @@ EOF
 echo "Running pre-commit example.sh..."
 
 if [[ ! -f .pre-commit-config.yaml ]]; then 
-	echo ".pre-commit-conifg.yaml file does not already exist. Adding it now..."
+	echo ".pre-commit-config.yaml file does not already exist. Adding it now..."
 	add_precommit
 else 
 	echo "Found existing .pre-commit-config.yaml file. Nothing to do."

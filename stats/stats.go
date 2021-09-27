@@ -20,13 +20,13 @@ const (
 	TargetBranchNotFound types.Event = "target-branch-not-found"
 	// TargetBranchAlreadyExists denotes the special branch used by this tool was already found (so it was likely already created by a previous run)
 	TargetBranchAlreadyExists types.Event = "target-branch-already-exists"
-	// TargetBranchLookupErr denotes an issue performing the lookup via Github API for the target branch - an API call failure
+	// TargetBranchLookupErr denotes an issue performing the lookup via GitHub API for the target branch - an API call failure
 	TargetBranchLookupErr types.Event = "target-branch-lookup-err"
-	// TargetBranchSuccessfullyCreated denotes a repo for which the target branch was created via Github API call
+	// TargetBranchSuccessfullyCreated denotes a repo for which the target branch was created via GitHub API call
 	TargetBranchSuccessfullyCreated types.Event = "target-branch-successfully-created"
-	// FetchedViaGithubAPI denotes a repo was successfully listed by calling the Github API
+	// FetchedViaGithubAPI denotes a repo was successfully listed by calling the GitHub API
 	FetchedViaGithubAPI types.Event = "fetch-via-github-api"
-	// RepoSuccessfullyCloned denotes a repo that was able to be cloned to the local filesystem of the operator's machine
+	// RepoSuccessfullyCloned denotes a repo that was cloned to the local filesystem of the operator's machine
 	RepoSuccessfullyCloned types.Event = "repo-successfully-cloned"
 	// RepoFailedToClone denotes that for whatever reason we were unable to clone the repo to the local system
 	RepoFailedToClone types.Event = "repo-failed-to-clone"
@@ -52,7 +52,7 @@ const (
 	PushBranchFailed types.Event = "push-branch-failed"
 	// PushBranchSkipped denotes a repo whose local branch was not pushed due to the --dry-run flag being set
 	PushBranchSkipped types.Event = "push-branch-skipped"
-	// RepoNotExists denotes a repo + org combo that was supplied via file but could not be successfully looked up via the Github API (returned a 404)
+	// RepoNotExists denotes a repo + org combo that was supplied via file but could not be successfully looked up via the GitHub API (returned a 404)
 	RepoNotExists types.Event = "repo-not-exists"
 	// PullRequestOpenErr denotes a repo whose pull request containing config changes could not be made successfully
 	PullRequestOpenErr types.Event = "pull-request-open-error"
@@ -84,7 +84,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: WorktreeStatusCheckFailed, Description: "Repos for which the git status command failed following command execution"},
 	{Event: WorktreeStatusDirty, Description: "Repos that showed file changes to their working directory following command execution"},
 	{Event: WorktreeStatusClean, Description: "Repos that showed NO file changes to their working directory following command execution"},
-	{Event: CommitChangesFailed, Description: "Repos whose file changes failed to be comitted for some reason"},
+	{Event: CommitChangesFailed, Description: "Repos whose file changes failed to be committed for some reason"},
 	{Event: PushBranchFailed, Description: "Repos whose tool-specific branch containing changes failed to push to remote origin"},
 	{Event: PushBranchSkipped, Description: "Repos whose local branch was not pushed because the --dry-run flag was set"},
 	{Event: RepoNotExists, Description: "Repos that were supplied by user but don't exist (404'd) via Github API"},
@@ -149,14 +149,14 @@ func (r *RunStats) GetPullRequests() map[string]string {
 	return r.pulls
 }
 
-// SetFileProvidedRepos sets the number of repos that were provided via file by the user on startup (as opposed to looked up via Github API via the --github-org flag)
+// SetFileProvidedRepos sets the number of repos that were provided via file by the user on startup (as opposed to looked up via GitHub API via the --github-org flag)
 func (r *RunStats) SetFileProvidedRepos(fileProvidedRepos []*types.AllowedRepo) {
 	for _, ar := range fileProvidedRepos {
 		r.fileProvidedRepos = append(r.fileProvidedRepos, ar)
 	}
 }
 
-// GetFileProvidedRepos returns a slice of the repos that were provided via the --repos flag (as opposed to looked up via the Github API via the --github-org flag)
+// GetFileProvidedRepos returns a slice of the repos that were provided via the --repos flag (as opposed to looked up via the GitHub API via the --github-org flag)
 func (r *RunStats) GetFileProvidedRepos() []*types.AllowedRepo {
 	return r.fileProvidedRepos
 }
@@ -168,22 +168,22 @@ func (r *RunStats) SetRepoFlagProvidedRepos(repoFlagProvidedRepos []*types.Allow
 	}
 }
 
-// SetSkipPullRequests tracks whether or not the user specified that pull requests should be skipped (in favor of committing and pushing directly to the specified branch)
+// SetSkipPullRequests tracks whether the user specified that pull requests should be skipped (in favor of committing and pushing directly to the specified branch)
 func (r *RunStats) SetSkipPullRequests(skipPullRequests bool) {
 	r.skipPullRequests = skipPullRequests
 }
 
-// SetRawCommand sets the user-supplied command to be run againt the targeted repos
+// SetCommand sets the user-supplied command to be run against the targeted repos
 func (r *RunStats) SetCommand(c []string) {
 	r.command = c
 }
 
-// GetMultiple returns the slice of pointers to Github repositories filed under the provided event's key
+// GetMultiple returns the slice of pointers to GitHub repositories filed under the provided event's key
 func (r *RunStats) GetMultiple(event types.Event) []*github.Repository {
 	return r.repos[event]
 }
 
-// TrackSingle accepts an types.Event to associate with the supplied repo so that a final report can be generated at the end of each run
+// TrackSingle accepts a types.Event to associate with the supplied repo so that a final report can be generated at the end of each run
 func (r *RunStats) TrackSingle(event types.Event, repo *github.Repository) {
 	// TrackSingle is called from multiple concurrent writing goroutines, so we need to lock access to the underlying map
 	defer r.mutex.Unlock()
@@ -191,7 +191,7 @@ func (r *RunStats) TrackSingle(event types.Event, repo *github.Repository) {
 	r.repos[event] = TrackEventIfMissing(r.repos[event], repo)
 }
 
-// Tracktypes.EventIfMissing prevents the addition of duplicates to the tracking slices. Repos may end up with file changes
+// TrackEventIfMissing prevents the addition of duplicates to the tracking slices. Repos may end up with file changes
 // for example, from multiple command runs, so we don't need the same repo repeated multiple times in the final report
 func TrackEventIfMissing(slice []*github.Repository, repo *github.Repository) []*github.Repository {
 	for _, existingRepo := range slice {
@@ -210,7 +210,7 @@ func (r *RunStats) TrackPullRequest(repoName, prURL string) {
 	r.pulls[repoName] = prURL
 }
 
-// TrackMultiple accepts an types.Event and a slice of pointers to Github repos that will all be associated with that event
+// TrackMultiple accepts a types.Event and a slice of pointers to GitHub repos that will all be associated with that event
 func (r *RunStats) TrackMultiple(event types.Event, repos []*github.Repository) {
 	for _, repo := range repos {
 		r.TrackSingle(event, repo)

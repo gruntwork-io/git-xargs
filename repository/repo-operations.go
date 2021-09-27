@@ -23,7 +23,7 @@ import (
 	"github.com/gruntwork-io/go-commons/logging"
 )
 
-// cloneLocalRepository clones a remote Github repo via SSH to a local temporary directory so that the supplied command
+// cloneLocalRepository clones a remote GitHub repo via SSH to a local temporary directory so that the supplied command
 // can be run against the repo locally and any git changes handled thereafter. The local directory has
 // git-xargs-<repo-name> appended to it to make it easier to find when you are looking for it while debugging
 func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository) (string, *git.Repository, error) {
@@ -204,7 +204,7 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 	if pullErr != nil {
 
 		if pullErr == plumbing.ErrReferenceNotFound {
-			// The suppled branch just doesn't exist yet on the remote - this is not a fatal error and will
+			// The supplied branch just doesn't exist yet on the remote - this is not a fatal error and will
 			// allow the new branch to be pushed in pushLocalBranch
 			config.Stats.TrackSingle(stats.BranchRemoteDidntExistYet, remoteRepository)
 			return branchName, nil
@@ -263,7 +263,7 @@ func updateRepo(config *config.GitXargsConfig, repositoryDir string, worktree *g
 		return pushBranchErr
 	}
 
-	// Open a pull request on Github, of the recently pushed branch against the repository default branch
+	// Open a pull request on GitHub, of the recently pushed branch against the repository default branch
 	openPullRequestErr := openPullRequest(config, remoteRepository, branchName)
 	if openPullRequestErr != nil {
 		return openPullRequestErr
@@ -333,8 +333,8 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 	return nil
 }
 
-// pushLocalBranch pushes the branch in the local clone of the /tmp/ directory repository to the Github remote origin
-// so that a pull request can be opened against it via the Github API
+// pushLocalBranch pushes the branch in the local clone of the /tmp/ directory repository to the GitHub remote origin
+// so that a pull request can be opened against it via the GitHub API
 func pushLocalBranch(config *config.GitXargsConfig, remoteRepository *github.Repository, localRepository *git.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 
@@ -379,7 +379,7 @@ func pushLocalBranch(config *config.GitXargsConfig, remoteRepository *github.Rep
 	return nil
 }
 
-// Attempt to open a pull request via the Github API, of the supplied branch specific to this tool, against the main
+// Attempt to open a pull request via the GitHub API, of the supplied branch specific to this tool, against the main
 // branch for the remote origin
 func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, branch string) error {
 	logger := logging.GetLogger("git-xargs")
@@ -435,7 +435,7 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		}
 	}
 
-	// Configure pull request options that the Github client accepts when making calls to open new pull requests
+	// Configure pull request options that the GitHub client accepts when making calls to open new pull requests
 	newPR := &github.NewPullRequest{
 		Title:               github.String(titleToUse),
 		Head:                github.String(branch),
@@ -444,7 +444,7 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		MaintainerCanModify: github.Bool(true),
 	}
 
-	// Make a pull request via the Github API
+	// Make a pull request via the GitHub API
 	pr, _, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
 
 	if err != nil {

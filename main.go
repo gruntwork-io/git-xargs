@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// This variable is set at build time using -ldflags parameters. For example, we typically set this flag in circle.yml
+// VERSION is set at build time using -ldflags parameters. For example, we typically set this flag in circle.yml
 // to the latest Git tag when building our Go apps:
 //
 // build-go-binaries --app-name my-app --dest-path bin --ld-flags "-X main.VERSION=$CIRCLE_TAG"
@@ -42,7 +42,7 @@ func setupApp() *cli.App {
 	app := entrypoint.NewApp()
 	entrypoint.HelpTextLineWidth = 120
 
-	// Override the CLI FlagEnvHinter so it only returns the Usage text of the Flag and doesn't apend the envVar text. Original func https://github.com/urfave/cli/blob/master/flag.go#L652
+	// Override the CLI FlagEnvHinter, so it only returns the Usage text of the Flag and doesn't append the envVar text. Original func https://github.com/urfave/cli/blob/master/flag.go#L652
 	cli.FlagEnvHinter = func(envVar, str string) string {
 		return str
 	}

@@ -55,7 +55,7 @@ var MockGithubRepositories = []*github.Repository{
 	},
 }
 
-// This mocks the PullRequest service in go-github that is used in production to call the associated Github endpoint
+// This mocks the PullRequest service in go-github that is used in production to call the associated GitHub endpoint
 type mockGithubPullRequestService struct {
 	PullRequest *github.PullRequest
 	Response    *github.Response
@@ -69,7 +69,7 @@ func (m mockGithubPullRequestService) List(ctx context.Context, owner string, re
 	return []*github.PullRequest{m.PullRequest}, m.Response, nil
 }
 
-// This mocks the Repositories service in go-github that is used in production to call the associated Github endpoint
+// This mocks the Repositories service in go-github that is used in production to call the associated GitHub endpoint
 type mockGithubRepositoriesService struct {
 	Repository   *github.Repository
 	Repositories []*github.Repository
@@ -84,12 +84,12 @@ func (m mockGithubRepositoriesService) ListByOrg(ctx context.Context, org string
 	return m.Repositories, m.Response, nil
 }
 
-// A convenience method to return a valid GithubClient configured for testing purposes, complete with the mocked services
+// ConfigureMockGithubClient returns a valid GithubClient configured for testing purposes, complete with the mocked services
 func ConfigureMockGithubClient() auth.GithubClient {
-	// Call the same NewClient method that is used by the actual CLI to obtain a Github client that calls the
-	// Github API. In testing, however, we just implement the mock services above to satisfy the interfaces required
+	// Call the same NewClient method that is used by the actual CLI to obtain a GitHub client that calls the
+	// GitHub API. In testing, however, we just implement the mock services above to satisfy the interfaces required
 	// by the GithubClient. GithubClient is used uniformly between production and test code, with the only difference
-	// being that in test we do not actually execute API calls to Github
+	// being that in test we do not actually execute API calls to GitHub
 	client := auth.NewClient(github.NewClient(nil))
 
 	testHTMLUrl := "https://github.com/gruntwork-io/test/pull/1"

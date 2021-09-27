@@ -25,9 +25,9 @@ type githubRepositoriesService interface {
 
 // GithubClient is the data structure that is common between production code and test code. In production code,
 // go-github satisfies the PullRequests and Repositories service interfaces, whereas in test the concrete
-// implementations for these same services are mocks that return a static slice of pointers to github repositories,
-// or a single pointer to a github repository, as appropriate. This allows us to test the workflow of git-xargs
-// without actually making API calls to Github when running tests
+// implementations for these same services are mocks that return a static slice of pointers to GitHub repositories,
+// or a single pointer to a GitHub repository, as appropriate. This allows us to test the workflow of git-xargs
+// without actually making API calls to GitHub when running tests
 type GithubClient struct {
 	PullRequests githubPullRequestService
 	Repositories githubRepositoriesService
@@ -40,7 +40,7 @@ func NewClient(client *github.Client) GithubClient {
 	}
 }
 
-// configureGithubClient creates a Github API client using the user-supplied GITHUB_OAUTH_TOKEN and return the configured Github client
+// ConfigureGithubClient creates a GitHub API client using the user-supplied GITHUB_OAUTH_TOKEN and returns the configured GitHub client
 func ConfigureGithubClient() GithubClient {
 	// Ensure user provided a GITHUB_OAUTH_TOKEN
 	GithubOauthToken := os.Getenv("GITHUB_OAUTH_TOKEN")
@@ -57,7 +57,7 @@ func ConfigureGithubClient() GithubClient {
 	return client
 }
 
-// ensureGithubOauthTokenSet is a sanity check that a value is exported for GITHUB_OAUTH_TOKEN
+// EnsureGithubOauthTokenSet is a sanity check that a value is exported for GITHUB_OAUTH_TOKEN
 func EnsureGithubOauthTokenSet() error {
 	if os.Getenv("GITHUB_OAUTH_TOKEN") == "" {
 		return errors.WithStackTrace(types.NoGithubOauthTokenProvidedErr{})
