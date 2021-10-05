@@ -71,13 +71,17 @@ func selectReposViaInput(config *config.GitXargsConfig) (*RepoSelection, error) 
 		AllowedRepos:           []*types.AllowedRepo{},
 		GithubOrganizationName: config.GithubOrg,
 	}
-
 	switch getPreferredOrderOfRepoSelections(config) {
 	case ExplicitReposOnCommandLine:
-		allowedRepos, err := selectReposViaRepoFlag(config.RepoSlice)
+		config.Stats.SetSelectionMode(string(ExplicitReposOnCommandLine))
+
+		allowedRepos, malformedRepos, err := selectReposViaRepoFlag(config.RepoSlice)
 		if err != nil {
 			return def, err
 		}
+
+		trackMalformedUserSuppliedRepoNames(config, malformedRepos)
+
 		return &RepoSelection{
 			SelectionType:          ExplicitReposOnCommandLine,
 			AllowedRepos:           allowedRepos,
@@ -85,10 +89,14 @@ func selectReposViaInput(config *config.GitXargsConfig) (*RepoSelection, error) 
 		}, nil
 
 	case ReposFilePath:
+
+		config.Stats.SetSelectionMode(string(ReposFilePath))
+
 		allowedRepos, err := io.ProcessAllowedRepos(config.ReposFile)
 		if err != nil {
 			return def, err
 		}
+
 		return &RepoSelection{
 			SelectionType:          ReposFilePath,
 			AllowedRepos:           allowedRepos,
@@ -96,13 +104,21 @@ func selectReposViaInput(config *config.GitXargsConfig) (*RepoSelection, error) 
 		}, nil
 
 	case GithubOrganization:
+
+		config.Stats.SetSelectionMode(string(GithubOrganization))
+
 		return def, nil
 
 	case ReposViaStdIn:
-		allowedRepos, err := selectReposViaRepoFlag(config.RepoFromStdIn)
+		config.Stats.SetSelectionMode(string(ReposViaStdIn))
+
+		allowedRepos, malformedRepos, err := selectReposViaRepoFlag(config.RepoFromStdIn)
 		if err != nil {
 			return def, err
 		}
+
+		trackMalformedUserSuppliedRepoNames(config, malformedRepos)
+
 		return &RepoSelection{
 			SelectionType:          ReposViaStdIn,
 			AllowedRepos:           allowedRepos,
@@ -114,23 +130,40 @@ func selectReposViaInput(config *config.GitXargsConfig) (*RepoSelection, error) 
 	}
 }
 
+// trackMalformedUserSuppliedRepoNames will add any malformed repositories supplied by the user via --repo or STDIN
+// to the final report, explaining that the repos could not be used as supplied (usually due to missing org prefix)
+func trackMalformedUserSuppliedRepoNames(config *config.GitXargsConfig, malformedRepos []string) {
+	// If any repos supplied via --repo flags were not parsed successfully, probably because they were malformed,
+	// then add them to the final run report so the operator understands why they were not processed
+	for _, m := range malformedRepos {
+		mr := &github.Repository{
+			Name: github.String(m),
+		}
+		config.Stats.TrackSingle(stats.RepoFlagSuppliedRepoMalformed, mr)
+	}
+}
+
 // selectReposViaRepoFlag converts the string slice of repo flags provided via stdin or by invocations of the --repo
 // flag into the internal representation of AllowedRepo that we use prior to fetching the corresponding repo from
 // GitHub
-func selectReposViaRepoFlag(inputRepos []string) ([]*types.AllowedRepo, error) {
+func selectReposViaRepoFlag(inputRepos []string) ([]*types.AllowedRepo, []string, error) {
 	var allowedRepos []*types.AllowedRepo
+	var malformedRepos []string
 
 	for _, repoInput := range inputRepos {
 		allowedRepo := util.ConvertStringToAllowedRepo(repoInput)
 		if allowedRepo != nil {
 			allowedRepos = append(allowedRepos, allowedRepo)
+		} else {
+			malformedRepos = append(malformedRepos, repoInput)
 		}
 	}
+
 	if len(allowedRepos) < 1 {
-		return allowedRepos, errors.WithStackTrace(types.NoRepoSelectionsMadeErr{})
+		return allowedRepos, malformedRepos, errors.WithStackTrace(types.NoRepoFlagTargetsValid{})
 	}
 
-	return allowedRepos, nil
+	return allowedRepos, malformedRepos, nil
 }
 
 // fetchUserProvidedReposViaGithub converts repos provided as strings, already validated as being well-formed, into GitHub API repo objects that can be further processed

@@ -66,6 +66,8 @@ const (
 	BranchRemotePullFailed types.Event = "branch-remote-pull-failed"
 	// BranchRemoteDidntExistYet denotes a repo whose specified branch didn't exist remotely yet and so was just created locally to begin with
 	BranchRemoteDidntExistYet types.Event = "branch-remote-didnt-exist-yet"
+	// RepoFlagSuppliedRepoMalformed denotes a repo passed via the --repo flag that was malformed (perhaps missing it's Github org prefix) and therefore unprocessable
+	RepoFlagSuppliedRepoMalformed types.Event = "repo-flag-supplied-repo-malformed"
 )
 
 var allEvents = []types.AnnotatedEvent{
@@ -94,10 +96,12 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: DirectCommitsPushedToRemoteBranch, Description: "Repos whose changes were pushed directly to the remote branch because --skip-pull-requests was passed"},
 	{Event: BranchRemotePullFailed, Description: "Repos whose remote branches could not be successfully pulled"},
 	{Event: BranchRemoteDidntExistYet, Description: "Repos whose specified branches did not exist on the remote, and so were first created locally"},
+	{Event: RepoFlagSuppliedRepoMalformed, Description: "Repos passed via the --repo flag that were malformed (missing their Github org prefix?) and therefore unprocessable"},
 }
 
 // RunStats will be a stats-tracker class that keeps score of which repos were touched, which were considered for update, which had branches made, PRs made, which were missing workflows or contexts, or had out of date workflows syntax values, etc
 type RunStats struct {
+	selectionMode         string
 	repos                 map[types.Event][]*github.Repository
 	skippedArchivedRepos  map[types.Event][]*github.Repository
 	pulls                 map[string]string
@@ -126,6 +130,16 @@ func NewStatsTracker() *RunStats {
 		mutex:                 &sync.Mutex{},
 	}
 	return t
+}
+
+// SetSelectionMode accepts a string representing the method by which repos were selected for this run - in order to print a human-legible description in the final report
+func (r *RunStats) SetSelectionMode(mode string) {
+	r.selectionMode = mode
+}
+
+// GetSelectionMode returns the currently set repo selection method
+func (r *RunStats) GetSelectionMode() string {
+	return r.selectionMode
 }
 
 // GetTotalRunSeconds returns the total time it took, in seconds, to run all the selected commands against all the targeted repos
@@ -223,6 +237,7 @@ func (r *RunStats) GenerateRunReport() *types.RunReport {
 		Repos:          r.GetRepos(),
 		SkippedRepos:   r.GetSkippedArchivedRepos(),
 		Command:        r.command,
+		SelectionMode:  r.selectionMode,
 		RuntimeSeconds: r.GetTotalRunSeconds(), FileProvidedRepos: r.GetFileProvidedRepos(),
 		PullRequests: r.GetPullRequests(),
 	}
