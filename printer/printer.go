@@ -39,6 +39,9 @@ func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunRepor
 	fmt.Println()
 	fmt.Println(runReport.Command)
 	fmt.Println()
+	fmt.Println("REPO SELECTION METHOD USED FOR THIS RUN - (see README.md for more information)")
+	fmt.Println()
+	fmt.Println(runReport.SelectionMode)
 
 	// If the user selected repos via a flat file, print a table showing which repos they were
 	if len(runReport.FileProvidedRepos) > 0 {

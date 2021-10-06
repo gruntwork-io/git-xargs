@@ -19,6 +19,7 @@ type RunReport struct {
 	Repos             map[Event][]*github.Repository
 	SkippedRepos      map[Event][]*github.Repository
 	Command           []string
+	SelectionMode     string
 	RuntimeSeconds    int
 	FileProvidedRepos []*AllowedRepo
 	PullRequests      map[string]string
@@ -58,6 +59,12 @@ type NoRepoSelectionsMadeErr struct{}
 
 func (NoRepoSelectionsMadeErr) Error() string {
 	return fmt.Sprint("You must target some repos for processing either via stdin or by providing one of the --github-org, --repos, or --repo flags")
+}
+
+type NoRepoFlagTargetsValid struct{}
+
+func (NoRepoFlagTargetsValid) Error() string {
+	return fmt.Sprint("None of the repos specified via the --repo flag are valid. Please double-check you have included the Github org prefix for each - e.g. --repo gruntwork-io/git-xargs")
 }
 
 type NoBranchNameErr struct{}
