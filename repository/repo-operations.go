@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -106,7 +107,7 @@ func executeCommandWithLogger(config *config.GitXargsConfig, repositoryDir strin
 
 	cmdArgs := config.Args
 
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	cmd := exec.Command("bash", "-c", strings.Join(cmdArgs[:], " "))
 	cmd.Dir = repositoryDir
 
 	logger.WithFields(logrus.Fields{
