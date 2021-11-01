@@ -1,0 +1,7 @@
+gruntwork-io/terraform-aws-security
+gruntwork-io/aws-service-catalog
+gruntwork-io/terraform-aws-vpc
+gruntwork-io/terraform-aws-data-storage
+gruntwork-io/terraform-aws-couchbase
+gruntwork-io/terraform-aws-kafka
+gruntwork-io/terraform-aws-monitoring
