@@ -1,14 +1,16 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Submit a feature request for this repo.
 title: ''
-labels: ''
+labels: enhancement
 assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+<!--
+  Have any questions? Check out the contributing docs at https://docs.gruntwork.io/guides/contributing/, or
+  ask in this issue and a Gruntwork core maintainer will be happy to help :)
+-->
 
 **Describe the solution you'd like**
 A clear and concise description of what you want to happen.
