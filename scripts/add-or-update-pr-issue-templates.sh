@@ -131,35 +131,31 @@ mkdir -p .github
 mkdir -p .github/ISSUE_TEMPLATE
 
 # if the repo does not contain a bug_report.md file, then create one or replace the existing one
-if [ ! -f ".github/ISSUE_TEMPLATE/bug_report.md" ]; then 
-	echo "Could not find file at .github/ISSUE_TEMPLATE/bug_report.md, so adding one..."
-	create_bug_issue_template
+if [[ ! -f ".github/ISSUE_TEMPLATE/bug_report.md" ]]; then
+    echo "Could not find file at .github/ISSUE_TEMPLATE/bug_report.md, so adding one..."
+    create_bug_issue_template
 else
     echo "Found file at .github/ISSUE_TEMPLATE/bug_report.md, so replacing it..."
     rm .github/ISSUE_TEMPLATE/bug_report.md
-	create_bug_issue_template
+    create_bug_issue_template
 fi 
 
 # if the repo does not contain a feature_request.md file, then create one or replace the existing one
-if [ ! -f ".github/ISSUE_TEMPLATE/feature_request.md" ]; then 
-	echo "Could not find file at .github/ISSUE_TEMPLATE/feature_request.md, so adding one..."
-	create_feature_issue_template
+if [[ ! -f ".github/ISSUE_TEMPLATE/feature_request.md" ]]; then
+    echo "Could not find file at .github/ISSUE_TEMPLATE/feature_request.md, so adding one..."
+    create_feature_issue_template
 else
     echo "Found file at .github/ISSUE_TEMPLATE/feature_request.md, so replacing it..."
     rm .github/ISSUE_TEMPLATE/feature_request.md
-	create_feature_issue_template
+    create_feature_issue_template
 fi 
 
 # if the repo does not contain a pull_request_template.md file, then create one or replace the existing one
-if [ ! -f ".github/pull_request_template.md" ]; then 
-	echo "Could not find file at .github/pull_request_template.md, so adding one..."
-	create_pr_template
+if [[ ! -f ".github/pull_request_template.md" ]]; then
+    echo "Could not find file at .github/pull_request_template.md, so adding one..."
+    create_pr_template
 else
     echo "Found file at .github/pull_request_template.md, so replacing it..."
     rm .github/pull_request_template.md
-	create_pr_template
+    create_pr_template
 fi 
-
-#   .github/ISSUE_TEMPLATE/bug_report.md
-#   .github/ISSUE_TEMPLATE/feature_request.md
-#   .github/pull_request_template.md
