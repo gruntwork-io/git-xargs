@@ -1,8 +1,0 @@
-gruntwork-io/circle-ci-docker-images
-gruntwork-io/terraform-aws-cis-service-catalog
-gruntwork-io/bash-commons
-gruntwork-io/fetch-test-private
-gruntwork-io/terraform-aws-beanstalk
-gruntwork-io/repo-copier
-gruntwork-io/gruntwork-installer
-gruntwork-io/fetch
