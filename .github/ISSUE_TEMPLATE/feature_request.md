@@ -8,8 +8,8 @@ assignees: ''
 ---
 
 <!--
-  Have any questions? Check out the contributing docs at https://docs.gruntwork.io/guides/contributing/, or
-  ask in this issue and a Gruntwork core maintainer will be happy to help :)
+Have any questions? Check out the contributing docs at https://gruntwork.notion.site/Gruntwork-Coding-Methodology-02fdcd6e4b004e818553684760bf691e,
+or ask in this issue and a Gruntwork core maintainer will be happy to help :)
 -->
 
 **Describe the solution you'd like**
