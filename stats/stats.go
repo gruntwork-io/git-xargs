@@ -66,7 +66,7 @@ const (
 	BranchRemotePullFailed types.Event = "branch-remote-pull-failed"
 	// BranchRemoteDidntExistYet denotes a repo whose specified branch didn't exist remotely yet and so was just created locally to begin with
 	BranchRemoteDidntExistYet types.Event = "branch-remote-didnt-exist-yet"
-  // RepoFlagSuppliedRepoMalformed denotes a repo passed via the --repo flag that was malformed (perhaps missing it's Github org prefix) and therefore unprocessable
+	// RepoFlagSuppliedRepoMalformed denotes a repo passed via the --repo flag that was malformed (perhaps missing it's Github org prefix) and therefore unprocessable
 	RepoFlagSuppliedRepoMalformed types.Event = "repo-flag-supplied-repo-malformed"
 	// RepoNotCompatibleWithPullConfig denotes a repo that is incompatible with the submitted pull request configuration
 	RepoNotCompatibleWithPullConfig types.Event = "repo-not-compatible-with-pull-config"
@@ -99,7 +99,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: BranchRemotePullFailed, Description: "Repos whose remote branches could not be successfully pulled"},
 	{Event: BranchRemoteDidntExistYet, Description: "Repos whose specified branches did not exist on the remote, and so were first created locally"},
 	{Event: RepoFlagSuppliedRepoMalformed, Description: "Repos passed via the --repo flag that were malformed (missing their Github org prefix?) and therefore unprocessable"},
-  {Event: RepoNotCompatibleWithPullConfig, Description: "Repos where the submitted pull request configuration is not compatible with the repo"},
+	{Event: RepoNotCompatibleWithPullConfig, Description: "Repos where the submitted pull request configuration is not compatible with the repo"},
 }
 
 // RunStats will be a stats-tracker class that keeps score of which repos were touched, which were considered for update, which had branches made, PRs made, which were missing workflows or contexts, or had out of date workflows syntax values, etc
