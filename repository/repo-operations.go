@@ -445,10 +445,14 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		Draft:               github.Bool(config.Draft),
 	}
 
-	// Make a pull request via the GitHub API
-	pr, _, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
+	// Make a pull request via the Github API
+	pr, resp, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
 
 	if err != nil {
+		if resp.StatusCode == 422 {
+			config.Stats.TrackSingle(stats.RepoNotCompatibleWithPullConfig, repo)
+		}
+
 		logger.WithFields(logrus.Fields{
 			"Error": err,
 			"Head":  branch,
