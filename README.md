@@ -174,7 +174,7 @@ $ brew install git-xargs
 1. **Alternatively, use go get to install a specific release of git-xargs**:
 
      ```bash
-     go get github.com/gruntwork-io/git-xargs@v0.0.5
+     go get github.com/gruntwork-io/git-xargs@v0.0.13
      ```
 
 ### Try it out!
@@ -406,6 +406,12 @@ This section provides a more in-depth look at how the `git-xargs` tool works und
 1. it will push your local branch with your new commits to your repo's remote
 1. it will call the GitHub API to open a pull request with a title and description that you can optionally specify via the `--pull-request-title` and `--pull-request-description` flags, respectively, unless you pass the `--skip-pull-requests` flag
 1. it will print out a detailed run summary to STDOUT that explains exactly what happened with each repo and provide links to successfully opened pull requests that you can quickly follow from your terminal. If any repos encountered errors at runtime (whether they weren't able to be cloned, or script errors were encountered during processing, etc) all of this will be spelled out in detail in the final report, so you know exactly what succeeded and what went wrong.
+
+## Rate-limit-aware behavior
+
+git-xargs attempts to be a good citizen as regards consumption of the Github API. Specifically, it inspects and honors `Retry-After` HTTP headers that may be returned by the Github API when certain rate limits are tripped. In the case of Github returning a `Retry-After` header in an HTTP response representing a tripped rate limit, git-xargs will sleep for the amount of time specified by the `Retry-After` header. While this behavior may increase the total amount of time it takes to perform your job, the upside is that you should be rate-limited significantly less frequently as a result, making it easier to run large jobs with git-xargs against hundreds and thousands of repositories.
+
+In addition, git-xargs implements the behavior requested by [Github's best practices for integrators](https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-secondary-rate-limits), by waiting at least 1 second between issuing requests for the same client.
 
 ## Tasks this tool is well-suited for
 
