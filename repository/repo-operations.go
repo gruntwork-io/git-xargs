@@ -445,7 +445,6 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		Draft:               github.Bool(config.Draft),
 	}
 
-	// Make a pull request via the Github API
 	pr, resp, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
 
 	prErrorMessage := "Error opening pull request"

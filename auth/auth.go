@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/google/go-github/v32/github"
+	"github.com/gruntwork-io/git-xargs/ratelimiting"
 	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/go-commons/errors"
 
@@ -50,6 +51,9 @@ func ConfigureGithubClient() GithubClient {
 	)
 
 	tc := oauth2.NewClient(context.Background(), ts)
+	// Wrap our Github client in a rate-limit-aware transport to avoid tripping limits when
+	// making many concurrent API requests to Github
+	tc.Transport = ratelimiting.NewRateLimitTransport(tc.Transport)
 
 	// Wrap the go-github client in a GithubClient struct, which is common between production and test code
 	client := NewClient(github.NewClient(tc))

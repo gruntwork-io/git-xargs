@@ -152,30 +152,31 @@ $ brew install git-xargs
 
 1. **Set execute permissions**. For example, on Linux or Mac, you'd run:
 
-      ```bash
-      chmod u+x /usr/local/bin/git-xargs
-      ```
+   ```bash
+   chmod u+x /usr/local/bin/git-xargs
+   ```
 
 1. **Check it's working**. Run the version command to ensure everything is working properly:
 
-      ```bash
-      git-xargs --version
-      ```
+   ```bash
+   git-xargs --version
+   ```
 
 ### Installation option 3: Run go get
 
 1. **Ensure you have Golang installed and working properly on your system.** [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
 
 1. **Run go get to install the latest release of git-xargs**:
-     ```bash
-     go get github.com/gruntwork-io/git-xargs
-     ```
+
+   ```bash
+   go get github.com/gruntwork-io/git-xargs
+   ```
 
 1. **Alternatively, use go get to install a specific release of git-xargs**:
 
-     ```bash
-     go get github.com/gruntwork-io/git-xargs@v0.0.5
-     ```
+   ```bash
+   go get github.com/gruntwork-io/git-xargs@v0.0.5
+   ```
 
 ### Try it out!
 
@@ -183,21 +184,21 @@ $ brew install git-xargs
    tokens](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)
    for information on how to generate one. For example, on Linux or Mac, you'd run:
 
-      ```bash
-      export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
-      ```
+   ```bash
+   export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
+   ```
 
 1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in
    every repo in your GitHub organization. Follow the same pattern to start running your own scripts and commands
    against your own repos!
 
-      ```bash
-      git-xargs \
-        --branch-name "test-branch" \
-        --commit-message "Testing git-xargs" \
-        --github-org <enter-your-github-org-name> \
-        touch git-xargs-is-awesome.txt
-      ```
+   ```bash
+   git-xargs \
+     --branch-name "test-branch" \
+     --commit-message "Testing git-xargs" \
+     --github-org <enter-your-github-org-name> \
+     touch git-xargs-is-awesome.txt
+   ```
 
 # Reference
 
@@ -377,8 +378,7 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
 | `--skip-archived-repos`  | If you want to exclude archived (read-only) repositories from the list of targeted repos, pass this flag.                                                                                                                                                                                                                                                                                                                     | Boolean | No       |
 | `--dry-run`              | If you are in the process of testing out `git-xargs` or your initial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run flag. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
 | `--max-concurrent-repos` | Limits the number of concurrent processed repositories. This is only useful if you encounter issues and need throttling when running on a very large number of repos. Default is `0` (Unlimited)                                                                                                                                                                                                                              | Integer | No       |
-| `--draft` | Whether to open pull requests in draft mode. Draft pull requests are available for public GitHub repositories and private repositories in GitHub tiered accounts. See [Draft Pull Requests](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests) for more details.  | Boolean | No |
-
+| `--draft`                | Whether to open pull requests in draft mode. Draft pull requests are available for public GitHub repositories and private repositories in GitHub tiered accounts. See [Draft Pull Requests](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests) for more details.                                                   | Boolean | No       |
 
 ## Best practices, tips and tricks
 
@@ -406,6 +406,12 @@ This section provides a more in-depth look at how the `git-xargs` tool works und
 1. it will push your local branch with your new commits to your repo's remote
 1. it will call the GitHub API to open a pull request with a title and description that you can optionally specify via the `--pull-request-title` and `--pull-request-description` flags, respectively, unless you pass the `--skip-pull-requests` flag
 1. it will print out a detailed run summary to STDOUT that explains exactly what happened with each repo and provide links to successfully opened pull requests that you can quickly follow from your terminal. If any repos encountered errors at runtime (whether they weren't able to be cloned, or script errors were encountered during processing, etc) all of this will be spelled out in detail in the final report, so you know exactly what succeeded and what went wrong.
+
+## Rate-limit-aware behavior
+
+git-xargs attempts to be a good citizen as regards consumption of the Github API. Specifically, it inspects and honors `Retry-After` HTTP headers that may be returned by the Github API when certain rate limits are tripped. In the case of Github returning a `Retry-After` header in an HTTP response representing a tripped rate limit, git-xargs will sleep for the amount of time specified by the `Retry-After` header. While this behavior may increase the total amount of time it takes to perform your job, the upside is that you should be rate-limited significantly less frequently as a result, making it easier to run large jobs with git-xargs against hundreds and thousands of repositories.
+
+In addition, git-xargs implements the behavior requested by [Github's best practices for integrators](https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-secondary-rate-limits), by waiting at least 1 second between issuing requests for the same client.
 
 ## Tasks this tool is well-suited for
 
