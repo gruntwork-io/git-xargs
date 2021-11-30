@@ -62,6 +62,7 @@ func setupApp() *cli.App {
 	app.Flags = []cli.Flag{
 		LogLevelFlag,
 		common.GenericGithubOrgFlag,
+		common.GenericDraftPullRequestFlag,
 		common.GenericDryRunFlag,
 		common.GenericSkipPullRequestFlag,
 		common.GenericSkipArchivedReposFlag,

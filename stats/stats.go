@@ -68,6 +68,8 @@ const (
 	BranchRemoteDidntExistYet types.Event = "branch-remote-didnt-exist-yet"
 	// RepoFlagSuppliedRepoMalformed denotes a repo passed via the --repo flag that was malformed (perhaps missing it's Github org prefix) and therefore unprocessable
 	RepoFlagSuppliedRepoMalformed types.Event = "repo-flag-supplied-repo-malformed"
+	// RepoDoesntSupportDraftPullRequestsErr denotes a repo that is incompatible with the submitted pull request configuration
+	RepoDoesntSupportDraftPullRequestsErr types.Event = "repo-not-compatible-with-pull-config"
 )
 
 var allEvents = []types.AnnotatedEvent{
@@ -97,6 +99,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: BranchRemotePullFailed, Description: "Repos whose remote branches could not be successfully pulled"},
 	{Event: BranchRemoteDidntExistYet, Description: "Repos whose specified branches did not exist on the remote, and so were first created locally"},
 	{Event: RepoFlagSuppliedRepoMalformed, Description: "Repos passed via the --repo flag that were malformed (missing their Github org prefix?) and therefore unprocessable"},
+	{Event: RepoDoesntSupportDraftPullRequestsErr, Description: "Repos that do not support Draft PRs (--draft flag was passed)"},
 }
 
 // RunStats will be a stats-tracker class that keeps score of which repos were touched, which were considered for update, which had branches made, PRs made, which were missing workflows or contexts, or had out of date workflows syntax values, etc
@@ -105,6 +108,7 @@ type RunStats struct {
 	repos                 map[types.Event][]*github.Repository
 	skippedArchivedRepos  map[types.Event][]*github.Repository
 	pulls                 map[string]string
+	draftpulls            map[string]string
 	command               []string
 	fileProvidedRepos     []*types.AllowedRepo
 	repoFlagProvidedRepos []*types.AllowedRepo
@@ -122,6 +126,7 @@ func NewStatsTracker() *RunStats {
 		repos:                 make(map[types.Event][]*github.Repository),
 		skippedArchivedRepos:  make(map[types.Event][]*github.Repository),
 		pulls:                 make(map[string]string),
+		draftpulls:            make(map[string]string),
 		command:               []string{},
 		fileProvidedRepos:     fileProvidedRepos,
 		repoFlagProvidedRepos: repoFlagProvidedRepos,
@@ -161,6 +166,11 @@ func (r *RunStats) GetSkippedArchivedRepos() map[types.Event][]*github.Repositor
 // GetPullRequests returns the inner representation of the pull requests that were opened during the lifecycle of a given run
 func (r *RunStats) GetPullRequests() map[string]string {
 	return r.pulls
+}
+
+// GetDraftPullRequests returns the inner representation of the draft pull requests that were opened during the lifecycle of a given run
+func (r *RunStats) GetDraftPullRequests() map[string]string {
+	return r.draftpulls
 }
 
 // SetFileProvidedRepos sets the number of repos that were provided via file by the user on startup (as opposed to looked up via GitHub API via the --github-org flag)
@@ -218,10 +228,20 @@ func TrackEventIfMissing(slice []*github.Repository, repo *github.Repository) []
 	return append(slice, repo)
 }
 
+// TrackPullRequest stores the successful PR opening for the supplied Repo, at the supplied PR URL
+// This function is safe to call from concurrent goroutines
 func (r *RunStats) TrackPullRequest(repoName, prURL string) {
 	defer r.mutex.Unlock()
 	r.mutex.Lock()
 	r.pulls[repoName] = prURL
+}
+
+// TrackDraftPullRequest stores the successful Draft PR opening for the supplied Repo, at the supplied PR URL
+// This function is safe to call from concurrent goroutines
+func (r *RunStats) TrackDraftPullRequest(repoName, prURL string) {
+	defer r.mutex.Unlock()
+	r.mutex.Lock()
+	r.draftpulls[repoName] = prURL
 }
 
 // TrackMultiple accepts a types.Event and a slice of pointers to GitHub repos that will all be associated with that event
@@ -239,7 +259,8 @@ func (r *RunStats) GenerateRunReport() *types.RunReport {
 		Command:        r.command,
 		SelectionMode:  r.selectionMode,
 		RuntimeSeconds: r.GetTotalRunSeconds(), FileProvidedRepos: r.GetFileProvidedRepos(),
-		PullRequests: r.GetPullRequests(),
+		PullRequests:      r.GetPullRequests(),
+		DraftPullRequests: r.GetDraftPullRequests(),
 	}
 }
 

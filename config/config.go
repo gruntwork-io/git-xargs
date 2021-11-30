@@ -12,6 +12,7 @@ import (
 
 // GitXargsConfig is the internal representation of a given git-xargs run as specified by the user
 type GitXargsConfig struct {
+	Draft                  bool
 	DryRun                 bool
 	SkipPullRequests       bool
 	SkipArchivedRepos      bool
@@ -33,6 +34,7 @@ type GitXargsConfig struct {
 // NewGitXargsConfig sets reasonable defaults for a GitXargsConfig and returns a pointer to the config
 func NewGitXargsConfig() *GitXargsConfig {
 	return &GitXargsConfig{
+		Draft:                  false,
 		DryRun:                 false,
 		SkipPullRequests:       false,
 		SkipArchivedRepos:      false,

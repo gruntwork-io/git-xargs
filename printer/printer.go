@@ -82,6 +82,16 @@ func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunRepor
 		pullRequests = append(pullRequests, pr)
 	}
 
+	var draftPullRequests []types.PullRequest
+
+	for repoName, prURL := range runReport.DraftPullRequests {
+		pr := types.PullRequest{
+			Repo: repoName,
+			URL:  prURL,
+		}
+		draftPullRequests = append(draftPullRequests, pr)
+	}
+
 	if len(pullRequests) > 0 {
 		fmt.Println()
 		fmt.Println("*****************************************************")
@@ -90,6 +100,18 @@ func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunRepor
 		pullRequestPrinter := tableprinter.New(os.Stdout)
 		configurePrinterStyling(pullRequestPrinter)
 		pullRequestPrinter.Print(pullRequests)
+		fmt.Println()
+
+	}
+
+	if len(draftPullRequests) > 0 {
+		fmt.Println()
+		fmt.Println("*****************************************************")
+		fmt.Println("  DRAFT PULL REQUESTS OPENED")
+		fmt.Println("*****************************************************")
+		pullRequestPrinter := tableprinter.New(os.Stdout)
+		configurePrinterStyling(pullRequestPrinter)
+		pullRequestPrinter.Print(draftPullRequests)
 		fmt.Println()
 
 	}
