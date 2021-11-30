@@ -448,9 +448,14 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 	// Make a pull request via the Github API
 	pr, resp, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
 
+	prErrorMessage := "Error opening pull request"
+	prDraftModeNotSupported := false
+
 	if err != nil {
 		if resp.StatusCode == 422 {
-			config.Stats.TrackSingle(stats.RepoNotCompatibleWithPullConfig, repo)
+			// Update the error to be more RepoDoesntSupportDraftPullRequestsErra Draft PR
+			prErrorMessage = "Error opening pull request: draft PRs not supported for this repo. See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests"
+			prDraftModeNotSupported = true
 		}
 
 		logger.WithFields(logrus.Fields{
@@ -458,10 +463,14 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 			"Head":  branch,
 			"Base":  repoDefaultBranch,
 			"Body":  descriptionToUse,
-		}).Debug("Error opening Pull request")
+		}).Debug(prErrorMessage)
 
 		// Track pull request open failure
-		config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
+		if prDraftModeNotSupported {
+			config.Stats.TrackSingle(stats.RepoDoesntSupportDraftPullRequestsErr, repo)
+		} else {
+			config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
+		}
 		return errors.WithStackTrace(err)
 	}
 
@@ -469,8 +478,12 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		"Pull Request URL": pr.GetHTMLURL(),
 	}).Debug("Successfully opened pull request")
 
-	// Track successful opening of the pull request, extracting the HTML url to the PR itself for easier review
-	config.Stats.TrackPullRequest(repo.GetName(), pr.GetHTMLURL())
+	if config.Draft {
+		config.Stats.TrackDraftPullRequest(repo.GetName(), pr.GetHTMLURL())
+	} else {
+		// Track successful opening of the pull request, extracting the HTML url to the PR itself for easier review
+		config.Stats.TrackPullRequest(repo.GetName(), pr.GetHTMLURL())
+	}
 	return nil
 }
 

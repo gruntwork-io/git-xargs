@@ -23,6 +23,7 @@ type RunReport struct {
 	RuntimeSeconds    int
 	FileProvidedRepos []*AllowedRepo
 	PullRequests      map[string]string
+	DraftPullRequests map[string]string
 }
 
 // AnnotatedEvent is used in printing the final report. It contains the info to print a section's table - both its Event for looking up the tagged repos, and the human-legible description for printing above the table
