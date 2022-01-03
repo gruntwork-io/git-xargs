@@ -390,8 +390,11 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 		}).Debug("--dry-run and / or --skip-pull-requests is set to true, so skipping opening a pull request!")
 		return nil
 	}
+	repoDefaultBranch := config.BaseBranchName
+	if repoDefaultBranch == "" {
+		repoDefaultBranch = repo.GetDefaultBranch()
+	}
 
-	repoDefaultBranch := repo.GetDefaultBranch()
 	pullRequestAlreadyExists, err := pullRequestAlreadyExistsForBranch(config, repo, branch, repoDefaultBranch)
 
 	if err != nil {
