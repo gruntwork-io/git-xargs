@@ -265,7 +265,7 @@ Passing the `--branch-name` (`-b`) flag is required when running `git-xargs`. If
 
 ## Default repository branch
 
-Any pull requests opened will be opened against the repository's default branch (whether that's `main`, or `master` or something else).
+Any pull requests opened will be opened against the repository's default branch (whether that's `main`, or `master` or something else). You can supply an additional `--base-branch-name` flag to change the target for your pull requests. Be aware that this will override the base branch name for **ALL** targetted repositories.
 
 ## Git file staging behavior
 
