@@ -70,6 +70,8 @@ const (
 	RepoFlagSuppliedRepoMalformed types.Event = "repo-flag-supplied-repo-malformed"
 	// RepoDoesntSupportDraftPullRequestsErr denotes a repo that is incompatible with the submitted pull request configuration
 	RepoDoesntSupportDraftPullRequestsErr types.Event = "repo-not-compatible-with-pull-config"
+	// BaseBranchTargetInvalidErr denotes a repo that does not have the base branch specified by the user
+	BaseBranchTargetInvalidErr types.Event = "base-branch-target-invalid"
 )
 
 var allEvents = []types.AnnotatedEvent{
@@ -100,6 +102,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: BranchRemoteDidntExistYet, Description: "Repos whose specified branches did not exist on the remote, and so were first created locally"},
 	{Event: RepoFlagSuppliedRepoMalformed, Description: "Repos passed via the --repo flag that were malformed (missing their Github org prefix?) and therefore unprocessable"},
 	{Event: RepoDoesntSupportDraftPullRequestsErr, Description: "Repos that do not support Draft PRs (--draft flag was passed)"},
+	{Event: BaseBranchTargetInvalidErr, Description: "Repos that did not have the branch specified by --base-branch-name"},
 }
 
 // RunStats will be a stats-tracker class that keeps score of which repos were touched, which were considered for update, which had branches made, PRs made, which were missing workflows or contexts, or had out of date workflows syntax values, etc

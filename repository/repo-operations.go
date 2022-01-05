@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -452,14 +453,29 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 	pr, resp, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
 
 	prErrorMessage := "Error opening pull request"
-	prDraftModeNotSupported := false
 
+	// Github's API will return HTTP status code 422 for several different errors
+	// Currently, there are two such errors that git-xargs is concerned with:
+	// 1. User passes the --draft flag, but the targeted repo does not support draft pull requests
+	// 2. User passes the --base-branch-name flag, specifying a branch that does not exist in the repo
 	if err != nil {
 		if resp.StatusCode == 422 {
-			// Update the error to be more RepoDoesntSupportDraftPullRequestsErra Draft PR
-			prErrorMessage = "Error opening pull request: draft PRs not supported for this repo. See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests"
-			prDraftModeNotSupported = true
+			switch {
+			case strings.Contains(err.Error(), "Draft pull requests are not supported"):
+				prErrorMessage = "Error opening pull request: draft PRs not supported for this repo. See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests"
+				config.Stats.TrackSingle(stats.RepoDoesntSupportDraftPullRequestsErr, repo)
+
+			case strings.Contains(err.Error(), "Field:base Code:invalid"): // TODO: implement error state detection for invalid base branch value
+				prErrorMessage = fmt.Sprintf("Error opening pull request: Base branch name: %s is invalid", config.BaseBranchName)
+				config.Stats.TrackSingle(stats.BaseBranchTargetInvalidErr, repo)
+
+			default:
+				config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
+			}
 		}
+
+		// If the Github reponse's status code is not 422, fallback to logging and tracking a generic pull request error
+		config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
 
 		logger.WithFields(logrus.Fields{
 			"Error": err,
@@ -468,15 +484,10 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 			"Body":  descriptionToUse,
 		}).Debug(prErrorMessage)
 
-		// Track pull request open failure
-		if prDraftModeNotSupported {
-			config.Stats.TrackSingle(stats.RepoDoesntSupportDraftPullRequestsErr, repo)
-		} else {
-			config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
-		}
 		return errors.WithStackTrace(err)
 	}
 
+	// There was no error opening the pull request
 	logger.WithFields(logrus.Fields{
 		"Pull Request URL": pr.GetHTMLURL(),
 	}).Debug("Successfully opened pull request")
