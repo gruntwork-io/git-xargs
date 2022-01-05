@@ -12,6 +12,7 @@ const (
 	ReposFileFlagName              = "repos"
 	CommitMessageFlagName          = "commit-message"
 	BranchFlagName                 = "branch-name"
+	BaseBranchFlagName             = "base-branch-name"
 	PullRequestTitleFlagName       = "pull-request-title"
 	PullRequestDescriptionFlagName = "pull-request-description"
 	MaxConcurrentReposFlagName     = "max-concurrent-repos"
@@ -53,6 +54,10 @@ var (
 	GenericBranchFlag = cli.StringFlag{
 		Name:  BranchFlagName,
 		Usage: "The name of the branch on which changes will be made",
+	}
+	GenericBaseBranchFlag = cli.StringFlag{
+		Name:  BaseBranchFlagName,
+		Usage: "The base branch that changes should be merged into",
 	}
 	GenericCommitMessageFlag = cli.StringFlag{
 		Name:  CommitMessageFlagName,
