@@ -465,7 +465,7 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 				prErrorMessage = "Error opening pull request: draft PRs not supported for this repo. See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests"
 				config.Stats.TrackSingle(stats.RepoDoesntSupportDraftPullRequestsErr, repo)
 
-			case strings.Contains(err.Error(), "Field:base Code:invalid"): // TODO: implement error state detection for invalid base branch value
+			case strings.Contains(err.Error(), "Field:base Code:invalid"):
 				prErrorMessage = fmt.Sprintf("Error opening pull request: Base branch name: %s is invalid", config.BaseBranchName)
 				config.Stats.TrackSingle(stats.BaseBranchTargetInvalidErr, repo)
 
