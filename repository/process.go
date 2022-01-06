@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v41/github"
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/remeh/sizedwaitgroup"

@@ -13,7 +13,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/sirupsen/logrus"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v41/github"
 
 	"github.com/gruntwork-io/git-xargs/common"
 	"github.com/gruntwork-io/git-xargs/config"
@@ -452,7 +452,7 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 	prDraftModeNotSupported := false
 
 	if err != nil {
-		if resp.StatusCode == 422 {
+		if resp != nil && resp.StatusCode == 422 {
 			// Update the error to be more RepoDoesntSupportDraftPullRequestsErra Draft PR
 			prErrorMessage = "Error opening pull request: draft PRs not supported for this repo. See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests"
 			prDraftModeNotSupported = true

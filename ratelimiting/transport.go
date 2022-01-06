@@ -5,17 +5,23 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v41/github"
 	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	ctxId = ctxIdType("id")
+	ctxId               = ctxIdType("id")
+	defaultSleepSeconds = 2
+	maxSleepSeconds     = 10
+	minSleepSeconds     = 3
 )
 
 // ctxIdType is used to avoid collisions between packages using context
@@ -67,10 +73,25 @@ func (rlt *RateLimitTransport) RoundTrip(req *http.Request) (*http.Response, err
 	ghErr := github.CheckResponse(resp)
 	resp.Body = r2
 
+	// Determine if we have tripped the secondary rate limits, which are separate from both:
+	// 1. Abuse rate limits
+	// 2. Regular rate limits
+	// Secondary rate limits are tripped when creating resources that generate notifications (such as Pull Requests)
+	// in rapid succession. We key off the URL provided in the DocumentationURL of the error response provided by Github
+	// to know when we've tripped the secondary rate limits (which is the same method used by the go-github library's CheckResponse method)
+	// Note that this is an unfortunate and quite brittle workaround, but we're forced to use this because Github's error responses are
+	// inconsistent. For more information on Github's secondary rate limits, see this document:
+	// https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-secondary-rate-limits
+	var errMessage string
+	if ghErr != nil {
+		errMessage = ghErr.(*github.ErrorResponse).DocumentationURL
+	}
+
 	// When you have been limited, use the Retry-After response header to slow down
 	if arlErr, ok := ghErr.(*github.AbuseRateLimitError); ok {
 		logger := logging.GetLogger("git-xargs")
 
+		logger.Debug("git-xargs received Abuse RateLimitError from Github")
 		rlt.delayNextRequest = false
 		retryAfter := arlErr.GetRetryAfter()
 		logger.WithFields(logrus.Fields{
@@ -84,6 +105,7 @@ func (rlt *RateLimitTransport) RoundTrip(req *http.Request) (*http.Response, err
 	if rlErr, ok := ghErr.(*github.RateLimitError); ok {
 		logger := logging.GetLogger("git-xargs")
 
+		logger.Debug("git-xargs received Regular RateLimitError from Github")
 		rlt.delayNextRequest = false
 		retryAfter := time.Until(rlErr.Rate.Reset.Time)
 		logger.WithFields(logrus.Fields{
@@ -91,6 +113,32 @@ func (rlt *RateLimitTransport) RoundTrip(req *http.Request) (*http.Response, err
 			"Rate Limit": rlErr.Rate.Limit,
 		}).Debug(fmt.Sprintf("Rate limit %d reached, sleeping for %s (until %s) before retrying", rlErr.Rate.Limit, retryAfter, time.Now().Add(retryAfter)))
 		time.Sleep(retryAfter)
+		rlt.unlock(req)
+		return rlt.RoundTrip(req)
+	}
+
+	if strings.Contains(errMessage, "secondary-rate-limits") {
+		logger := logging.GetLogger("git-xargs")
+
+		logger.Debug("git-xargs received Secondary rate limit error from Github!")
+		// Secondary Rate limits can be tripped when creating lots of resources that trigger notifications, such as PRs
+		// Unfortunately, in these cases the `Retry-After` header may intentionally be omitted from the response
+		// Therefore, when this occurs we have to add a small random sleep
+		// See: https://github.community/t/retry-after-header-missing/179442/2
+		if v := resp.Header["Retry-After"]; len(v) > 0 {
+			// It's almost certain this header will be unavailable to us, so we use the logic below this
+			// if statement to pick a small random duration to sleep between write (PUT, POST, PATCH, etc) requests
+			retryAfterSeconds, _ := strconv.ParseInt(v[0], 10, 64)
+			retryAfter := time.Duration(retryAfterSeconds) * time.Second
+			time.Sleep(retryAfter)
+			rlt.unlock(req)
+			return rlt.RoundTrip(req)
+		}
+
+		rand.Seed(time.Now().UnixNano())
+		duration := rand.Intn(maxSleepSeconds-minSleepSeconds) + minSleepSeconds
+		logger.Debug(fmt.Sprintf("git-xargs http transport sleeping %d seconds before retrying because Github's secondary rate limits have been tripped", duration))
+		time.Sleep(time.Duration(duration) * time.Second)
 		rlt.unlock(req)
 		return rlt.RoundTrip(req)
 	}
@@ -121,8 +169,8 @@ type RateLimitTransportOption func(*RateLimitTransport)
 // optional functions that modify the RateLimitTransport struct itself. This
 // may be used to alter the write delay in between requests, for example
 func NewRateLimitTransport(rt http.RoundTripper, options ...RateLimitTransportOption) *RateLimitTransport {
-	// Default to 1 second of delay if none is provided
-	rlt := &RateLimitTransport{transport: rt, writeDelay: 1 * time.Second}
+	// Default to 2 second of delay if none is provided
+	rlt := &RateLimitTransport{transport: rt, writeDelay: defaultSleepSeconds * time.Second}
 
 	for _, opt := range options {
 		opt(rlt)

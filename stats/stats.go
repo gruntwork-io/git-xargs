@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v41/github"
 	"github.com/gruntwork-io/git-xargs/printer"
 	"github.com/gruntwork-io/git-xargs/types"
 )
