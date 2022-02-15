@@ -4,8 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/google/go-github/v41/github"
-	"github.com/gruntwork-io/git-xargs/ratelimiting"
+	"github.com/google/go-github/v42/github"
 	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/go-commons/errors"
 
@@ -43,21 +42,13 @@ func NewClient(client *github.Client) GithubClient {
 
 // ConfigureGithubClient creates a GitHub API client using the user-supplied GITHUB_OAUTH_TOKEN and returns the configured GitHub client
 func ConfigureGithubClient() GithubClient {
-	// Ensure user provided a GITHUB_OAUTH_TOKEN
-	GithubOauthToken := os.Getenv("GITHUB_OAUTH_TOKEN")
-
+	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: GithubOauthToken},
+		&oauth2.Token{AccessToken: os.Getenv("GITHUB_OAUTH_TOKEN")},
 	)
-
-	tc := oauth2.NewClient(context.Background(), ts)
-	// Configure our Github client to use the rate-limit-aware transport to avoid tripping limits when
-	// making many concurrent API requests to Github
-	tc.Transport = ratelimiting.NewRateLimitTransport(tc.Transport)
-
+	tc := oauth2.NewClient(ctx, ts)
 	// Wrap the go-github client in a GithubClient struct, which is common between production and test code
 	client := NewClient(github.NewClient(tc))
-
 	return client
 }
 

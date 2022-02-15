@@ -13,7 +13,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/sirupsen/logrus"
 
-	"github.com/google/go-github/v41/github"
+	"github.com/google/go-github/v42/github"
 
 	"github.com/gruntwork-io/git-xargs/common"
 	"github.com/gruntwork-io/git-xargs/config"
@@ -447,7 +447,6 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 
 	// Make a pull request via the Github API
 	pr, resp, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
-
 	prErrorMessage := "Error opening pull request"
 	prDraftModeNotSupported := false
 

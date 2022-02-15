@@ -1,10 +1,9 @@
 package repository
 
 import (
-	"github.com/google/go-github/v41/github"
+	"github.com/google/go-github/v42/github"
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/go-commons/logging"
-	"github.com/remeh/sizedwaitgroup"
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,27 +11,16 @@ import (
 func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 
-	// Limit the number of concurrent goroutines using the MaxConcurrentRepos config value
-	// MaxConcurrentRepos == 0 will fall back to unlimited (previous default behavior)
-	wg := sizedwaitgroup.New(gitxargsConfig.MaxConcurrentRepos)
-
 	for _, repo := range repos {
-		wg.Add()
-		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
-			defer wg.Done()
-			// For each repo, run the supplied command against it and, if it succeeds without error,
-			// commit the changes, push the local branch to remote and use the GitHub API to open a pr
-			processErr := processRepo(gitxargsConfig, repo)
-			if processErr != nil {
-				logger.WithFields(logrus.Fields{
-					"Repo name": repo.GetName(), "Error": processErr,
-				}).Debug("Error encountered while processing repo")
-			}
-			return processErr
-
-		}(gitxargsConfig, repo)
+		// For each repo, run the supplied command against it and, if it succeeds without error,
+		// commit the changes, push the local branch to remote and use the GitHub API to open a pr
+		processErr := processRepo(gitxargsConfig, repo)
+		if processErr != nil {
+			logger.WithFields(logrus.Fields{
+				"Repo name": repo.GetName(), "Error": processErr,
+			}).Debug("Error encountered while processing repo")
+		}
 	}
-	wg.Wait()
 
 	return nil
 }

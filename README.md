@@ -27,8 +27,6 @@ and `git-xargs` will:
 1. open pull requests
 1. provide a detailed report of everything that happened
 
-Git-xargs leverages goroutines to perform the repo-updating work in parallel, so it is very fast.
-
 For example, have you ever needed to add a particular file across many repos at once? Or to run a search and replace to change your company or product name across 150 repos with one command? What about upgrading Terraform modules to all use the latest syntax? How about adding a CI/CD configuration file, if it doesn't already exist, or modifying it in place if it does, but only on a subset of repositories you select?
 You can handle these use cases and many more with a single `git-xargs` command.
 
@@ -376,7 +374,6 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
 | `--skip-pull-requests`   | If you don't want any pull requests opened, but would rather have your changes committed directly to your specified branch, pass this flag. Note that it won't work if your Github repo is configured with branch protections on the branch you're trying to commit directly to!                                                                                                                                              | Boolean | No       |
 | `--skip-archived-repos`  | If you want to exclude archived (read-only) repositories from the list of targeted repos, pass this flag.                                                                                                                                                                                                                                                                                                                     | Boolean | No       |
 | `--dry-run`              | If you are in the process of testing out `git-xargs` or your initial set of targeted repos, but you don't want to make any changes via the Github API (pushing your local changes or opening pull requests) you can pass the dry-run flag. This is useful because the output report will still tell you which repos would have been affected, without actually making changes via the Github API to your remote repositories. | Boolean | No       |
-| `--max-concurrent-repos` | Limits the number of concurrent processed repositories. This is only useful if you encounter issues and need throttling when running on a very large number of repos. Default is `0` (Unlimited)                                                                                                                                                                                                                              | Integer | No       |
 | `--draft` | Whether to open pull requests in draft mode. Draft pull requests are available for public GitHub repositories and private repositories in GitHub tiered accounts. See [Draft Pull Requests](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests) for more details.  | Boolean | No |
 
 

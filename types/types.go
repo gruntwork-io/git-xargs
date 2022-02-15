@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/google/go-github/v41/github"
+	"github.com/google/go-github/v42/github"
 )
 
 // Event is a generic tracking occurrence that RunStats manages
