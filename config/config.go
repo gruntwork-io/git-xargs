@@ -18,6 +18,7 @@ type GitXargsConfig struct {
 	SkipArchivedRepos      bool
 	MaxConcurrentRepos     int
 	BranchName             string
+	BaseBranchName         string
 	CommitMessage          string
 	PullRequestTitle       string
 	PullRequestDescription string
@@ -40,6 +41,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 		SkipArchivedRepos:      false,
 		MaxConcurrentRepos:     0,
 		BranchName:             "",
+		BaseBranchName:         "",
 		CommitMessage:          common.DefaultCommitMessage,
 		PullRequestTitle:       common.DefaultPullRequestTitle,
 		PullRequestDescription: common.DefaultPullRequestDescription,

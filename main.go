@@ -69,6 +69,7 @@ func setupApp() *cli.App {
 		common.GenericRepoFlag,
 		common.GenericRepoFileFlag,
 		common.GenericBranchFlag,
+		common.GenericBaseBranchFlag,
 		common.GenericCommitMessageFlag,
 		common.GenericPullRequestTitleFlag,
 		common.GenericPullRequestDescriptionFlag,
