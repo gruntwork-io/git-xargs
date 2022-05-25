@@ -31,6 +31,21 @@ func TestProcessRepo(t *testing.T) {
 	testConfig.Args = []string{"touch", util.NewTestFileName()}
 	testConfig.GithubClient = mocks.ConfigureMockGithubClient()
 
+	// The GitXargsConfig object uses an unbuffered channel to send pull request messages
+	// so we need to listen for the PR messages in this test so that we don't block the channel
+	// which would deadlock this test - we also don't need to make the PR requests themselves
+	// in this test, we can discard them instead
+	go func() {
+		for {
+			select {
+			case pr := <-testConfig.PRChan:
+				_ = pr
+			}
+		}
+	}()
+
+	defer close(testConfig.PRChan)
+
 	// Run a command to delete all local branches in the "../data/test/test-repo" repo to avoid the git-xargs repo
 	// growing in size over time with test data
 	defer cleanupLocalTestRepoChanges(t, testConfig)

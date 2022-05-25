@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v43/github"
 	"github.com/gruntwork-io/git-xargs/printer"
 	"github.com/gruntwork-io/git-xargs/types"
 )
@@ -72,6 +72,10 @@ const (
 	RepoDoesntSupportDraftPullRequestsErr types.Event = "repo-not-compatible-with-pull-config"
 	// BaseBranchTargetInvalidErr denotes a repo that does not have the base branch specified by the user
 	BaseBranchTargetInvalidErr types.Event = "base-branch-target-invalid"
+	// PRFailedDueToRateLimits denotes a repo whose initial pull request failed as a result of being rate limited by GitHub
+	PRFailedDueToRateLimitsErr types.Event = "pr-failed-due-to-rate-limits"
+	//PRFailedAfterMaximumRetriesErr denotes a repo whose pull requests all failed to be created via GitHub following the maximum number of retries
+	PRFailedAfterMaximumRetriesErr types.Event = "pr-failed-after-maximum-retries"
 )
 
 var allEvents = []types.AnnotatedEvent{
@@ -103,6 +107,8 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: RepoFlagSuppliedRepoMalformed, Description: "Repos passed via the --repo flag that were malformed (missing their Github org prefix?) and therefore unprocessable"},
 	{Event: RepoDoesntSupportDraftPullRequestsErr, Description: "Repos that do not support Draft PRs (--draft flag was passed)"},
 	{Event: BaseBranchTargetInvalidErr, Description: "Repos that did not have the branch specified by --base-branch-name"},
+	{Event: PRFailedDueToRateLimitsErr, Description: "Repos whose initial Pull Request failed to be created due to GitHub rate limits"},
+	{Event: PRFailedAfterMaximumRetriesErr, Description: "Repos whose Pull Request failed to be created after the maximum number of retries"},
 }
 
 // RunStats will be a stats-tracker class that keeps score of which repos were touched, which were considered for update, which had branches made, PRs made, which were missing workflows or contexts, or had out of date workflows syntax values, etc

@@ -8,13 +8,14 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/sirupsen/logrus"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v43/github"
 
 	"github.com/gruntwork-io/git-xargs/common"
 	"github.com/gruntwork-io/git-xargs/config"
@@ -264,11 +265,14 @@ func updateRepo(config *config.GitXargsConfig, repositoryDir string, worktree *g
 		return pushBranchErr
 	}
 
-	// Open a pull request on GitHub, of the recently pushed branch against the repository default branch
-	openPullRequestErr := openPullRequest(config, remoteRepository, branchName)
-	if openPullRequestErr != nil {
-		return openPullRequestErr
+	// Create an OpenPrRequest that can be sent into a buffered delay channel to manage calls made to GitHub
+	opr := types.OpenPrRequest{
+		Repo:    remoteRepository,
+		Branch:  branchName,
+		Retries: 0,
 	}
+
+	config.PRChan <- opr
 
 	return nil
 }
@@ -382,43 +386,52 @@ func pushLocalBranch(config *config.GitXargsConfig, remoteRepository *github.Rep
 
 // Attempt to open a pull request via the GitHub API, of the supplied branch specific to this tool, against the main
 // branch for the remote origin
-func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, branch string) error {
+func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) error {
 	logger := logging.GetLogger("git-xargs")
+
+	// If the current request has already exhausted the configured number of PR retries, short-circuit
+	if pr.Retries > config.PullRequestRetries {
+		config.Stats.TrackSingle(stats.PRFailedAfterMaximumRetriesErr, pr.Repo)
+		return nil
+	}
 
 	if config.DryRun || config.SkipPullRequests {
 		logger.WithFields(logrus.Fields{
-			"Repo": repo.GetName(),
+			"Repo": pr.Repo.GetName(),
 		}).Debug("--dry-run and / or --skip-pull-requests is set to true, so skipping opening a pull request!")
 		return nil
 	}
+
+	logger.Debugf("openPullRequest received job with retries: %d. Config max retries for this run: %d", pr.Retries, config.PullRequestRetries)
+
 	repoDefaultBranch := config.BaseBranchName
 	if repoDefaultBranch == "" {
-		repoDefaultBranch = repo.GetDefaultBranch()
+		repoDefaultBranch = pr.Repo.GetDefaultBranch()
 	}
 
-	pullRequestAlreadyExists, err := pullRequestAlreadyExistsForBranch(config, repo, branch, repoDefaultBranch)
+	pullRequestAlreadyExists, err := pullRequestAlreadyExistsForBranch(config, pr.Repo, pr.Branch, repoDefaultBranch)
 
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"Error": err,
-			"Head":  branch,
+			"Head":  pr.Branch,
 			"Base":  repoDefaultBranch,
 		}).Debug("Error listing pull requests")
 
 		// Track pull request open failure
-		config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
+		config.Stats.TrackSingle(stats.PullRequestOpenErr, pr.Repo)
 		return errors.WithStackTrace(err)
 	}
 
 	if pullRequestAlreadyExists {
 		logger.WithFields(logrus.Fields{
-			"Repo": repo.GetName(),
-			"Head": branch,
+			"Repo": pr.Repo.GetName(),
+			"Head": pr.Branch,
 			"Base": repoDefaultBranch,
 		}).Debug("Pull request already exists for this branch, so skipping opening a pull request!")
 
 		// Track that we skipped opening a pull request
-		config.Stats.TrackSingle(stats.PullRequestAlreadyExists, repo)
+		config.Stats.TrackSingle(stats.PullRequestAlreadyExists, pr.Repo)
 		return nil
 	}
 
@@ -442,7 +455,7 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 	// Configure pull request options that the GitHub client accepts when making calls to open new pull requests
 	newPR := &github.NewPullRequest{
 		Title:               github.String(titleToUse),
-		Head:                github.String(branch),
+		Head:                github.String(pr.Branch),
 		Base:                github.String(repoDefaultBranch),
 		Body:                github.String(descriptionToUse),
 		MaintainerCanModify: github.Bool(true),
@@ -450,8 +463,66 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 	}
 
 	// Make a pull request via the Github API
-	pr, resp, err := config.GithubClient.PullRequests.Create(context.Background(), *repo.GetOwner().Login, repo.GetName(), newPR)
+	githubPR, resp, err := config.GithubClient.PullRequests.Create(context.Background(), *pr.Repo.GetOwner().Login, pr.Repo.GetName(), newPR)
 
+	// the go-github library's CheckResponse method can return two different types of rate limiting error:
+	// 1. AbuseRateLimitError which may contain a Retry-After header whose value we can use to slow down, or
+	// 2. RateLimitError which may contain information about when the rate limit will be removed, that we can also use to slow down
+	// Therefore, we need to use type assertions to test for each type of error response, and accordingly fetch the data it may contain
+	// about how long git-xargs should wait before its next attempt to open a pull request
+	githubErr := github.CheckResponse(resp.Response)
+
+	if githubErr != nil {
+
+		var isRateLimited = false
+
+		// Create a new open pull request struct that we'll eventually send on the PRChan
+		opr := types.OpenPrRequest{
+			Repo:    pr.Repo,
+			Branch:  pr.Branch,
+			Retries: 1,
+		}
+
+		// If this request has been seen before, increment its retries count, taking into account previous iterations
+		opr.Retries = (pr.Retries + 1)
+
+		// If GitHub returned an error of type RateLimitError, we can attempt to compute the next time to try the request again
+		// by reading its rate limit information
+		if rateLimitError, ok := githubErr.(*github.RateLimitError); ok {
+			isRateLimited = true
+			retryAfter := time.Until(rateLimitError.Rate.Reset.Time)
+			opr.Delay = retryAfter
+			logger.Infof("git-xargs parsed retryAfter %d from GitHub rate limit error's reset time", retryAfter)
+		}
+
+		// If GitHub returned a Retry-After header, use its value, otherwise use the default
+		if abuseRateLimitError, ok := githubErr.(*github.AbuseRateLimitError); ok {
+			isRateLimited = true
+			if abuseRateLimitError.RetryAfter != nil {
+				if abuseRateLimitError.RetryAfter.Seconds() > 0 {
+					opr.Delay = *abuseRateLimitError.RetryAfter
+				}
+			}
+		}
+
+		if isRateLimited {
+			// If we couldn't determine a more accurate delay from GitHub API response headers, then fall back to our user-configurable default
+			if opr.Delay == 0 {
+				opr.Delay = time.Duration(config.SecondsToSleepWhenRateLimited)
+			}
+
+			logger.Infof("Retrying PR for repo: %s again later with %d second delay due to secondary rate limiting.", pr.Repo.GetName(), opr.Delay)
+			// Put another pull request on the channel so this can effectively be retried after a cooldown
+			config.PRChan <- opr
+			// Keep track of the repo's PR initially failing due to rate limiting
+			config.Stats.TrackSingle(stats.PRFailedDueToRateLimitsErr, pr.Repo)
+
+			return nil
+		}
+	}
+
+	// Otherwise, if we reach this point, we can assume we are not rate limited, and hence must do some
+	// further inspection on the error values returned to us to determine what went wrong
 	prErrorMessage := "Error opening pull request"
 
 	// Github's API will return HTTP status code 422 for several different errors
@@ -463,23 +534,23 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 			switch {
 			case strings.Contains(err.Error(), "Draft pull requests are not supported"):
 				prErrorMessage = "Error opening pull request: draft PRs not supported for this repo. See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests"
-				config.Stats.TrackSingle(stats.RepoDoesntSupportDraftPullRequestsErr, repo)
+				config.Stats.TrackSingle(stats.RepoDoesntSupportDraftPullRequestsErr, pr.Repo)
 
 			case strings.Contains(err.Error(), "Field:base Code:invalid"):
 				prErrorMessage = fmt.Sprintf("Error opening pull request: Base branch name: %s is invalid", config.BaseBranchName)
-				config.Stats.TrackSingle(stats.BaseBranchTargetInvalidErr, repo)
+				config.Stats.TrackSingle(stats.BaseBranchTargetInvalidErr, pr.Repo)
 
 			default:
-				config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
+				config.Stats.TrackSingle(stats.PullRequestOpenErr, pr.Repo)
 			}
 		}
 
 		// If the Github reponse's status code is not 422, fallback to logging and tracking a generic pull request error
-		config.Stats.TrackSingle(stats.PullRequestOpenErr, repo)
+		config.Stats.TrackSingle(stats.PullRequestOpenErr, pr.Repo)
 
 		logger.WithFields(logrus.Fields{
 			"Error": err,
-			"Head":  branch,
+			"Head":  pr.Branch,
 			"Base":  repoDefaultBranch,
 			"Body":  descriptionToUse,
 		}).Debug(prErrorMessage)
@@ -489,14 +560,14 @@ func openPullRequest(config *config.GitXargsConfig, repo *github.Repository, bra
 
 	// There was no error opening the pull request
 	logger.WithFields(logrus.Fields{
-		"Pull Request URL": pr.GetHTMLURL(),
+		"Pull Request URL": githubPR.GetHTMLURL(),
 	}).Debug("Successfully opened pull request")
 
 	if config.Draft {
-		config.Stats.TrackDraftPullRequest(repo.GetName(), pr.GetHTMLURL())
+		config.Stats.TrackDraftPullRequest(pr.Repo.GetName(), githubPR.GetHTMLURL())
 	} else {
 		// Track successful opening of the pull request, extracting the HTML url to the PR itself for easier review
-		config.Stats.TrackPullRequest(repo.GetName(), pr.GetHTMLURL())
+		config.Stats.TrackPullRequest(pr.Repo.GetName(), githubPR.GetHTMLURL())
 	}
 	return nil
 }

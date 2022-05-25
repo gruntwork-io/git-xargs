@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v43/github"
 )
 
 func getMockGithubRepo() *github.Repository {

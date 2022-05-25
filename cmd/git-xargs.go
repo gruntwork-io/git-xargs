@@ -5,8 +5,10 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gruntwork-io/git-xargs/auth"
+	"github.com/gruntwork-io/git-xargs/common"
 	"github.com/gruntwork-io/git-xargs/config"
 	gitxargs_io "github.com/gruntwork-io/git-xargs/io"
 	"github.com/gruntwork-io/git-xargs/repository"
@@ -33,6 +35,17 @@ func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config.GithubOrg = c.String("github-org")
 	config.RepoSlice = c.StringSlice("repo")
 	config.MaxConcurrentRepos = c.Int("max-concurrent-repos")
+	config.SecondsToSleepBetweenPRs = c.Int("seconds-between-prs")
+	config.PullRequestRetries = c.Int("max-pr-retries")
+	config.SecondsToSleepWhenRateLimited = c.Int("seconds-to-wait-when-rate-limited")
+
+	// A non-positive ticker value won't work, so set to the default minimum if user passed a bad value
+	tickerVal := c.Int("seconds-between-prs")
+	if tickerVal < 1 {
+		tickerVal = common.DefaultSecondsBetweenPRs
+	}
+
+	config.Ticker = time.NewTicker(time.Duration(tickerVal) * time.Second)
 	config.Args = c.Args()
 
 	shouldReadStdIn, err := dataBeingPipedToStdIn()

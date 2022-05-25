@@ -22,8 +22,10 @@ func TestHandleRepoProcessing(t *testing.T) {
 	testConfig.CommitMessage = "test-commit-name"
 	testConfig.Args = []string{"touch", "test.txt"}
 	testConfig.GithubClient = mocks.ConfigureMockGithubClient()
-	err := handleRepoProcessing(testConfig)
+	testConfig.PullRequestRetries = 0
+	testConfig.SecondsToSleepBetweenPRs = 1
 
+	err := handleRepoProcessing(testConfig)
 	assert.NoError(t, err)
 }
 
