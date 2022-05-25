@@ -35,7 +35,7 @@ func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr ty
 
 // We process all work that can be done up to the open pull request API call in parallel, with as many concurrent goroutines
 // as specified by the --max-concurrent-repos flag.
-// However, we then separately process all open pull request jobs separately, through the separate PRChan. We do this so that
+// However, we then separately process all open pull request jobs, through the PRChan. We do this so that
 // we can insert a configurable buffer of time between open pull request API calls, which must be staggered to avoid tripping
 // the GitHub API's rate limiting mechanisms
 // See https://github.com/gruntwork-io/git-xargs/issues/53 for more information
