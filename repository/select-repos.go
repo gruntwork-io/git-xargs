@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v43/github"
 	"github.com/gruntwork-io/git-xargs/auth"
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/git-xargs/io"

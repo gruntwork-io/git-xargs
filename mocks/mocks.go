@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v43/github"
 	"github.com/gruntwork-io/git-xargs/auth"
 )
 

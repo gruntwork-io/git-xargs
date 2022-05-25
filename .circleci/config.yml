@@ -45,7 +45,7 @@ jobs:
             git config --global user.name "Grunty"
       - run:
           name: run git-xargs tests
-          command: run-go-tests --timeout 45m
+          command: run-go-tests --timeout 5m
           no_output_timeout: 45m
           when: always
   build-and-deploy:
