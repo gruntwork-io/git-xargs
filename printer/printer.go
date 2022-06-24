@@ -14,10 +14,10 @@ import (
 // configurePrinterStyling accepts a pointer to a table printer and sets up the styles commonly used across them
 // resulting in uniform tabular output to STDOUT following each run of the CLI
 func configurePrinterStyling(printer *tableprinter.Printer) {
-	printer.BorderTop, printer.BorderBottom, printer.BorderLeft, printer.BorderRight = true, true, true, true
-	printer.CenterSeparator = "│"
-	printer.ColumnSeparator = "│"
-	printer.RowSeparator = "─"
+	printer.BorderTop, printer.BorderBottom, printer.BorderLeft, printer.BorderRight = false, false, true, true
+	printer.CenterSeparator = "|"
+	printer.ColumnSeparator = "|"
+	printer.RowSeparator = "-"
 	printer.HeaderBgColor = tablewriter.BgBlackColor
 	printer.HeaderFgColor = tablewriter.FgGreenColor
 }
