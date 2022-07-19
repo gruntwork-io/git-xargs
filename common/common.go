@@ -15,7 +15,6 @@ const (
 	BaseBranchFlagName                   = "base-branch-name"
 	PullRequestTitleFlagName             = "pull-request-title"
 	PullRequestDescriptionFlagName       = "pull-request-description"
-	MaxConcurrentReposFlagName           = "max-concurrent-repos"
 	SecondsToWaitBetweenPrsFlagName      = "seconds-between-prs"
 	DefaultCommitMessage                 = "git-xargs programmatic commit"
 	DefaultPullRequestTitle              = "git-xargs programmatic pull request"
@@ -79,11 +78,6 @@ var (
 		Name:  PullRequestDescriptionFlagName,
 		Usage: "The description to add to pull requests opened by git-xargs",
 		Value: DefaultPullRequestDescription,
-	}
-	GenericMaxConcurrentReposFlag = cli.IntFlag{
-		Name:  MaxConcurrentReposFlagName,
-		Usage: "Limits the number of concurrent processed repositories. This is only useful if you encounter issues and need throttling when running on a very large number of repos.  Default is 0 (Unlimited)",
-		Value: DefaultMaxConcurrentRepos,
 	}
 	GenericSecondsToWaitFlag = cli.IntFlag{
 		Name:  SecondsToWaitBetweenPrsFlagName,

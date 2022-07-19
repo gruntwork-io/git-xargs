@@ -2,9 +2,11 @@ package types
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/google/go-github/v43/github"
+	"github.com/pterm/pterm"
 )
 
 // Event is a generic tracking occurrence that RunStats manages
@@ -40,10 +42,12 @@ type AllowedRepo struct {
 }
 
 type OpenPrRequest struct {
-	Repo    *github.Repository
-	Branch  string
-	Delay   time.Duration
-	Retries int
+	Repo        *github.Repository
+	Branch      string
+	Delay       time.Duration
+	Retries     int
+	WaitGroup   *sync.WaitGroup
+	ProgressBar *pterm.ProgressbarPrinter
 }
 
 // PullRequest is a simple two column representation of the repo name and its PR url
