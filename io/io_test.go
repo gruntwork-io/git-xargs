@@ -19,7 +19,7 @@ func TestProcessAllowedReposErrsOnBadFilepath(t *testing.T) {
 func TestProcessAllowedReposCorrectlyParsesValidReposFile(t *testing.T) {
 	t.Parallel()
 
-	filepathToValidReposFile := "../data/test/good-test-repos.txt"
+	filepathToValidReposFile := "../data/test/test-file-parsing.txt"
 	allowedRepos, err := ProcessAllowedRepos(filepathToValidReposFile)
 
 	assert.NoError(t, err)
