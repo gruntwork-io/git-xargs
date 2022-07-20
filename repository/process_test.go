@@ -2,13 +2,11 @@ package repository
 
 import (
 	"os/exec"
-	"sync"
 	"testing"
 
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/git-xargs/mocks"
 	"github.com/gruntwork-io/git-xargs/util"
-	"github.com/pterm/pterm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,12 +50,7 @@ func TestProcessRepo(t *testing.T) {
 	// growing in size over time with test data
 	defer cleanupLocalTestRepoChanges(t, testConfig)
 
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-
-	p, _ := pterm.DefaultProgressbar.WithTotal(1).WithTitle("Downloading stuff").Start()
-
-	processErr := processRepo(testConfig, mocks.GetMockGithubRepo(), wg, p)
+	processErr := processRepo(testConfig, mocks.GetMockGithubRepo())
 	assert.NoError(t, processErr)
 }
 
