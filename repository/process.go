@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -47,11 +46,13 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 	}
 
 	wg := &sync.WaitGroup{}
-	fmt.Printf("Setting waitgroup size to %d", len(repos))
 	wg.Add(len(repos))
 
 	for _, repo := range repos {
 		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
+			defer p.Increment()
+			defer wg.Done()
+
 			// For each repo, run the supplied command against it and, if it succeeds without error,
 			// commit the changes, push the local branch to remote and use the GitHub API to open a pr
 			processErr := processRepo(gitxargsConfig, repo)
@@ -60,9 +61,6 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 					"Repo name": repo.GetName(), "Error": processErr,
 				}).Debug("Error encountered while processing repo")
 			}
-
-			p.Increment()
-			wg.Done()
 
 			return processErr
 		}(gitxargsConfig, repo)
