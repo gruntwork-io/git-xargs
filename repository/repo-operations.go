@@ -224,7 +224,13 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 // updateRepo will check for any changes in worktree as a result of script execution, and if any are present,
 // add any untracked, deleted or modified files, create a commit using the supplied or default commit message,
 // push the code to the remote repo, and open a pull request.
-func updateRepo(config *config.GitXargsConfig, repositoryDir string, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository, branchName string) error {
+func updateRepo(config *config.GitXargsConfig,
+	repositoryDir string,
+	worktree *git.Worktree,
+	remoteRepository *github.Repository,
+	localRepository *git.Repository,
+	branchName string,
+) error {
 	logger := logging.GetLogger("git-xargs")
 
 	status, statusErr := worktree.Status()
@@ -249,7 +255,6 @@ func updateRepo(config *config.GitXargsConfig, repositoryDir string, worktree *g
 
 		// Track the fact that repo had no file changes post command execution
 		config.Stats.TrackSingle(stats.WorktreeStatusClean, remoteRepository)
-
 		return nil
 	}
 
@@ -265,16 +270,14 @@ func updateRepo(config *config.GitXargsConfig, repositoryDir string, worktree *g
 		return pushBranchErr
 	}
 
-	// Create an OpenPrRequest that can be sent into a buffered delay channel to manage calls made to GitHub
+	// Create an OpenPrRequest that tracks retries
 	opr := types.OpenPrRequest{
 		Repo:    remoteRepository,
 		Branch:  branchName,
 		Retries: 0,
 	}
 
-	config.PRChan <- opr
-
-	return nil
+	return openPullRequestsWithThrottling(config, opr)
 }
 
 // commitLocalChanges will check for any changes in worktree as a result of script execution, and if any are present,
@@ -410,7 +413,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 	}
 
 	pullRequestAlreadyExists, err := pullRequestAlreadyExistsForBranch(config, pr.Repo, pr.Branch, repoDefaultBranch)
-
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"Error": err,
@@ -474,7 +476,7 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 	if githubErr != nil {
 
-		var isRateLimited = false
+		isRateLimited := false
 
 		// Create a new open pull request struct that we'll eventually send on the PRChan
 		opr := types.OpenPrRequest{
@@ -492,7 +494,7 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 			isRateLimited = true
 			retryAfter := time.Until(rateLimitError.Rate.Reset.Time)
 			opr.Delay = retryAfter
-			logger.Infof("git-xargs parsed retryAfter %d from GitHub rate limit error's reset time", retryAfter)
+			logger.Debugf("git-xargs parsed retryAfter %d from GitHub rate limit error's reset time", retryAfter)
 		}
 
 		// If GitHub returned a Retry-After header, use its value, otherwise use the default
@@ -511,13 +513,12 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 				opr.Delay = time.Duration(config.SecondsToSleepWhenRateLimited)
 			}
 
-			logger.Infof("Retrying PR for repo: %s again later with %d second delay due to secondary rate limiting.", pr.Repo.GetName(), opr.Delay)
+			logger.Debugf("Retrying PR for repo: %s again later with %d second delay due to secondary rate limiting.", pr.Repo.GetName(), opr.Delay)
 			// Put another pull request on the channel so this can effectively be retried after a cooldown
-			config.PRChan <- opr
+
 			// Keep track of the repo's PR initially failing due to rate limiting
 			config.Stats.TrackSingle(stats.PRFailedDueToRateLimitsErr, pr.Repo)
-
-			return nil
+			return openPullRequestsWithThrottling(config, opr)
 		}
 	}
 
@@ -554,7 +555,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 			"Base":  repoDefaultBranch,
 			"Body":  descriptionToUse,
 		}).Debug(prErrorMessage)
-
 		return errors.WithStackTrace(err)
 	}
 

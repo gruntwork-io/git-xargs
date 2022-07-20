@@ -1,21 +1,20 @@
 package repository
 
 import (
+	"sync"
 	"time"
 
 	"github.com/google/go-github/v43/github"
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/go-commons/logging"
-	"github.com/remeh/sizedwaitgroup"
+	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 )
 
 // openPullRequestsWithThrottling calls the method to open a pull request after waiting on the internal ticker channel, which
 // reflects the value of the --seconds-between-prs flag
-func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr types.OpenPrRequest, wg *sizedwaitgroup.SizedWaitGroup) {
-	defer wg.Done()
-
+func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr types.OpenPrRequest) error {
 	logger := logging.GetLogger("git-xargs")
 	logger.Debugf("pullRequestWorker received pull request job. Delay: %d seconds. Retries: %d for repo: %s on branch: %s\n", pr.Delay, pr.Retries, pr.Repo.GetName(), pr.Branch)
 
@@ -28,13 +27,12 @@ func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr ty
 		time.Sleep(time.Duration(pr.Delay) * time.Second)
 	}
 	// Make pull request. Errors are handled within the method itself
-	openPullRequest(gitxargsConfig, pr)
+	return openPullRequest(gitxargsConfig, pr)
 }
 
 // ProcessRepos loops through every repo we've selected and uses a WaitGroup so that the processing can happen in parallel.
 
-// We process all work that can be done up to the open pull request API call in parallel, with as many concurrent goroutines
-// as specified by the --max-concurrent-repos flag.
+// We process all work that can be done up to the open pull request API call in parallel
 // However, we then separately process all open pull request jobs, through the PRChan. We do this so that
 // we can insert a configurable buffer of time between open pull request API calls, which must be staggered to avoid tripping
 // the GitHub API's rate limiting mechanisms
@@ -42,25 +40,19 @@ func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr ty
 func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 
-	// Limit the number of concurrent goroutines using the MaxConcurrentRepos config value
-	// MaxConcurrentRepos == 0 will fall back to unlimited (previous default behavior)
-	wg := sizedwaitgroup.New(gitxargsConfig.MaxConcurrentRepos)
+	p, progressBarErr := pterm.DefaultProgressbar.WithTotal(len(repos)).WithTitle("Processing repos").Start()
+	if progressBarErr != nil {
+		return progressBarErr
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(len(repos))
 
 	for _, repo := range repos {
-		wg.Add()
-
-		go func() {
-			for {
-				select {
-				case pr := <-gitxargsConfig.PRChan:
-					wg.Add()
-					go openPullRequestsWithThrottling(gitxargsConfig, pr, &wg)
-				}
-			}
-		}()
-
 		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
+			defer p.Increment()
 			defer wg.Done()
+
 			// For each repo, run the supplied command against it and, if it succeeds without error,
 			// commit the changes, push the local branch to remote and use the GitHub API to open a pr
 			processErr := processRepo(gitxargsConfig, repo)
@@ -69,8 +61,8 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 					"Repo name": repo.GetName(), "Error": processErr,
 				}).Debug("Error encountered while processing repo")
 			}
-			return processErr
 
+			return processErr
 		}(gitxargsConfig, repo)
 	}
 	wg.Wait()
@@ -118,7 +110,7 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 		return branchErr
 	}
 
-	//Run the specified command
+	// Run the specified command
 	commandErr := executeCommand(config, repositoryDir, repo)
 	if commandErr != nil {
 		return commandErr
@@ -131,7 +123,7 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 
 	logger.WithFields(logrus.Fields{
 		"Repo name": repo.GetName(),
-	}).Info("Repository successfully processed")
+	}).Debug("Repository successfully processed")
 
 	return nil
 }

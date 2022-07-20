@@ -9,8 +9,7 @@ require (
 	github.com/gruntwork-io/go-commons v0.8.2
 	github.com/kataras/tablewriter v0.0.0-20180708051242-e063d29b7c23
 	github.com/landoop/tableprinter v0.0.0-20200805134727-ea32388e35c1
-	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/remeh/sizedwaitgroup v1.0.0
+	github.com/pterm/pterm v0.12.42
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.5
