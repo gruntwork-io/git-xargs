@@ -18,12 +18,10 @@ import (
 // For more info, see: http://stackoverflow.com/a/11355611/483528
 var VERSION string
 
-var (
-	LogLevelFlag = cli.StringFlag{
-		Name:  "loglevel",
-		Value: logrus.InfoLevel.String(),
-	}
-)
+var LogLevelFlag = cli.StringFlag{
+	Name:  "loglevel",
+	Value: logrus.InfoLevel.String(),
+}
 
 // initCli initializes the CLI app before any command is actually executed. This function will handle all the setup
 // code, such as setting up the logger with the appropriate log level.
@@ -77,6 +75,7 @@ func setupApp() *cli.App {
 		common.GenericSecondsToWaitFlag,
 		common.GenericMaxPullRequestRetriesFlag,
 		common.GenericSecondsToWaitWhenRateLimitedFlag,
+		common.GenericNoSkipCIFlag,
 	}
 
 	app.Action = cmd.RunGitXargs

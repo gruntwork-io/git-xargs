@@ -36,6 +36,7 @@ type GitXargsConfig struct {
 	SecondsToSleepBetweenPRs      int
 	PullRequestRetries            int
 	SecondsToSleepWhenRateLimited int
+	NoSkipCI                      bool
 	Ticker                        *time.Ticker
 }
 
@@ -64,11 +65,11 @@ func NewGitXargsConfig() *GitXargsConfig {
 		SecondsToSleepBetweenPRs:      common.DefaultSecondsBetweenPRs,
 		SecondsToSleepWhenRateLimited: common.DefaultSecondsToWaitWhenRateLimited,
 		PullRequestRetries:            common.DefaultMaxPullRequestRetries,
+		NoSkipCI:                      false,
 	}
 }
 
 func NewGitXargsTestConfig() *GitXargsConfig {
-
 	config := NewGitXargsConfig()
 
 	uniqueID := util.RandStringBytes(9)
