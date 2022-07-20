@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -38,6 +39,12 @@ func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config.SecondsToSleepBetweenPRs = c.Int("seconds-between-prs")
 	config.PullRequestRetries = c.Int("max-pr-retries")
 	config.SecondsToSleepWhenRateLimited = c.Int("seconds-to-wait-when-rate-limited")
+	config.NoSkipCI = c.Bool("no-skip-ci")
+	// By default, prepend "[skip ci]" to commit messages, unless the user passed --no-skip-ci
+	if config.NoSkipCI == false {
+		commitMsgWithCISkip := fmt.Sprintf("%s %s", "[skip ci]", config.CommitMessage)
+		config.CommitMessage = commitMsgWithCISkip
+	}
 
 	// A non-positive ticker value won't work, so set to the default minimum if user passed a bad value
 	tickerVal := c.Int("seconds-between-prs")
