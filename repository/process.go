@@ -44,7 +44,10 @@ func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr ty
 func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 
-	p, _ := pterm.DefaultProgressbar.WithTotal(len(repos)).WithTitle("Processing repos").Start()
+	p, progressBarErr := pterm.DefaultProgressbar.WithTotal(len(repos)).WithTitle("Processing repos").Start()
+	if progressBarErr != nil {
+		return progressBarErr
+	}
 
 	// Limit the number of concurrent goroutines using the MaxConcurrentRepos config value
 	// MaxConcurrentRepos == 0 will fall back to unlimited (previous default behavior)
