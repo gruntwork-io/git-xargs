@@ -8,13 +8,11 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 
 	"github.com/google/go-github/v43/github"
@@ -232,8 +230,6 @@ func updateRepo(config *config.GitXargsConfig,
 	remoteRepository *github.Repository,
 	localRepository *git.Repository,
 	branchName string,
-	wg *sync.WaitGroup,
-	p *pterm.ProgressbarPrinter,
 ) error {
 	logger := logging.GetLogger("git-xargs")
 
@@ -248,8 +244,6 @@ func updateRepo(config *config.GitXargsConfig,
 
 		// Track the status check failure
 		config.Stats.TrackSingle(stats.WorktreeStatusCheckFailedCommand, remoteRepository)
-		wg.Done()
-		p.Increment()
 		return errors.WithStackTrace(statusErr)
 	}
 
@@ -261,39 +255,29 @@ func updateRepo(config *config.GitXargsConfig,
 
 		// Track the fact that repo had no file changes post command execution
 		config.Stats.TrackSingle(stats.WorktreeStatusClean, remoteRepository)
-		wg.Done()
-		p.Increment()
 		return nil
 	}
 
 	// Commit any untracked files, modified or deleted files that resulted from script execution
 	commitErr := commitLocalChanges(status, config, repositoryDir, worktree, remoteRepository, localRepository)
 	if commitErr != nil {
-		wg.Done()
-		p.Increment()
 		return commitErr
 	}
 
 	// Push the local branch containing all of our changes from executing the supplied command
 	pushBranchErr := pushLocalBranch(config, remoteRepository, localRepository)
 	if pushBranchErr != nil {
-		wg.Done()
-		p.Increment()
 		return pushBranchErr
 	}
 
-	// Create an OpenPrRequest that can be sent into a buffered delay channel to manage calls made to GitHub
+	// Create an OpenPrRequest that tracks retries
 	opr := types.OpenPrRequest{
-		Repo:        remoteRepository,
-		Branch:      branchName,
-		Retries:     0,
-		WaitGroup:   wg,
-		ProgressBar: p,
+		Repo:    remoteRepository,
+		Branch:  branchName,
+		Retries: 0,
 	}
 
-	config.PRChan <- opr
-
-	return nil
+	return openPullRequestsWithThrottling(config, opr)
 }
 
 // commitLocalChanges will check for any changes in worktree as a result of script execution, and if any are present,
@@ -411,8 +395,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 	// If the current request has already exhausted the configured number of PR retries, short-circuit
 	if pr.Retries > config.PullRequestRetries {
 		config.Stats.TrackSingle(stats.PRFailedAfterMaximumRetriesErr, pr.Repo)
-		pr.WaitGroup.Done()
-		pr.ProgressBar.Increment()
 		return nil
 	}
 
@@ -420,8 +402,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 		logger.WithFields(logrus.Fields{
 			"Repo": pr.Repo.GetName(),
 		}).Debug("--dry-run and / or --skip-pull-requests is set to true, so skipping opening a pull request!")
-		pr.WaitGroup.Done()
-		pr.ProgressBar.Increment()
 		return nil
 	}
 
@@ -442,8 +422,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 		// Track pull request open failure
 		config.Stats.TrackSingle(stats.PullRequestOpenErr, pr.Repo)
-		pr.WaitGroup.Done()
-		pr.ProgressBar.Increment()
 		return errors.WithStackTrace(err)
 	}
 
@@ -456,8 +434,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 		// Track that we skipped opening a pull request
 		config.Stats.TrackSingle(stats.PullRequestAlreadyExists, pr.Repo)
-		pr.WaitGroup.Done()
-		pr.ProgressBar.Increment()
 		return nil
 	}
 
@@ -504,11 +480,9 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 		// Create a new open pull request struct that we'll eventually send on the PRChan
 		opr := types.OpenPrRequest{
-			Repo:        pr.Repo,
-			Branch:      pr.Branch,
-			Retries:     1,
-			WaitGroup:   pr.WaitGroup,
-			ProgressBar: pr.ProgressBar,
+			Repo:    pr.Repo,
+			Branch:  pr.Branch,
+			Retries: 1,
 		}
 
 		// If this request has been seen before, increment its retries count, taking into account previous iterations
@@ -541,10 +515,10 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 			logger.Debugf("Retrying PR for repo: %s again later with %d second delay due to secondary rate limiting.", pr.Repo.GetName(), opr.Delay)
 			// Put another pull request on the channel so this can effectively be retried after a cooldown
-			config.PRChan <- opr
+
 			// Keep track of the repo's PR initially failing due to rate limiting
 			config.Stats.TrackSingle(stats.PRFailedDueToRateLimitsErr, pr.Repo)
-			return nil
+			return openPullRequestsWithThrottling(config, opr)
 		}
 	}
 
@@ -581,8 +555,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 			"Base":  repoDefaultBranch,
 			"Body":  descriptionToUse,
 		}).Debug(prErrorMessage)
-		pr.WaitGroup.Done()
-		pr.ProgressBar.Increment()
 		return errors.WithStackTrace(err)
 	}
 
@@ -597,8 +569,6 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 		// Track successful opening of the pull request, extracting the HTML url to the PR itself for easier review
 		config.Stats.TrackPullRequest(pr.Repo.GetName(), githubPR.GetHTMLURL())
 	}
-	pr.WaitGroup.Done()
-	pr.ProgressBar.Increment()
 	return nil
 }
 

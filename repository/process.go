@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -14,12 +15,9 @@ import (
 
 // openPullRequestsWithThrottling calls the method to open a pull request after waiting on the internal ticker channel, which
 // reflects the value of the --seconds-between-prs flag
-func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr types.OpenPrRequest) {
+func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr types.OpenPrRequest) error {
 	logger := logging.GetLogger("git-xargs")
 	logger.Debugf("pullRequestWorker received pull request job. Delay: %d seconds. Retries: %d for repo: %s on branch: %s\n", pr.Delay, pr.Retries, pr.Repo.GetName(), pr.Branch)
-
-	// Update the user-facing progress bar so it's clear we're waiting / sleeping on purpose
-	pr.ProgressBar.UpdateTitle("Processing repos - and waiting on GitHub API rate limits...")
 
 	// Space out open PR calls to GitHub API to avoid being aggressively rate-limited. By waiting on the ticker,
 	// we ensure we're staggering our calls by the number of seconds specified by the seconds-between-prs flag, or
@@ -30,13 +28,12 @@ func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr ty
 		time.Sleep(time.Duration(pr.Delay) * time.Second)
 	}
 	// Make pull request. Errors are handled within the method itself
-	openPullRequest(gitxargsConfig, pr)
+	return openPullRequest(gitxargsConfig, pr)
 }
 
 // ProcessRepos loops through every repo we've selected and uses a WaitGroup so that the processing can happen in parallel.
 
-// We process all work that can be done up to the open pull request API call in parallel, with as many concurrent goroutines
-// as specified by the --max-concurrent-repos flag.
+// We process all work that can be done up to the open pull request API call in parallel
 // However, we then separately process all open pull request jobs, through the PRChan. We do this so that
 // we can insert a configurable buffer of time between open pull request API calls, which must be staggered to avoid tripping
 // the GitHub API's rate limiting mechanisms
@@ -49,30 +46,24 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 		return progressBarErr
 	}
 
-	// Limit the number of concurrent goroutines using the MaxConcurrentRepos config value
-	// MaxConcurrentRepos == 0 will fall back to unlimited (previous default behavior)
 	wg := &sync.WaitGroup{}
+	fmt.Printf("Setting waitgroup size to %d", len(repos))
 	wg.Add(len(repos))
 
 	for _, repo := range repos {
-		go func() {
-			for {
-				select {
-				case pr := <-gitxargsConfig.PRChan:
-					go openPullRequestsWithThrottling(gitxargsConfig, pr)
-				}
-			}
-		}()
-
 		go func(gitxargsConfig *config.GitXargsConfig, repo *github.Repository) error {
 			// For each repo, run the supplied command against it and, if it succeeds without error,
 			// commit the changes, push the local branch to remote and use the GitHub API to open a pr
-			processErr := processRepo(gitxargsConfig, repo, wg, p)
+			processErr := processRepo(gitxargsConfig, repo)
 			if processErr != nil {
 				logger.WithFields(logrus.Fields{
 					"Repo name": repo.GetName(), "Error": processErr,
 				}).Debug("Error encountered while processing repo")
 			}
+
+			p.Increment()
+			wg.Done()
+
 			return processErr
 		}(gitxargsConfig, repo)
 	}
@@ -90,7 +81,7 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 // 7. Via the GitHub API, open a pull request of the newly pushed branch against the main branch of the repo
 // 8. Track all successfully opened pull requests via the stats tracker so that we can print them out as part of our final
 // run report that is displayed in table format to the operator following each run
-func processRepo(config *config.GitXargsConfig, repo *github.Repository, wg *sync.WaitGroup, p *pterm.ProgressbarPrinter) error {
+func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 	logger := logging.GetLogger("git-xargs")
 
 	// Create a new temporary directory in the default temp directory of the system, but append
@@ -98,16 +89,12 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository, wg *syn
 	repositoryDir, localRepository, cloneErr := cloneLocalRepository(config, repo)
 
 	if cloneErr != nil {
-		wg.Done()
-		p.Increment()
 		return cloneErr
 	}
 
 	// Get HEAD ref from the repo
 	ref, headRefErr := getLocalRepoHeadRef(config, localRepository, repo)
 	if headRefErr != nil {
-		wg.Done()
-		p.Increment()
 		return headRefErr
 	}
 
@@ -115,8 +102,6 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository, wg *syn
 	worktree, worktreeErr := getLocalWorkTree(repositoryDir, localRepository, repo)
 
 	if worktreeErr != nil {
-		wg.Done()
-		p.Increment()
 		return worktreeErr
 	}
 
@@ -124,23 +109,17 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository, wg *syn
 	// Also, attempt to pull the latest from the remote branch if it exists
 	branchName, branchErr := checkoutLocalBranch(config, ref, worktree, repo, localRepository)
 	if branchErr != nil {
-		wg.Done()
-		p.Increment()
 		return branchErr
 	}
 
 	// Run the specified command
 	commandErr := executeCommand(config, repositoryDir, repo)
 	if commandErr != nil {
-		wg.Done()
-		p.Increment()
 		return commandErr
 	}
 
 	// Commit and push the changes to Git and open a PR
-	if err := updateRepo(config, repositoryDir, worktree, repo, localRepository, branchName.String(), wg, p); err != nil {
-		wg.Done()
-		p.Increment()
+	if err := updateRepo(config, repositoryDir, worktree, repo, localRepository, branchName.String()); err != nil {
 		return err
 	}
 
