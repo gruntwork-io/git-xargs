@@ -60,7 +60,7 @@ const (
 	PullRequestAlreadyExists types.Event = "pull-request-already-exists"
 	// CommitsMadeDirectlyToBranch denotes a repo whose local worktree changes were committed directly to the specified branch because the --skip-pull-requests flag was passed
 	CommitsMadeDirectlyToBranch types.Event = "commits-made-directly-to-branch"
-	//DirectCommitsPushedToRemoteBranch denotes a repo whose changes were pushed to the remote specified branch because the --skip-pull-requests flag was passed
+	// DirectCommitsPushedToRemoteBranch denotes a repo whose changes were pushed to the remote specified branch because the --skip-pull-requests flag was passed
 	DirectCommitsPushedToRemoteBranch types.Event = "direct-commits-pushed-to-remote"
 	// BranchRemotePullFailed denotes a repo whose remote branch could not be fetched successfully
 	BranchRemotePullFailed types.Event = "branch-remote-pull-failed"
@@ -74,14 +74,14 @@ const (
 	BaseBranchTargetInvalidErr types.Event = "base-branch-target-invalid"
 	// PRFailedDueToRateLimits denotes a repo whose initial pull request failed as a result of being rate limited by GitHub
 	PRFailedDueToRateLimitsErr types.Event = "pr-failed-due-to-rate-limits"
-	//PRFailedAfterMaximumRetriesErr denotes a repo whose pull requests all failed to be created via GitHub following the maximum number of retries
+	// PRFailedAfterMaximumRetriesErr denotes a repo whose pull requests all failed to be created via GitHub following the maximum number of retries
 	PRFailedAfterMaximumRetriesErr types.Event = "pr-failed-after-maximum-retries"
 )
 
 var allEvents = []types.AnnotatedEvent{
 	{Event: FetchedViaGithubAPI, Description: "Repos successfully fetched via Github API"},
 	{Event: DryRunSet, Description: "Repos that were not modified in any way because this was a dry-run"},
-	{Event: ReposSelected, Description: "All repos that were targeted for processing AFTER filtering missing / malformed repos"},
+	{Event: ReposSelected, Description: "All repos that were targeted for processing after filtering missing / malformed repos"},
 	{Event: ReposArchivedSkipped, Description: "All repos that were filtered out with the --skip-archived-repos flag"},
 	{Event: TargetBranchNotFound, Description: "Repos whose target branch was not found"},
 	{Event: TargetBranchAlreadyExists, Description: "Repos whose target branch already existed"},
@@ -93,7 +93,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: CommandErrorOccurredDuringExecution, Description: "Repos for which the supplied command raised an error during execution"},
 	{Event: WorktreeStatusCheckFailed, Description: "Repos for which the git status command failed following command execution"},
 	{Event: WorktreeStatusDirty, Description: "Repos that showed file changes to their working directory following command execution"},
-	{Event: WorktreeStatusClean, Description: "Repos that showed NO file changes to their working directory following command execution"},
+	{Event: WorktreeStatusClean, Description: "Repos that showed no file changes to their working directory following command execution"},
 	{Event: CommitChangesFailed, Description: "Repos whose file changes failed to be committed for some reason"},
 	{Event: PushBranchFailed, Description: "Repos whose tool-specific branch containing changes failed to push to remote origin"},
 	{Event: PushBranchSkipped, Description: "Repos whose local branch was not pushed because the --dry-run flag was set"},

@@ -7,8 +7,6 @@ require (
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-github/v43 v43.0.0
 	github.com/gruntwork-io/go-commons v0.8.2
-	github.com/kataras/tablewriter v0.0.0-20180708051242-e063d29b7c23
-	github.com/landoop/tableprinter v0.0.0-20200805134727-ea32388e35c1
 	github.com/pterm/pterm v0.12.42
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.7.0

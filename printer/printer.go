@@ -2,59 +2,34 @@ package printer
 
 import (
 	"fmt"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/gruntwork-io/git-xargs/types"
-	"github.com/kataras/tablewriter"
-	"github.com/landoop/tableprinter"
+	"github.com/pterm/pterm"
 )
 
-// configurePrinterStyling accepts a pointer to a table printer and sets up the styles commonly used across them
-// resulting in uniform tabular output to STDOUT following each run of the CLI
-func configurePrinterStyling(printer *tableprinter.Printer) {
-	printer.BorderTop, printer.BorderBottom, printer.BorderLeft, printer.BorderRight = false, false, true, true
-	printer.CenterSeparator = "|"
-	printer.ColumnSeparator = "|"
-	printer.RowSeparator = "-"
-	printer.HeaderBgColor = tablewriter.BgBlackColor
-	printer.HeaderFgColor = tablewriter.FgGreenColor
-}
-
 func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunReport) {
-	fmt.Print("\n\n")
-	fmt.Println("*****************************************************************")
-	fmt.Printf("  GIT-XARGS RUN SUMMARY @ %v\n", time.Now().UTC())
-	fmt.Printf("  Runtime in seconds: %v\n", runReport.RuntimeSeconds)
-	fmt.Println("*****************************************************************")
+	renderSection(fmt.Sprintf("Git-xargs run summary @ %s", time.Now().UTC()))
 
-	// If there were any allowed repos provided via file, print out the list of them
-	fileProvidedReposPrinter := tableprinter.New(os.Stdout)
-	configurePrinterStyling(fileProvidedReposPrinter)
+	pterm.DefaultBulletList.WithItems([]pterm.BulletListItem{
+		{Level: 0, Text: fmt.Sprintf("Runtime in seconds: %d", runReport.RuntimeSeconds)},
+		{Level: 0, Text: fmt.Sprintf("Command supplied: %s", runReport.Command)},
+		{Level: 0, Text: fmt.Sprintf("Repo selection method: %s", runReport.SelectionMode)},
+	}).Render()
 
-	fmt.Print("\n\n")
-
-	fmt.Println("COMMAND SUPPLIED")
-	fmt.Println()
-	fmt.Println(runReport.Command)
-	fmt.Println()
-	fmt.Println("REPO SELECTION METHOD USED FOR THIS RUN - (see README.md for more information)")
-	fmt.Println()
-	fmt.Println(runReport.SelectionMode)
-
-	// If the user selected repos via a flat file, print a table showing which repos they were
 	if len(runReport.FileProvidedRepos) > 0 {
-		fmt.Println(" REPOS SUPPLIED VIA --repos FILE FLAG")
-		fileProvidedReposPrinter.Print(runReport.FileProvidedRepos)
+		renderSection("Repos supplied via --repos file flag")
+		data := make([][]string, len(runReport.FileProvidedRepos))
+		for idx, fileProvidedRepo := range runReport.FileProvidedRepos {
+			data[idx] = []string{fmt.Sprintf("%s/%s", fileProvidedRepo.Organization, fileProvidedRepo.Name)}
+		}
+		renderTableWithHeader([]string{"Repo name"}, data)
 	}
-	// For each event type, print a summary of the repos in that category
+
+	// For each event type, print a summary table of the repos in that category
 	for _, ae := range allEvents {
 
 		var reducedRepos []types.ReducedRepo
-
-		printer := tableprinter.New(os.Stdout)
-		configurePrinterStyling(printer)
 
 		for _, repo := range runReport.Repos[ae.Event] {
 			rr := types.ReducedRepo{
@@ -65,10 +40,14 @@ func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunRepor
 		}
 
 		if len(reducedRepos) > 0 {
-			fmt.Println()
-			fmt.Printf(" %s\n", strings.ToUpper(ae.Description))
-			printer.Print(reducedRepos)
-			fmt.Println()
+
+			renderSection(ae.Description)
+			data := make([][]string, len(reducedRepos))
+			for idx, repo := range reducedRepos {
+				data[idx] = []string{repo.Name, repo.URL}
+			}
+
+			renderTableWithHeader([]string{"Repo name", "Repo URL"}, data)
 		}
 	}
 
@@ -93,26 +72,44 @@ func PrintRepoReport(allEvents []types.AnnotatedEvent, runReport *types.RunRepor
 	}
 
 	if len(pullRequests) > 0 {
-		fmt.Println()
-		fmt.Println("*****************************************************")
-		fmt.Println("  PULL REQUESTS OPENED")
-		fmt.Println("*****************************************************")
-		pullRequestPrinter := tableprinter.New(os.Stdout)
-		configurePrinterStyling(pullRequestPrinter)
-		pullRequestPrinter.Print(pullRequests)
-		fmt.Println()
+		renderSection("Pull requests opened")
 
+		data := make([][]string, len(pullRequests))
+		for idx, pullRequest := range pullRequests {
+			data[idx] = []string{pullRequest.Repo, pullRequest.URL}
+		}
+
+		renderTableWithHeader([]string{"Repo name", "Pull request URL"}, data)
 	}
 
 	if len(draftPullRequests) > 0 {
-		fmt.Println()
-		fmt.Println("*****************************************************")
-		fmt.Println("  DRAFT PULL REQUESTS OPENED")
-		fmt.Println("*****************************************************")
-		pullRequestPrinter := tableprinter.New(os.Stdout)
-		configurePrinterStyling(pullRequestPrinter)
-		pullRequestPrinter.Print(draftPullRequests)
-		fmt.Println()
+		renderSection("Draft Pull requests opened")
 
+		data := make([][]string, len(draftPullRequests))
+		for idx, draftPullRequest := range draftPullRequests {
+			data[idx] = []string{draftPullRequest.Repo, draftPullRequest.URL}
+		}
+
+		renderTableWithHeader([]string{"Repo name", "Draft Pull request URL"}, data)
 	}
+}
+
+func renderSection(sectionTitle string) {
+	pterm.DefaultSection.Style = pterm.NewStyle(pterm.FgLightCyan)
+	pterm.DefaultSection.WithLevel(0).Println(sectionTitle)
+}
+
+func renderTableWithHeader(headers []string, data [][]string) {
+	tableData := pterm.TableData{
+		headers,
+	}
+	for idx := range data {
+		tableData = append(tableData, data[idx])
+	}
+	pterm.DefaultTable.
+		WithHasHeader().
+		WithBoxed(true).
+		WithRowSeparator("-").
+		WithData(tableData).
+		Render()
 }
