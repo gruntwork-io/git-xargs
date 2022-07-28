@@ -174,15 +174,22 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 	checkoutErr := worktree.Checkout(co)
 
 	if checkoutErr != nil {
-		logger.WithFields(logrus.Fields{
-			"Error": checkoutErr,
-			"Repo":  remoteRepository.GetName(),
-		}).Debug("Error creating new branch")
+		if config.SkipPullRequests &&
+			remoteRepository.GetDefaultBranch() == config.BranchName &&
+			strings.Contains(checkoutErr.Error(), "already exists") {
+			// User has requested pull requess be skipped, meaning they want their commits pushed on their target branch
+			// If the target branch is also the repo's default branch and therefore already exists, we don't have an error
+		} else {
+			logger.WithFields(logrus.Fields{
+				"Error": checkoutErr,
+				"Repo":  remoteRepository.GetName(),
+			}).Debug("Error creating new branch")
 
-		// Track the error checking out the branch
-		config.Stats.TrackSingle(stats.BranchCheckoutFailed, remoteRepository)
+			// Track the error checking out the branch
+			config.Stats.TrackSingle(stats.BranchCheckoutFailed, remoteRepository)
 
-		return branchName, errors.WithStackTrace(checkoutErr)
+			return branchName, errors.WithStackTrace(checkoutErr)
+		}
 	}
 
 	// Pull latest code from remote branch if it exists to avoid fast-forwarding errors
@@ -209,6 +216,11 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 			// The supplied branch just doesn't exist yet on the remote - this is not a fatal error and will
 			// allow the new branch to be pushed in pushLocalBranch
 			config.Stats.TrackSingle(stats.BranchRemoteDidntExistYet, remoteRepository)
+			return branchName, nil
+		}
+
+		if pullErr == git.NoErrAlreadyUpToDate {
+			// The local branch is already up to date, which is not a fatal error
 			return branchName, nil
 		}
 
