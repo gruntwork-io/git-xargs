@@ -166,14 +166,19 @@ $ brew install git-xargs
 
 1. **Ensure you have Golang installed and working properly on your system.** [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
 
-1. **Run go get to install the latest release of git-xargs**:
+1. **Run go install to install the latest release of git-xargs**:
      ```bash
-     go get github.com/gruntwork-io/git-xargs
+     go install github.com/gruntwork-io/git-xargs@latest
      ```
 
-1. **Alternatively, use go get to install a specific release of git-xargs**:
-
+1. **Alternatively, use go install to select a specific release of git-xargs**:
      ```bash
+     go install github.com/gruntwork-io/git-xargs@v0.0.5
+     ```
+
+1. **If you have Go 1.16 or earlier, you can use get**
+     ```bash
+     go get github.com/gruntwork-io/git-xargs
      go get github.com/gruntwork-io/git-xargs@v0.0.5
      ```
 
