@@ -162,7 +162,7 @@ $ brew install git-xargs
       git-xargs --version
       ```
 
-### Installation option 3: Run go get
+### Installation option 3: Run go install or go get
 
 1. **Ensure you have Golang installed and working properly on your system.** [Follow the official Golang install guide](https://golang.org/doc/install) to get started.
 
