@@ -24,6 +24,8 @@ type GitXargsConfig struct {
 	CommitMessage                 string
 	PullRequestTitle              string
 	PullRequestDescription        string
+	Reviewers                     []string
+	TeamReviewers                 []string
 	ReposFile                     string
 	GithubOrg                     string
 	RepoSlice                     []string
@@ -53,6 +55,8 @@ func NewGitXargsConfig() *GitXargsConfig {
 		CommitMessage:                 common.DefaultCommitMessage,
 		PullRequestTitle:              common.DefaultPullRequestTitle,
 		PullRequestDescription:        common.DefaultPullRequestDescription,
+		Reviewers:                     []string{},
+		TeamReviewers:                 []string{},
 		ReposFile:                     "",
 		GithubOrg:                     "",
 		RepoSlice:                     []string{},
@@ -80,4 +84,8 @@ func NewGitXargsTestConfig() *GitXargsConfig {
 	config.Ticker = time.NewTicker(time.Duration(1) * time.Second)
 
 	return config
+}
+
+func (c *GitXargsConfig) HasReviewers() bool {
+	return len(c.Reviewers) > 0 || len(c.TeamReviewers) > 0
 }

@@ -15,6 +15,7 @@ import (
 type githubPullRequestService interface {
 	Create(ctx context.Context, owner string, name string, pr *github.NewPullRequest) (*github.PullRequest, *github.Response, error)
 	List(ctx context.Context, owner string, repo string, opts *github.PullRequestListOptions) ([]*github.PullRequest, *github.Response, error)
+	RequestReviewers(ctx context.Context, owner, repo string, number int, reviewers github.ReviewersRequest) (*github.PullRequest, *github.Response, error)
 }
 
 // The go-github package satisfies this Repositories service's interface in production

@@ -32,6 +32,8 @@ func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config.CommitMessage = c.String("commit-message")
 	config.PullRequestTitle = c.String("pull-request-title")
 	config.PullRequestDescription = c.String("pull-request-description")
+	config.Reviewers = c.StringSlice("reviewers")
+	config.TeamReviewers = c.StringSlice("team-reviewers")
 	config.ReposFile = c.String("repos")
 	config.GithubOrg = c.String("github-org")
 	config.RepoSlice = c.StringSlice("repo")

@@ -71,6 +71,8 @@ func setupApp() *cli.App {
 		common.GenericCommitMessageFlag,
 		common.GenericPullRequestTitleFlag,
 		common.GenericPullRequestDescriptionFlag,
+		common.GenericPullRequestReviewersFlag,
+		common.GenericPullRequestTeamReviewersFlag,
 		common.GenericSecondsToWaitFlag,
 		common.GenericMaxPullRequestRetriesFlag,
 		common.GenericSecondsToWaitWhenRateLimitedFlag,

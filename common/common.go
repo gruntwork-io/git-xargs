@@ -15,6 +15,8 @@ const (
 	BaseBranchFlagName                   = "base-branch-name"
 	PullRequestTitleFlagName             = "pull-request-title"
 	PullRequestDescriptionFlagName       = "pull-request-description"
+	PullRequestReviewersFlagName         = "reviewers"
+	PullRequestTeamReviewersFlagName     = "team-reviewers"
 	SecondsToWaitBetweenPrsFlagName      = "seconds-between-prs"
 	DefaultCommitMessage                 = "git-xargs programmatic commit"
 	DefaultPullRequestTitle              = "git-xargs programmatic pull request"
@@ -79,6 +81,14 @@ var (
 		Name:  PullRequestDescriptionFlagName,
 		Usage: "The description to add to pull requests opened by git-xargs",
 		Value: DefaultPullRequestDescription,
+	}
+	GenericPullRequestReviewersFlag = cli.StringSliceFlag{
+		Name:  PullRequestReviewersFlagName,
+		Usage: "A list of GitHub usernames to request reviews from",
+	}
+	GenericPullRequestTeamReviewersFlag = cli.StringSliceFlag{
+		Name:  PullRequestTeamReviewersFlagName,
+		Usage: "A list of GitHub team names to request reviews from",
 	}
 	GenericSecondsToWaitFlag = cli.IntFlag{
 		Name:  SecondsToWaitBetweenPrsFlagName,
