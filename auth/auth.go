@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/google/go-github/v43/github"
@@ -51,8 +52,21 @@ func ConfigureGithubClient() GithubClient {
 
 	tc := oauth2.NewClient(context.Background(), ts)
 
+	GithubEnterpriseHostname := os.Getenv("GITHUB_ENTERPRISE_HOSTNAME")
+
+	var githubClient *github.Client
+	if GithubEnterpriseHostname != "" {
+		githubClient, _ = github.NewEnterpriseClient(
+			fmt.Sprintf("https://%s/api/v3/", GithubEnterpriseHostname),
+			fmt.Sprintf("https://%s/api/uploads/", GithubEnterpriseHostname),
+			tc,
+		)
+	} else {
+		githubClient = github.NewClient(tc)
+	}
+
 	// Wrap the go-github client in a GithubClient struct, which is common between production and test code
-	client := NewClient(github.NewClient(tc))
+	client := NewClient(githubClient)
 
 	return client
 }
