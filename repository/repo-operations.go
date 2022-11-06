@@ -575,6 +575,21 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 		"Pull Request URL": githubPR.GetHTMLURL(),
 	}).Debug("Successfully opened pull request")
 
+	reviewersRequest := github.ReviewersRequest{
+		NodeID:        githubPR.NodeID,
+		Reviewers:     config.Reviewers,
+		TeamReviewers: config.TeamReviewers,
+	}
+
+	// If the user supplied reviewer information on the pull request, initiate a separate request to ask for reviews
+	if config.HasReviewers() {
+		_, _, reviewRequestErr := config.GithubClient.PullRequests.RequestReviewers(context.Background(), *pr.Repo.GetOwner().Login, pr.Repo.GetName(), githubPR.GetNumber(), reviewersRequest)
+		if reviewRequestErr != nil {
+			config.Stats.TrackSingle(stats.RequestReviewersErr, pr.Repo)
+		}
+
+	}
+
 	if config.Draft {
 		config.Stats.TrackDraftPullRequest(pr.Repo.GetName(), githubPR.GetHTMLURL())
 	} else {
