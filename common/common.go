@@ -97,7 +97,7 @@ var (
 	}
 	GenericMaxPullRequestRetriesFlag = cli.IntFlag{
 		Name:  MaxPullRequestRetriesFlagName,
-		Usage: "The number of times to re-try a failed pull request. Defaults to 3.",
+		Usage: "The number of times to retry a pull request that failed due to rate limiting. Defaults to 3.",
 		Value: DefaultMaxPullRequestRetries,
 	}
 	GenericSecondsToWaitWhenRateLimitedFlag = cli.IntFlag{
