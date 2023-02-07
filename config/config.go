@@ -39,6 +39,7 @@ type GitXargsConfig struct {
 	PullRequestRetries            int
 	SecondsToSleepWhenRateLimited int
 	NoSkipCI                      bool
+	RetainLocalRepos              bool
 	Ticker                        *time.Ticker
 }
 
@@ -70,6 +71,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 		SecondsToSleepWhenRateLimited: common.DefaultSecondsToWaitWhenRateLimited,
 		PullRequestRetries:            common.DefaultMaxPullRequestRetries,
 		NoSkipCI:                      false,
+		RetainLocalRepos:              false,
 	}
 }
 
