@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"os"
 	"sync"
 	"time"
 
@@ -70,6 +71,19 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 	return nil
 }
 
+// cleanupTempDir removes the temporary directory that was created for the local clone of the repo
+// It logs a debug-level error if the directory could not be removed, but does not return an error
+func cleanupTempDir(repositoryDir string) {
+	logger := logging.GetLogger("git-xargs")
+	removeErr := os.RemoveAll(repositoryDir)
+	if removeErr != nil {
+		logger.WithFields(logrus.Fields{
+			"Error":          removeErr,
+			"Temp directory": repositoryDir,
+		}).Debug("Error encountered while removing temporary directory")
+	}
+}
+
 // 1. Attempt to clone it to the local filesystem. To avoid conflicts, this generates a new directory for each repo FOR EACH run, so heavy use of this tool may inflate your /tmp/ directory size
 // 2. Look up the HEAD ref of the repo, and create a new branch from that ref, specific to this tool so that we can safely make our changes in the branch
 // 3. Execute the supplied command against the locally cloned repo
@@ -85,6 +99,11 @@ func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
 	// Create a new temporary directory in the default temp directory of the system, but append
 	// git-xargs-<repo-name> to it so that it's easier to find when you're looking for it
 	repositoryDir, localRepository, cloneErr := cloneLocalRepository(config, repo)
+
+	// if user did not pass retention flag, defer cleanup of the repositoryDir
+	if config.RetainLocalRepos == false {
+		defer cleanupTempDir(repositoryDir)
+	}
 
 	if cloneErr != nil {
 		return cloneErr

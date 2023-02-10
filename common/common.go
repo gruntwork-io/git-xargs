@@ -24,6 +24,7 @@ const (
 	MaxPullRequestRetriesFlagName        = "max-pr-retries"
 	SecondsToWaitWhenRateLimitedFlagName = "seconds-to-wait-when-rate-limited"
 	NoSkipCIFlagName                     = "no-skip-ci"
+	KeepClonedRepositoriesFlagName       = "keep-cloned-repositories"
 	DefaultMaxConcurrentRepos            = 0
 	DefaultSecondsBetweenPRs             = 1
 	DefaultMaxPullRequestRetries         = 3
@@ -108,5 +109,9 @@ var (
 	GenericNoSkipCIFlag = cli.BoolFlag{
 		Name:  NoSkipCIFlagName,
 		Usage: "By default, git-xargs prepends \"[skip ci]\" to its commit messages. Pass this flag to prevent \"[skip ci]\" from being prepending to commit messages.",
+	}
+	GenericKeepClonedRepositoriesFlag = cli.BoolFlag{
+		Name:  KeepClonedRepositoriesFlagName,
+		Usage: "By default, git-xargs deletes the cloned repositories from the temp directory after the command has finished running, to save space on your machine. Pass this flag to prevent git-xargs from deleting the cloned repositories.",
 	}
 )
