@@ -237,6 +237,16 @@ git-xargs --github-org my-github-org \
   "$(pwd)/scripts/my-ruby-script.rb"
 ```
 
+## Using `git-xargs` environment variables in commands or scripts
+
+When executing commands or scripts, `git-xargs` will register the following environment variables for use by commands or scripts based on the arguments and flags provided:
+
+| Env var            | Value
+| ------------------ | ---------------------------
+| `XARGS_DRY_RUN`    | Whether the `--dry-run` flag was provided to `git-xargs`; options are `true`, `false`
+| `XARGS_REPO_NAME`  | Name of the target repository being processed
+| `XARGS_REPO_OWNER` | Owner of the target repository being processed
+
 ## Debugging runtime errors
 
 By default, `git-xargs` will conceal runtime errors as they occur because its log level setting is `INFO` if not overridden by the `--loglevel` flag.

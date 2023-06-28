@@ -73,8 +73,9 @@ func TestExecuteCommandWithLoggerWithEnvVars(t *testing.T) {
 
 	err := executeCommandWithLogger(cfg, ".", repo, logger)
 	assert.NoError(t, err)
-	assert.Contains(t, buffer.String(), fmt.Sprintf("XARGS_REPO_NAME=%s", *repo.Name))
 	assert.Contains(t, buffer.String(), "XARGS_DRY_RUN=false")
+	assert.Contains(t, buffer.String(), fmt.Sprintf("XARGS_REPO_NAME=%s", *repo.Name))
+	assert.Contains(t, buffer.String(), fmt.Sprintf("XARGS_REPO_OWNER=%s", *repo.Owner.Login))
 
 	// Test whether --dry-run sets environment variable correctly
 	cfg.DryRun = true
@@ -87,6 +88,7 @@ func TestExecuteCommandWithLoggerWithEnvVars(t *testing.T) {
 
 	err = executeCommandWithLogger(cfg, ".", repo, logger)
 	assert.NoError(t, err)
-	assert.Contains(t, buffer.String(), fmt.Sprintf("XARGS_REPO_NAME=%s", *repo.Name))
 	assert.Contains(t, buffer.String(), "XARGS_DRY_RUN=true")
+	assert.Contains(t, buffer.String(), fmt.Sprintf("XARGS_REPO_NAME=%s", *repo.Name))
+	assert.Contains(t, buffer.String(), fmt.Sprintf("XARGS_REPO_OWNER=%s", *repo.Owner.Login))
 }
