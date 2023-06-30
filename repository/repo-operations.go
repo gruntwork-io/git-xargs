@@ -110,6 +110,10 @@ func executeCommandWithLogger(config *config.GitXargsConfig, repositoryDir strin
 
 	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	cmd.Dir = repositoryDir
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("XARGS_DRY_RUN=%t", config.DryRun))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("XARGS_REPO_NAME=%s", repo.GetName()))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("XARGS_REPO_OWNER=%s", repo.GetOwner().GetLogin()))
 
 	logger.WithFields(logrus.Fields{
 		"Repo":      repo.GetName(),
