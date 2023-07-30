@@ -192,6 +192,11 @@ $ brew install git-xargs
       export GITHUB_OAUTH_TOKEN=<your-secret-github-oauth-token>
       ```
 
+1. **Setup authentication with your Github Enterprise server**. To use a Github Enterprise server, set the GITHUB_HOSTNAME environment variable:
+      ```bash
+      export GITHUB_HOSTNAME=<your-ghe-hostname.your-domain.com>
+      ```
+
 1. **Provide a script or command and target some repos**. Here's a simple example of running the `touch` command in
    every repo in your GitHub organization. Follow the same pattern to start running your own scripts and commands
    against your own repos!
@@ -203,6 +208,7 @@ $ brew install git-xargs
         --github-org <enter-your-github-org-name> \
         touch git-xargs-is-awesome.txt
       ```
+
 
 # Reference
 
