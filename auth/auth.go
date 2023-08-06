@@ -24,6 +24,10 @@ type githubRepositoriesService interface {
 	ListByOrg(ctx context.Context, org string, opts *github.RepositoryListByOrgOptions) ([]*github.Repository, *github.Response, error)
 }
 
+type githubIssuesService interface {
+	AddLabelsToIssue(ctx context.Context, owner string, repo string, number int, labels []string) ([]*github.Label, *github.Response, error)
+}
+
 // GithubClient is the data structure that is common between production code and test code. In production code,
 // go-github satisfies the PullRequests and Repositories service interfaces, whereas in test the concrete
 // implementations for these same services are mocks that return a static slice of pointers to GitHub repositories,
@@ -32,12 +36,14 @@ type githubRepositoriesService interface {
 type GithubClient struct {
 	PullRequests githubPullRequestService
 	Repositories githubRepositoriesService
+	Issues       githubIssuesService
 }
 
 func NewClient(client *github.Client) GithubClient {
 	return GithubClient{
 		PullRequests: client.PullRequests,
 		Repositories: client.Repositories,
+		Issues:       client.Issues,
 	}
 }
 

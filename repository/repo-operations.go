@@ -594,6 +594,15 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 	}
 
+	// if the user supplied label information on the pull request, initiate a separate request to add label(s)
+	if config.HasLabels() {
+		_, _, labelRequestErr := config.GithubClient.Issues.AddLabelsToIssue(context.Background(), *pr.Repo.GetOwner().Login, pr.Repo.GetName(), githubPR.GetNumber(), config.PullRequestLabelSlice)
+		if labelRequestErr != nil {
+			config.Stats.TrackSingle(stats.AddLabelsToIssueErr, pr.Repo)
+		}
+
+	}
+
 	if config.Draft {
 		config.Stats.TrackDraftPullRequest(pr.Repo.GetName(), githubPR.GetHTMLURL())
 	} else {
