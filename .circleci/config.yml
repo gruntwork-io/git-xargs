@@ -1,5 +1,3 @@
-orbs:
-  go: circleci/go@1.7.3
 env: &env
   environment:
     TERRATEST_LOG_PARSER_VERSION: NONE
@@ -24,8 +22,10 @@ install_gruntwork_utils: &install_gruntwork_utils
     --terraform-version ${TERRAFORM_VERSION} \
     --terragrunt-version ${TERRAGRUNT_VERSION} \
     --packer-version ${PACKER_VERSION} \
-    --go-version ${GOLANG_VERSION} 
-version: 2
+    --go-version ${GOLANG_VERSION}
+orbs:
+  go: circleci/go@1.7.3
+version: 2.1
 jobs:
   pre-commit:
     <<: *defaults
