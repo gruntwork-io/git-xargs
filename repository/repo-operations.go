@@ -7,11 +7,15 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	gogitconfig "github.com/go-git/go-git/v5/plumbing/format/config"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/sirupsen/logrus"
 
@@ -306,6 +310,54 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 		"Repo": remoteRepository.GetName(),
 	}).Debug("Local repository worktree no longer clean, will stage and add new files and commit changes")
 
+	// Step 1: Locate the global git configuration file
+	usr, err := user.Current()
+	if err != nil {
+		return err // handle error
+	}
+	gitConfigPath := filepath.Join(usr.HomeDir, ".gitconfig")
+
+	// Step 2: Open the global git configuration file
+	file, err := os.Open(gitConfigPath)
+	if err != nil {
+		return err // handle error
+	}
+	defer file.Close()
+
+	// Step 3: Create a new Decoder
+	decoder := gogitconfig.NewDecoder(file)
+
+	// Step 4: Decode the configuration
+	var cfg gogitconfig.Config
+	if err := decoder.Decode(&cfg); err != nil {
+		return err // handle error
+	}
+
+	// Step 5: Access the required configuration values
+	signingKeyID := cfg.Section("user").Option("signingkey")
+	gpgProgramPath := cfg.Section("gpg").Option("program")
+
+	if gpgProgramPath == "" {
+		// Locate the GPG program if not specified in the git configuration
+		gpgProgramPath, err = exec.LookPath("gpg")
+		if err != nil {
+			return err // handle error
+		}
+	}
+
+	// After obtaining signingKeyID and gpgProgramPath, export the signing key
+	keyData, err := exec.Command(gpgProgramPath, "--export-secret-keys", "--armor", signingKeyID).Output()
+	if err != nil {
+		return err // handle error
+	}
+
+	// Load the exported key into an *openpgp.Entity object
+	keyRing, err := openpgp.ReadArmoredKeyRing(bytes.NewReader(keyData))
+	if err != nil {
+		return err // handle error
+	}
+	signingKey := keyRing[0] // Assume the first key is the signing key
+
 	// Track the fact that worktree changes were made following execution
 	config.Stats.TrackSingle(stats.WorktreeStatusDirty, remoteRepository)
 
@@ -332,7 +384,8 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 	// option when configuring our commit option so that all modified and deleted files
 	// will have their changes committed
 	commitOps := &git.CommitOptions{
-		All: true,
+		All:     true,
+		SignKey: signingKey,
 	}
 
 	_, commitErr := worktree.Commit(config.CommitMessage, commitOps)
