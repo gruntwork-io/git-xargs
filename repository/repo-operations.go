@@ -317,25 +317,46 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 
 	// If user.signingkey is defined and there's no error retrieving it, add the signing key to the commit options
 	if err == nil && signingKeyID != "" {
+		// Log the found signing key ID
+		logger.WithFields(logrus.Fields{
+			"SigningKeyID": signingKeyID,
+		}).Debug("Found signing key in git global config, will attempt to use it for commit.")
+
 		gpgProgramPath, err := gitconfig.Global("gpg.program")
 		if err != nil {
 			gpgProgramPath, err = exec.LookPath("gpg")
 			if err != nil {
-				return err // handle error
+				logger.WithFields(logrus.Fields{
+					"Error": err.Error(),
+				}).Error("Failed to locate GPG program.")
+				return err
 			}
 		}
+		logger.WithFields(logrus.Fields{
+			"GPGProgramPath": gpgProgramPath,
+		}).Debug("Located GPG program.")
 
 		// Export the signing key
 		keyData, err := exec.Command(gpgProgramPath, "--export-secret-keys", "--armor", signingKeyID).Output()
 		if err != nil {
-			return err // handle error
+			logger.WithFields(logrus.Fields{
+				"Error":          err.Error(),
+				"GPGProgramPath": gpgProgramPath,
+				"SigningKeyID":   signingKeyID,
+			}).Error("Failed to export signing key.")
+			return err
 		}
+		logger.Debug("Successfully exported signing key.")
 
 		// Load the exported key into an *openpgp.Entity object
 		keyRing, err := openpgp.ReadArmoredKeyRing(bytes.NewReader(keyData))
 		if err != nil {
-			return err // handle error
+			logger.WithFields(logrus.Fields{
+				"Error": err.Error(),
+			}).Error("Failed to load signing key into openpgp.Entity object.")
+			return err
 		}
+		logger.Debug("Successfully loaded signing key into openpgp.Entity object.")
 
 		// Set the SignKey field in the commitOps object if we have a signing key to use in our git config
 		commitOps.SignKey = keyRing[0]
