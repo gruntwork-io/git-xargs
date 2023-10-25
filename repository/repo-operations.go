@@ -328,7 +328,7 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 			if err != nil {
 				logger.WithFields(logrus.Fields{
 					"Error": err.Error(),
-				}).Error("Failed to locate GPG program.")
+				}).Debug("Failed to locate GPG program.")
 				return err
 			}
 		}
@@ -343,7 +343,7 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 				"Error":          err.Error(),
 				"GPGProgramPath": gpgProgramPath,
 				"SigningKeyID":   signingKeyID,
-			}).Error("Failed to export signing key.")
+			}).Debug("Failed to export signing key.")
 			return err
 		}
 		logger.Debug("Successfully exported signing key.")
@@ -353,7 +353,7 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 		if err != nil {
 			logger.WithFields(logrus.Fields{
 				"Error": err.Error(),
-			}).Error("Failed to load signing key into openpgp.Entity object.")
+			}).Debug("Failed to load signing key into openpgp.Entity object.")
 			return err
 		}
 		logger.Debug("Successfully loaded signing key into openpgp.Entity object.")
