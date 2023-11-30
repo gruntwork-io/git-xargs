@@ -2,12 +2,12 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/google/go-github/v43/github"
 	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/go-commons/errors"
-
 	"golang.org/x/oauth2"
 )
 
@@ -52,8 +52,20 @@ func ConfigureGithubClient() GithubClient {
 
 	tc := oauth2.NewClient(context.Background(), ts)
 
+	var githubClient *github.Client
+
+	if os.Getenv("GITHUB_HOSTNAME") != "" {
+		GithubHostname := os.Getenv("GITHUB_HOSTNAME")
+		baseUrl := fmt.Sprintf("https://%s/", GithubHostname)
+
+		githubClient, _ = github.NewEnterpriseClient(baseUrl, baseUrl, tc)
+
+	} else {
+		githubClient = github.NewClient(tc)
+	}
+
 	// Wrap the go-github client in a GithubClient struct, which is common between production and test code
-	client := NewClient(github.NewClient(tc))
+	client := NewClient(githubClient)
 
 	return client
 }
