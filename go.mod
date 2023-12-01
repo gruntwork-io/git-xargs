@@ -3,12 +3,14 @@ module github.com/gruntwork-io/git-xargs
 go 1.18
 
 require (
+	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/google/go-github/v43 v43.0.0
 	github.com/gruntwork-io/go-commons v0.8.2
 	github.com/pterm/pterm v0.12.42
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.7.0
+	github.com/tcnksm/go-gitconfig v0.1.2
 	github.com/urfave/cli v1.22.5
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 )
@@ -17,7 +19,6 @@ require (
 	atomicgo.dev/cursor v0.1.1 // indirect
 	atomicgo.dev/keyboard v0.2.8 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
