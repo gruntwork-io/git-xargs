@@ -17,6 +17,7 @@ const (
 	PullRequestDescriptionFlagName       = "pull-request-description"
 	PullRequestReviewersFlagName         = "reviewers"
 	PullRequestTeamReviewersFlagName     = "team-reviewers"
+	PullRequestLabelFlagName             = "label"
 	SecondsToWaitBetweenPrsFlagName      = "seconds-between-prs"
 	DefaultCommitMessage                 = "git-xargs programmatic commit"
 	DefaultPullRequestTitle              = "git-xargs programmatic pull request"
@@ -90,6 +91,10 @@ var (
 	GenericPullRequestTeamReviewersFlag = cli.StringSliceFlag{
 		Name:  PullRequestTeamReviewersFlagName,
 		Usage: "A list of GitHub team names to request reviews from",
+	}
+	GenericPullRequestLabelFlag = cli.StringSliceFlag{
+		Name:  PullRequestLabelFlagName,
+		Usage: "A single GitHub label to add to the pull request. Can be invoked multiple times with different labels",
 	}
 	GenericSecondsToWaitFlag = cli.IntFlag{
 		Name:  SecondsToWaitBetweenPrsFlagName,

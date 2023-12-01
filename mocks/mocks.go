@@ -92,6 +92,15 @@ func (m mockGithubRepositoriesService) ListByOrg(ctx context.Context, org string
 	return m.Repositories, m.Response, nil
 }
 
+type mockGithubIssuesService struct {
+	Issue    *github.Issue
+	Response *github.Response
+}
+
+func (m mockGithubIssuesService) AddLabelsToIssue(ctx context.Context, owner string, repo string, number int, labels []string) ([]*github.Label, *github.Response, error) {
+	return []*github.Label{}, m.Response, nil
+}
+
 // ConfigureMockGithubClient returns a valid GithubClient configured for testing purposes, complete with the mocked services
 func ConfigureMockGithubClient() auth.GithubClient {
 	// Call the same NewClient method that is used by the actual CLI to obtain a GitHub client that calls the
@@ -124,6 +133,10 @@ func ConfigureMockGithubClient() auth.GithubClient {
 		PullRequest: &github.PullRequest{
 			HTMLURL: &testHTMLUrl,
 		},
+		Response: &github.Response{},
+	}
+	client.Issues = mockGithubIssuesService{
+		Issue:    &github.Issue{},
 		Response: &github.Response{},
 	}
 
