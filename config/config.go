@@ -38,6 +38,7 @@ type GitXargsConfig struct {
 	SecondsToSleepBetweenPRs      int
 	PullRequestRetries            int
 	SecondsToSleepWhenRateLimited int
+	CloneJobsLimiter              chan struct{}
 	NoSkipCI                      bool
 	RetainLocalRepos              bool
 	Ticker                        *time.Ticker
@@ -70,6 +71,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 		SecondsToSleepBetweenPRs:      common.DefaultSecondsBetweenPRs,
 		SecondsToSleepWhenRateLimited: common.DefaultSecondsToWaitWhenRateLimited,
 		PullRequestRetries:            common.DefaultMaxPullRequestRetries,
+		CloneJobsLimiter:              make(chan struct{}),
 		NoSkipCI:                      false,
 		RetainLocalRepos:              false,
 	}
