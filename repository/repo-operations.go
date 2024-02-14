@@ -15,6 +15,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/sirupsen/logrus"
 
+	gitConfig "github.com/go-git/go-git/v5/config"
 	"github.com/google/go-github/v43/github"
 
 	"github.com/gruntwork-io/git-xargs/common"
@@ -162,77 +163,78 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 	// BranchName is a global variable that is set in cmd/root.go. It is override-able by the operator via the --branch-name or -b flag. It defaults to "git-xargs"
 
 	branchName := plumbing.NewBranchReferenceName(config.BranchName)
-	logger.WithFields(logrus.Fields{
-		"Branch Name": branchName,
-		"Repo":        remoteRepository.GetName(),
-	}).Debug("Created branch")
 
-	// Create a branch specific to the multi repo script runner
-	co := &git.CheckoutOptions{
-		Hash:   ref.Hash(),
-		Branch: branchName,
-		Create: true,
+	logger.WithFields(logrus.Fields{
+		"Repo": remoteRepository.GetName(),
+	}).Debug("Fetching remote branches")
+
+	// Fetch remote branches
+	fetchRemoteBranchesErr := localRepository.Fetch(&git.FetchOptions{
+		RefSpecs: []gitConfig.RefSpec{"refs/*:refs/*"},
+		Auth: &http.BasicAuth{
+			Username: remoteRepository.GetOwner().GetLogin(),
+			Password: os.Getenv("GITHUB_OAUTH_TOKEN"),
+		},
+	})
+
+	if fetchRemoteBranchesErr != nil {
+		logger.WithFields(logrus.Fields{
+			"Error": fetchRemoteBranchesErr,
+			"Repo":  remoteRepository.GetName(),
+		}).Debug("Error fetching remote branches")
+
+		// Track the error fetching branches from the remote
+		config.Stats.TrackSingle(stats.BranchRemoteFetchFailed, remoteRepository)
+
+		return branchName, errors.WithStackTrace(fetchRemoteBranchesErr)
 	}
 
-	// Attempt to checkout the new tool-specific branch on which the supplied command will be executed
-	checkoutErr := worktree.Checkout(co)
+	// Checkout existing branch
+	checkoutExistingBranchErr := worktree.Checkout(&git.CheckoutOptions{
+		Branch: branchName,
+	})
 
-	if checkoutErr != nil {
+	if checkoutExistingBranchErr == nil {
+		logger.WithFields(logrus.Fields{
+			"Branch Name": branchName,
+			"Repo":        remoteRepository.GetName(),
+		}).Debug("Checkout existing branch")
+
+		// We have successfully checkout existing branch, exiting
+		return branchName, nil
+	}
+
+	// Create new branch
+	checkoutNewBranchErr := worktree.Checkout(
+		&git.CheckoutOptions{
+			Hash:   ref.Hash(),
+			Branch: branchName,
+			Create: true,
+		})
+
+	if checkoutNewBranchErr != nil {
 		if config.SkipPullRequests &&
 			remoteRepository.GetDefaultBranch() == config.BranchName &&
-			strings.Contains(checkoutErr.Error(), "already exists") {
-			// User has requested pull requess be skipped, meaning they want their commits pushed on their target branch
+			strings.Contains(checkoutNewBranchErr.Error(), "already exists") {
+			// User has requested pull request be skipped, meaning they want their commits pushed on their target branch
 			// If the target branch is also the repo's default branch and therefore already exists, we don't have an error
 		} else {
 			logger.WithFields(logrus.Fields{
-				"Error": checkoutErr,
+				"Error": checkoutNewBranchErr,
 				"Repo":  remoteRepository.GetName(),
 			}).Debug("Error creating new branch")
 
 			// Track the error checking out the branch
 			config.Stats.TrackSingle(stats.BranchCheckoutFailed, remoteRepository)
 
-			return branchName, errors.WithStackTrace(checkoutErr)
+			return branchName, errors.WithStackTrace(checkoutNewBranchErr)
 		}
-	}
-
-	// Pull latest code from remote branch if it exists to avoid fast-forwarding errors
-	gitProgressBuffer := bytes.NewBuffer(nil)
-	po := &git.PullOptions{
-		RemoteName:    "origin",
-		ReferenceName: branchName,
-		Auth: &http.BasicAuth{
-			Username: remoteRepository.GetOwner().GetLogin(),
-			Password: os.Getenv("GITHUB_OAUTH_TOKEN"),
-		},
-		Progress: gitProgressBuffer,
 	}
 
 	logger.WithFields(logrus.Fields{
-		"Repo": remoteRepository.GetName(),
-	}).Debug(gitProgressBuffer)
-
-	pullErr := worktree.Pull(po)
-
-	if pullErr != nil {
-
-		if pullErr == plumbing.ErrReferenceNotFound {
-			// The supplied branch just doesn't exist yet on the remote - this is not a fatal error and will
-			// allow the new branch to be pushed in pushLocalBranch
-			config.Stats.TrackSingle(stats.BranchRemoteDidntExistYet, remoteRepository)
-			return branchName, nil
-		}
-
-		if pullErr == git.NoErrAlreadyUpToDate {
-			// The local branch is already up to date, which is not a fatal error
-			return branchName, nil
-		}
-
-		// Track the error pulling the latest from the remote branch
-		config.Stats.TrackSingle(stats.BranchRemotePullFailed, remoteRepository)
-
-		return branchName, errors.WithStackTrace(pullErr)
-	}
+		"Branch Name": branchName,
+		"Repo":        remoteRepository.GetName(),
+	}).Debug("Created new branch")
 
 	return branchName, nil
 }

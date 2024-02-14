@@ -62,8 +62,8 @@ const (
 	CommitsMadeDirectlyToBranch types.Event = "commits-made-directly-to-branch"
 	// DirectCommitsPushedToRemoteBranch denotes a repo whose changes were pushed to the remote specified branch because the --skip-pull-requests flag was passed
 	DirectCommitsPushedToRemoteBranch types.Event = "direct-commits-pushed-to-remote"
-	// BranchRemotePullFailed denotes a repo whose remote branch could not be fetched successfully
-	BranchRemotePullFailed types.Event = "branch-remote-pull-failed"
+	// BranchRemoteFetchFailed denotes a repo whose remote branch could not be fetched successfully
+	BranchRemoteFetchFailed types.Event = "branch-remote-fetch-failed"
 	// BranchRemoteDidntExistYet denotes a repo whose specified branch didn't exist remotely yet and so was just created locally to begin with
 	BranchRemoteDidntExistYet types.Event = "branch-remote-didnt-exist-yet"
 	// RepoFlagSuppliedRepoMalformed denotes a repo passed via the --repo flag that was malformed (perhaps missing it's Github org prefix) and therefore unprocessable
@@ -104,7 +104,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: PullRequestAlreadyExists, Description: "Repos where opening a pull request was skipped because a pull request was already open"},
 	{Event: CommitsMadeDirectlyToBranch, Description: "Repos whose local changes were committed directly to the specified branch because --skip-pull-requests was passed"},
 	{Event: DirectCommitsPushedToRemoteBranch, Description: "Repos whose changes were pushed directly to the remote branch because --skip-pull-requests was passed"},
-	{Event: BranchRemotePullFailed, Description: "Repos whose remote branches could not be successfully pulled"},
+	{Event: BranchRemoteFetchFailed, Description: "Repos whose remote branches could not be successfully fetched"},
 	{Event: BranchRemoteDidntExistYet, Description: "Repos whose specified branches did not exist on the remote, and so were first created locally"},
 	{Event: RepoFlagSuppliedRepoMalformed, Description: "Repos passed via the --repo flag that were malformed (missing their Github org prefix?) and therefore unprocessable"},
 	{Event: RepoDoesntSupportDraftPullRequestsErr, Description: "Repos that do not support Draft PRs (--draft flag was passed)"},
