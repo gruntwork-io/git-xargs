@@ -177,7 +177,7 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 		},
 	})
 
-	if fetchRemoteBranchesErr != nil {
+	if fetchRemoteBranchesErr != git.NoErrAlreadyUpToDate && fetchRemoteBranchesErr != nil {
 		logger.WithFields(logrus.Fields{
 			"Error": fetchRemoteBranchesErr,
 			"Repo":  remoteRepository.GetName(),
