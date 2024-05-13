@@ -247,11 +247,12 @@ git-xargs --github-org my-github-org \
 
 When executing commands or scripts, `git-xargs` will register the following environment variables for use by commands or scripts based on the arguments and flags provided:
 
-| Env var            | Value
-| ------------------ | ---------------------------
-| `XARGS_DRY_RUN`    | Whether the `--dry-run` flag was provided to `git-xargs`; options are `true`, `false`
-| `XARGS_REPO_NAME`  | Name of the target repository being processed
-| `XARGS_REPO_OWNER` | Owner of the target repository being processed
+| Env var                | Value
+| ---------------------- | ---------------------------
+| `XARGS_DRY_RUN`        | Whether the `--dry-run` flag was provided to `git-xargs`; options are `true`, `false`
+| `XARGS_REPO_NAME`      | Name of the target repository being processed
+| `XARGS_REPO_OWNER`     | Owner of the target repository being processed
+| `XARGS_REPO_DIRECTORY` | Directory of the target repository being processed
 
 ## Debugging runtime errors
 
