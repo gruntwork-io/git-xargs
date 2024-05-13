@@ -41,6 +41,11 @@ func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config.SecondsToSleepBetweenPRs = c.Int("seconds-between-prs")
 	config.PullRequestRetries = c.Int("max-pr-retries")
 	config.SecondsToSleepWhenRateLimited = c.Int("seconds-to-wait-when-rate-limited")
+	maxConcurrentClones := c.Int("max-concurrent-clones")
+	if maxConcurrentClones > 0 {
+		config.CloneJobsLimiter = make(chan struct{}, maxConcurrentClones)
+	}
+
 	config.NoSkipCI = c.Bool("no-skip-ci")
 	config.RetainLocalRepos = c.Bool("keep-cloned-repositories")
 	// By default, prepend "[skip ci]" to commit messages, unless the user passed --no-skip-ci
