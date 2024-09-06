@@ -76,6 +76,7 @@ func setupApp() *cli.App {
 		common.GenericSecondsToWaitFlag,
 		common.GenericMaxPullRequestRetriesFlag,
 		common.GenericSecondsToWaitWhenRateLimitedFlag,
+		common.GenericMaxConcurrentClonesFlag,
 		common.GenericNoSkipCIFlag,
 		common.GenericKeepClonedRepositoriesFlag,
 	}
