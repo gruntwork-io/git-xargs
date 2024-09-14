@@ -10,10 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/sirupsen/logrus"
+	gitconfig "github.com/tcnksm/go-gitconfig"
 
 	"github.com/google/go-github/v43/github"
 
@@ -306,6 +308,60 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 		"Repo": remoteRepository.GetName(),
 	}).Debug("Local repository worktree no longer clean, will stage and add new files and commit changes")
 
+	signingKeyID, err := gitconfig.Global("user.signingkey")
+
+	// Define the commit options with the All field set to true
+	commitOps := &git.CommitOptions{
+		All: true,
+	}
+
+	// If user.signingkey is defined and there's no error retrieving it, add the signing key to the commit options
+	if err == nil && signingKeyID != "" {
+		// Log the found signing key ID
+		logger.WithFields(logrus.Fields{
+			"SigningKeyID": signingKeyID,
+		}).Debug("Found signing key in git global config, will attempt to use it for commit.")
+
+		gpgProgramPath, err := gitconfig.Global("gpg.program")
+		if err != nil {
+			gpgProgramPath, err = exec.LookPath("gpg")
+			if err != nil {
+				logger.WithFields(logrus.Fields{
+					"Error": err.Error(),
+				}).Debug("Failed to locate GPG program.")
+				return err
+			}
+		}
+		logger.WithFields(logrus.Fields{
+			"GPGProgramPath": gpgProgramPath,
+		}).Debug("Located GPG program.")
+
+		// Export the signing key
+		keyData, err := exec.Command(gpgProgramPath, "--export-secret-keys", "--armor", signingKeyID).Output()
+		if err != nil {
+			logger.WithFields(logrus.Fields{
+				"Error":          err.Error(),
+				"GPGProgramPath": gpgProgramPath,
+				"SigningKeyID":   signingKeyID,
+			}).Debug("Failed to export signing key.")
+			return err
+		}
+		logger.Debug("Successfully exported signing key.")
+
+		// Load the exported key into an *openpgp.Entity object
+		keyRing, err := openpgp.ReadArmoredKeyRing(bytes.NewReader(keyData))
+		if err != nil {
+			logger.WithFields(logrus.Fields{
+				"Error": err.Error(),
+			}).Debug("Failed to load signing key into openpgp.Entity object.")
+			return err
+		}
+		logger.Debug("Successfully loaded signing key into openpgp.Entity object.")
+
+		// Set the SignKey field in the commitOps object if we have a signing key to use in our git config
+		commitOps.SignKey = keyRing[0]
+	}
+
 	// Track the fact that worktree changes were made following execution
 	config.Stats.TrackSingle(stats.WorktreeStatusDirty, remoteRepository)
 
@@ -331,9 +387,6 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 	// With all our untracked files staged, we can now create a commit, passing the All
 	// option when configuring our commit option so that all modified and deleted files
 	// will have their changes committed
-	commitOps := &git.CommitOptions{
-		All: true,
-	}
 
 	_, commitErr := worktree.Commit(config.CommitMessage, commitOps)
 
