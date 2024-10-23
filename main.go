@@ -73,6 +73,7 @@ func setupApp() *cli.App {
 		common.GenericPullRequestDescriptionFlag,
 		common.GenericPullRequestReviewersFlag,
 		common.GenericPullRequestTeamReviewersFlag,
+		common.GenericPullRequestLabelFlag,
 		common.GenericSecondsToWaitFlag,
 		common.GenericMaxPullRequestRetriesFlag,
 		common.GenericSecondsToWaitWhenRateLimitedFlag,

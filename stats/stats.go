@@ -78,6 +78,8 @@ const (
 	PRFailedAfterMaximumRetriesErr types.Event = "pr-failed-after-maximum-retries"
 	// RequestReviewersErr denotes a repo whose follow up request to add reviewers to the opened pull request failed
 	RequestReviewersErr types.Event = "request-reviewers-error"
+	// AddLabelsToIssueErr denotes a repo whose follow up request to add labels to the opened pull request failed
+	AddLabelsToIssueErr types.Event = "add-labels-to-issue-error"
 )
 
 var allEvents = []types.AnnotatedEvent{
@@ -112,6 +114,7 @@ var allEvents = []types.AnnotatedEvent{
 	{Event: PRFailedDueToRateLimitsErr, Description: "Repos whose initial Pull Request failed to be created due to GitHub rate limits"},
 	{Event: PRFailedAfterMaximumRetriesErr, Description: "Repos whose Pull Request failed to be created after the maximum number of retries"},
 	{Event: RequestReviewersErr, Description: "Repos whose request to add reviewers to the opened pull request failed"},
+	{Event: AddLabelsToIssueErr, Description: "Repos whose request to add labels to the opened pull request failed"},
 }
 
 // RunStats will be a stats-tracker class that keeps score of which repos were touched, which were considered for update, which had branches made, PRs made, which were missing workflows or contexts, or had out of date workflows syntax values, etc
