@@ -71,7 +71,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 		SecondsToSleepBetweenPRs:      common.DefaultSecondsBetweenPRs,
 		SecondsToSleepWhenRateLimited: common.DefaultSecondsToWaitWhenRateLimited,
 		PullRequestRetries:            common.DefaultMaxPullRequestRetries,
-		CloneJobsLimiter:              make(chan struct{}),
+		CloneJobsLimiter:              make(chan struct{}, common.DefaultMaxConcurrentClones),
 		NoSkipCI:                      false,
 		RetainLocalRepos:              false,
 	}
