@@ -23,9 +23,10 @@ const (
 	DefaultPullRequestDescription        = "git-xargs programmatic pull request"
 	MaxPullRequestRetriesFlagName        = "max-pr-retries"
 	SecondsToWaitWhenRateLimitedFlagName = "seconds-to-wait-when-rate-limited"
+	MaxConcurrentClonesFlagName          = "max-concurrent-clones"
 	NoSkipCIFlagName                     = "no-skip-ci"
 	KeepClonedRepositoriesFlagName       = "keep-cloned-repositories"
-	DefaultMaxConcurrentRepos            = 0
+	DefaultMaxConcurrentClones           = 4
 	DefaultSecondsBetweenPRs             = 1
 	DefaultMaxPullRequestRetries         = 3
 	DefaultSecondsToWaitWhenRateLimited  = 60
@@ -105,6 +106,11 @@ var (
 		Name:  SecondsToWaitWhenRateLimitedFlagName,
 		Usage: "The number of additional seconds to sleep before attempting to open a PR again, when rate limited by GitHub. Defaults to 60.",
 		Value: DefaultSecondsToWaitWhenRateLimited,
+	}
+	GenericMaxConcurrentClonesFlag = cli.IntFlag{
+		Name:  MaxConcurrentClonesFlagName,
+		Usage: "The maximum number of concurrent clones to run at once. Defaults to 4. If set to 0 no limit will be applied.",
+		Value: DefaultMaxConcurrentClones,
 	}
 	GenericNoSkipCIFlag = cli.BoolFlag{
 		Name:  NoSkipCIFlagName,
