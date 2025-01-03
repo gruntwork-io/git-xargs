@@ -16,6 +16,7 @@ var (
 	repoName2 = "terratest"
 	repoName3 = "fetch"
 	repoName4 = "terraform-kubernetes-helm"
+	repoName5 = "terraform-google-load-balancer"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 	repoURL2 = "https://github.com/gruntwork-io/terratest"
 	repoURL3 = "https://github.com/gruntwork-io/fetch"
 	repoURL4 = "https://github.com/gruntwork-io/terraform-kubernetes-helm"
+	repoURL5 = "https://github.com/gruntwork-io/terraform-google-load-balancer"
 )
 
 var archivedFlag = true
@@ -55,6 +57,14 @@ var MockGithubRepositories = []*github.Repository{
 		},
 		Name:     &repoName4,
 		HTMLURL:  &repoURL4,
+		Archived: &archivedFlag,
+	},
+	{
+		Owner: &github.User{
+			Login: &ownerName,
+		},
+		Name:     &repoName5,
+		HTMLURL:  &repoURL5,
 		Archived: &archivedFlag,
 	},
 }
