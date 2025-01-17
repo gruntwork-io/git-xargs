@@ -49,7 +49,12 @@ jobs:
             git config --global user.name "Grunty"
       - run:
           name: run git-xargs tests
-          command: run-go-tests --timeout 5m
+          command: |
+            go version
+            which -a go
+            echo $GOROOT
+            echo $GOPATH
+            run-go-tests --timeout 5m
           no_output_timeout: 45m
           when: always
   build:
