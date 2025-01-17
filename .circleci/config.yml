@@ -34,7 +34,7 @@ jobs:
       - run:
           command: |
             pip install pre-commit
-            go install golang.org/x/tools/cmd/goimports@latest
+            go install golang.org/x/tools/cmd/goimports@v0.24.0
             export GOPATH=~/go/bin && export PATH=$PATH:$GOPATH
             pre-commit install
             pre-commit run --all-files
