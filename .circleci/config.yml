@@ -5,7 +5,7 @@ env: &env
     TERRAGRUNT_VERSION: NONE
     PACKER_VERSION: NONE
     GRUNTWORK_INSTALLER_VERSION: v0.0.39
-    MODULE_CI_VERSION: v0.53.3
+    MODULE_CI_VERSION: v0.57.3
     GOLANG_VERSION: 1.21.1
     GO111MODULE: auto
     CGO_ENABLED: 1
@@ -64,7 +64,7 @@ jobs:
   deploy:
     <<: *env
     macos:
-      xcode: 14.2.0
+      xcode: 15.3.0
     resource_class: macos.m1.medium.gen1
     steps:
       - checkout
