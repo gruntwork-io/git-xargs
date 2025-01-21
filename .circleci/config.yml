@@ -6,12 +6,12 @@ env: &env
     PACKER_VERSION: NONE
     GRUNTWORK_INSTALLER_VERSION: v0.0.39
     MODULE_CI_VERSION: v0.53.3
-    GOLANG_VERSION: 1.18
+    GOLANG_VERSION: 1.21.1
     GO111MODULE: auto
     CGO_ENABLED: 1
 defaults: &defaults
   docker:
-    - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.18-tf1.4-tg39.1-pck1.8-ci50.7
+    - image: 087285199408.dkr.ecr.us-east-1.amazonaws.com/circle-ci-test-image-base:go1.21-tf1.5-tg39.1-pck1.8-ci50.7
   <<: *env
 install_gruntwork_utils: &install_gruntwork_utils
   name: Install gruntwork utils
@@ -34,7 +34,7 @@ jobs:
       - run:
           command: |
             pip install pre-commit
-            go get golang.org/x/tools/cmd/goimports
+            go install golang.org/x/tools/cmd/goimports@v0.24.0
             export GOPATH=~/go/bin && export PATH=$PATH:$GOPATH
             pre-commit install
             pre-commit run --all-files
