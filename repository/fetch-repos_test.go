@@ -63,6 +63,6 @@ func TestSkipArchivedRepos(t *testing.T) {
 
 	githubRepos, reposByOrgLookupErr := getReposByOrg(config)
 
-	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories)-1)
+	assert.Equal(t, len(githubRepos), len(mocks.MockGithubRepositories)-2)
 	assert.NoError(t, reposByOrgLookupErr)
 }
