@@ -26,6 +26,7 @@ type GitXargsConfig struct {
 	PullRequestDescription        string
 	Reviewers                     []string
 	TeamReviewers                 []string
+	Assignees                     []string
 	ReposFile                     string
 	GithubOrg                     string
 	RepoSlice                     []string
@@ -59,6 +60,7 @@ func NewGitXargsConfig() *GitXargsConfig {
 		PullRequestDescription:        common.DefaultPullRequestDescription,
 		Reviewers:                     []string{},
 		TeamReviewers:                 []string{},
+		Assignees:                     []string{},
 		ReposFile:                     "",
 		GithubOrg:                     "",
 		RepoSlice:                     []string{},
@@ -92,4 +94,8 @@ func NewGitXargsTestConfig() *GitXargsConfig {
 
 func (c *GitXargsConfig) HasReviewers() bool {
 	return len(c.Reviewers) > 0 || len(c.TeamReviewers) > 0
+}
+
+func (c *GitXargsConfig) HasAssignees() bool {
+	return len(c.Assignees) > 0
 }
