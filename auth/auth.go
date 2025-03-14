@@ -18,6 +18,11 @@ type githubPullRequestService interface {
 	RequestReviewers(ctx context.Context, owner, repo string, number int, reviewers github.ReviewersRequest) (*github.PullRequest, *github.Response, error)
 }
 
+// The go-github package satisfies this Issues service's interface in production
+type githubIssuesService interface {
+	AddAssignees(ctx context.Context, owner, repo string, number int, assignees []string) (*github.Issue, *github.Response, error)
+}
+
 // The go-github package satisfies this Repositories service's interface in production
 type githubRepositoriesService interface {
 	Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error)
@@ -31,12 +36,14 @@ type githubRepositoriesService interface {
 // without actually making API calls to GitHub when running tests
 type GithubClient struct {
 	PullRequests githubPullRequestService
+	Issues       githubIssuesService
 	Repositories githubRepositoriesService
 }
 
 func NewClient(client *github.Client) GithubClient {
 	return GithubClient{
 		PullRequests: client.PullRequests,
+		Issues:       client.Issues,
 		Repositories: client.Repositories,
 	}
 }
