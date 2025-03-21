@@ -326,7 +326,7 @@ If your job is consistently being rate-limited, try incrementally increasing the
 
 ## Branch behavior
 
-Passing the `--branch-name` (`-b`) flag is required when running `git-xargs`. If you specify the name of a branch that exists on your remote, its latest changes will be pulled locally prior to your command or script being run. If you specify the name of a new branch that does not yet exist on your remote, it will be created locally and pushed once your changes are committed.
+Passing the `--branch-name` (`-b`) flag is required when running `git-xargs`. If you specify the name of a branch that exists on your remote, it is checkout locally prior to your command or script being run. If you specify the name of a new branch that does not yet exist on your remote, it will be created locally and pushed once your changes are committed.
 
 ## Default repository branch
 
