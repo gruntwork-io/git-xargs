@@ -27,6 +27,7 @@ type githubRepositoriesService interface {
 // The go-github package satisfies this Search service's interface in production
 type githubSearchService interface {
 	Repositories(ctx context.Context, query string, opts *github.SearchOptions) (*github.RepositoriesSearchResult, *github.Response, error)
+	Code(ctx context.Context, query string, opts *github.SearchOptions) (*github.CodeSearchResult, *github.Response, error)
 }
 
 // GithubClient is the data structure that is common between production code and test code. In production code,

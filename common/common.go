@@ -123,6 +123,6 @@ var (
 	}
 	GenericGithubSearchQueryFlag = cli.StringFlag{
 		Name:  GithubSearchQueryFlagName,
-		Usage: "GitHub search query to find repositories. For example: 'is:private' to find private repos, or 'language:go' to find Go repositories. See GitHub search syntax for more options.",
+		Usage: "GitHub search query to find repositories. Supports both repository search (e.g., 'language:go', 'is:private') and code search (e.g., 'path:Dockerfile', 'filename:package.json'). Code search will automatically extract unique repositories from matching files. See GitHub search syntax for more options.",
 	}
 )
