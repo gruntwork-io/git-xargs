@@ -146,8 +146,8 @@ func getReposBySearch(config *config.GitXargsConfig) ([]*github.Repository, erro
 	searchQuery := config.GithubSearchQuery
 
 	// If a specific organization is provided, add it to the query
-	if config.GithubSearchOrg != "" {
-		searchQuery = fmt.Sprintf("%s org:%s", searchQuery, config.GithubSearchOrg)
+	if config.GithubOrg != "" {
+		searchQuery = fmt.Sprintf("%s org:%s", searchQuery, config.GithubOrg)
 	}
 
 	logger.WithFields(logrus.Fields{

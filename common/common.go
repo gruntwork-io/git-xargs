@@ -31,7 +31,6 @@ const (
 	DefaultMaxPullRequestRetries         = 3
 	DefaultSecondsToWaitWhenRateLimited  = 60
 	GithubSearchQueryFlagName            = "github-search"
-	GithubSearchOrgFlagName              = "github-search-org"
 )
 
 var (
@@ -125,9 +124,5 @@ var (
 	GenericGithubSearchQueryFlag = cli.StringFlag{
 		Name:  GithubSearchQueryFlagName,
 		Usage: "GitHub search query to find repositories. For example: 'is:private' to find private repos, or 'language:go' to find Go repositories. See GitHub search syntax for more options.",
-	}
-	GenericGithubSearchOrgFlag = cli.StringFlag{
-		Name:  GithubSearchOrgFlagName,
-		Usage: "When used with --github-search, limits the search to repositories within the specified organization.",
 	}
 )

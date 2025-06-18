@@ -29,7 +29,6 @@ type GitXargsConfig struct {
 	ReposFile                     string
 	GithubOrg                     string
 	GithubSearchQuery             string
-	GithubSearchOrg               string
 	RepoSlice                     []string
 	RepoFromStdIn                 []string
 	Args                          []string
@@ -64,7 +63,6 @@ func NewGitXargsConfig() *GitXargsConfig {
 		ReposFile:                     "",
 		GithubOrg:                     "",
 		GithubSearchQuery:             "",
-		GithubSearchOrg:               "",
 		RepoSlice:                     []string{},
 		RepoFromStdIn:                 []string{},
 		Args:                          []string{},

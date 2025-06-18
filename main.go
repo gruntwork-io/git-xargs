@@ -80,7 +80,6 @@ func setupApp() *cli.App {
 		common.GenericNoSkipCIFlag,
 		common.GenericKeepClonedRepositoriesFlag,
 		common.GenericGithubSearchQueryFlag,
-		common.GenericGithubSearchOrgFlag,
 	}
 
 	app.Action = cmd.RunGitXargs
