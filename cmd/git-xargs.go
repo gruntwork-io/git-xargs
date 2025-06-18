@@ -36,6 +36,8 @@ func parseGitXargsConfig(c *cli.Context) (*config.GitXargsConfig, error) {
 	config.TeamReviewers = c.StringSlice("team-reviewers")
 	config.ReposFile = c.String("repos")
 	config.GithubOrg = c.String("github-org")
+	config.GithubSearchQuery = c.String("github-search")
+	config.GithubSearchOrg = c.String("github-search-org")
 	config.RepoSlice = c.StringSlice("repo")
 	config.MaxConcurrentRepos = c.Int("max-concurrent-repos")
 	config.SecondsToSleepBetweenPRs = c.Int("seconds-between-prs")

@@ -30,6 +30,8 @@ const (
 	DefaultSecondsBetweenPRs             = 1
 	DefaultMaxPullRequestRetries         = 3
 	DefaultSecondsToWaitWhenRateLimited  = 60
+	GithubSearchQueryFlagName            = "github-search"
+	GithubSearchOrgFlagName              = "github-search-org"
 )
 
 var (
@@ -119,5 +121,13 @@ var (
 	GenericKeepClonedRepositoriesFlag = cli.BoolFlag{
 		Name:  KeepClonedRepositoriesFlagName,
 		Usage: "By default, git-xargs deletes the cloned repositories from the temp directory after the command has finished running, to save space on your machine. Pass this flag to prevent git-xargs from deleting the cloned repositories.",
+	}
+	GenericGithubSearchQueryFlag = cli.StringFlag{
+		Name:  GithubSearchQueryFlagName,
+		Usage: "GitHub search query to find repositories. For example: 'is:private' to find private repos, or 'language:go' to find Go repositories. See GitHub search syntax for more options.",
+	}
+	GenericGithubSearchOrgFlag = cli.StringFlag{
+		Name:  GithubSearchOrgFlagName,
+		Usage: "When used with --github-search, limits the search to repositories within the specified organization.",
 	}
 )

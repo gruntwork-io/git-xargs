@@ -131,3 +131,82 @@ func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) 
 
 	return allRepos, nil
 }
+
+// getReposBySearch uses GitHub's search API to find repositories matching the given query
+func getReposBySearch(config *config.GitXargsConfig) ([]*github.Repository, error) {
+	logger := logging.GetLogger("git-xargs")
+
+	var allRepos []*github.Repository
+
+	if config.GithubSearchQuery == "" {
+		return allRepos, errors.WithStackTrace(types.NoGithubSearchQuerySuppliedErr{})
+	}
+
+	// Build the search query
+	searchQuery := config.GithubSearchQuery
+
+	// If a specific organization is provided, add it to the query
+	if config.GithubSearchOrg != "" {
+		searchQuery = fmt.Sprintf("%s org:%s", searchQuery, config.GithubSearchOrg)
+	}
+
+	logger.WithFields(logrus.Fields{
+		"Query": searchQuery,
+	}).Debug("Searching for repositories using GitHub Search API")
+
+	opt := &github.SearchOptions{
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
+	}
+
+	for {
+		var reposToAdd []*github.Repository
+		result, resp, err := config.GithubClient.Search.Repositories(context.Background(), searchQuery, opt)
+		if err != nil {
+			return allRepos, errors.WithStackTrace(err)
+		}
+
+		repos := result.Repositories
+
+		// Filter out archived repos if --skip-archived-repos is passed
+		if config.SkipArchivedRepos {
+			for _, repo := range repos {
+				if repo.GetArchived() {
+					logger.WithFields(logrus.Fields{
+						"Name": repo.GetFullName(),
+					}).Debug("Skipping archived repository from search results")
+
+					// Track repos to skip because of archived status for our final run report
+					config.Stats.TrackSingle(stats.ReposArchivedSkipped, repo)
+				} else {
+					reposToAdd = append(reposToAdd, repo)
+				}
+			}
+		} else {
+			reposToAdd = repos
+		}
+
+		allRepos = append(allRepos, reposToAdd...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	repoCount := len(allRepos)
+
+	if repoCount == 0 {
+		return nil, errors.WithStackTrace(types.NoReposFoundFromSearchErr{Query: searchQuery})
+	}
+
+	logger.WithFields(logrus.Fields{
+		"Repo count": repoCount,
+		"Query":      searchQuery,
+	}).Debug("Fetched repos from GitHub Search API")
+
+	config.Stats.TrackMultiple(stats.FetchedViaGithubAPI, allRepos)
+
+	return allRepos, nil
+}

@@ -8,7 +8,7 @@ import (
 
 // EnsureValidOptionsPassed checks that user has provided one valid method for selecting repos to operate on
 func EnsureValidOptionsPassed(config *config.GitXargsConfig) error {
-	if len(config.RepoSlice) < 1 && config.ReposFile == "" && config.GithubOrg == "" && len(config.RepoFromStdIn) == 0 {
+	if len(config.RepoSlice) < 1 && config.ReposFile == "" && config.GithubOrg == "" && config.GithubSearchQuery == "" && len(config.RepoFromStdIn) == 0 {
 		return errors.WithStackTrace(types.NoRepoSelectionsMadeErr{})
 	}
 	if config.BranchName == "" {

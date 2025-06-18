@@ -67,7 +67,7 @@ func (NoGithubOrgSuppliedErr) Error() string {
 type NoRepoSelectionsMadeErr struct{}
 
 func (NoRepoSelectionsMadeErr) Error() string {
-	return fmt.Sprint("You must target some repos for processing either via stdin or by providing one of the --github-org, --repos, or --repo flags")
+	return fmt.Sprint("You must target some repos for processing either via stdin or by providing one of the --github-search, --github-org, --repos, or --repo flags")
 }
 
 type NoRepoFlagTargetsValid struct{}
@@ -106,4 +106,18 @@ type NoGithubOauthTokenProvidedErr struct{}
 
 func (NoGithubOauthTokenProvidedErr) Error() string {
 	return fmt.Sprintf("You must export a valid Github personal access token as GITHUB_OAUTH_TOKEN")
+}
+
+type NoGithubSearchQuerySuppliedErr struct{}
+
+func (NoGithubSearchQuerySuppliedErr) Error() string {
+	return fmt.Sprint("You must pass a valid GitHub search query via the --github-search flag")
+}
+
+type NoReposFoundFromSearchErr struct {
+	Query string
+}
+
+func (err NoReposFoundFromSearchErr) Error() string {
+	return fmt.Sprintf("No repos found for the search query: %s", err.Query)
 }
