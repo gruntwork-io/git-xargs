@@ -79,7 +79,8 @@ func setupApp() *cli.App {
 		common.GenericMaxConcurrentClonesFlag,
 		common.GenericNoSkipCIFlag,
 		common.GenericKeepClonedRepositoriesFlag,
-		common.GenericGithubSearchQueryFlag,
+		common.GenericGithubRepositorySearchFlag,
+		common.GenericGithubCodeSearchFlag,
 	}
 
 	app.Action = cmd.RunGitXargs

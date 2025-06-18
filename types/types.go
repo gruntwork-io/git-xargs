@@ -67,7 +67,7 @@ func (NoGithubOrgSuppliedErr) Error() string {
 type NoRepoSelectionsMadeErr struct{}
 
 func (NoRepoSelectionsMadeErr) Error() string {
-	return fmt.Sprint("You must target some repos for processing either via stdin or by providing one of the --github-search, --github-org, --repos, or --repo flags")
+	return fmt.Sprint("You must target some repos for processing either via stdin or by providing one of the --github-repository-search, --github-code-search, --github-org, --repos, or --repo flags")
 }
 
 type NoRepoFlagTargetsValid struct{}

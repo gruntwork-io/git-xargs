@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/gruntwork-io/git-xargs/auth"
 	"github.com/gruntwork-io/git-xargs/config"
@@ -137,22 +136,68 @@ func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) 
 func getReposBySearch(config *config.GitXargsConfig) ([]*github.Repository, error) {
 	logger := logging.GetLogger("git-xargs")
 
-	if config.GithubSearchQuery == "" {
-		return nil, errors.WithStackTrace(types.NoGithubSearchQuerySuppliedErr{})
+	// Handle different search scenarios
+	if config.GithubRepositorySearch != "" && config.GithubCodeSearch != "" {
+		// Both searches provided - return intersection
+		logger.Debug("Both repository and code search queries provided, finding intersection")
+		return getReposByIntersection(config)
+	} else if config.GithubRepositorySearch != "" {
+		// Only repository search
+		return getReposByRepositorySearch(config)
+	} else if config.GithubCodeSearch != "" {
+		// Only code search
+		return getReposByCodeSearch(config)
 	}
 
-	// Determine if this should be a code search or repository search
-	if isCodeSearchQuery(config.GithubSearchQuery) {
-		logger.WithFields(logrus.Fields{
-			"Query": config.GithubSearchQuery,
-		}).Debug("Detected code search query, using GitHub Code Search API")
-		return getReposByCodeSearch(config)
-	} else {
-		logger.WithFields(logrus.Fields{
-			"Query": config.GithubSearchQuery,
-		}).Debug("Detected repository search query, using GitHub Repository Search API")
-		return getReposByRepositorySearch(config)
+	return nil, errors.WithStackTrace(types.NoGithubSearchQuerySuppliedErr{})
+}
+
+// getReposByIntersection finds repositories that match both repository and code search queries
+func getReposByIntersection(config *config.GitXargsConfig) ([]*github.Repository, error) {
+	logger := logging.GetLogger("git-xargs")
+
+	// Get repositories from repository search
+	repoSearchRepos, err := getReposByRepositorySearch(config)
+	if err != nil {
+		return nil, err
 	}
+
+	// Get repositories from code search
+	codeSearchRepos, err := getReposByCodeSearch(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find intersection
+	repoMap := make(map[string]*github.Repository)
+	for _, repo := range repoSearchRepos {
+		repoMap[repo.GetFullName()] = repo
+	}
+
+	var intersectionRepos []*github.Repository
+	for _, repo := range codeSearchRepos {
+		if _, found := repoMap[repo.GetFullName()]; found {
+			intersectionRepos = append(intersectionRepos, repo)
+		}
+	}
+
+	repoCount := len(intersectionRepos)
+	if repoCount == 0 {
+		return nil, errors.WithStackTrace(types.NoReposFoundFromSearchErr{
+			Query: fmt.Sprintf("intersection of repository search '%s' and code search '%s'",
+				config.GithubRepositorySearch, config.GithubCodeSearch),
+		})
+	}
+
+	logger.WithFields(logrus.Fields{
+		"Repo count":       repoCount,
+		"Repository Query": config.GithubRepositorySearch,
+		"Code Query":       config.GithubCodeSearch,
+	}).Debug("Found intersection of repository and code search results")
+
+	config.Stats.TrackMultiple(stats.FetchedViaGithubAPI, intersectionRepos)
+
+	return intersectionRepos, nil
 }
 
 // getReposByRepositorySearch uses GitHub's repository search API to find repositories matching the given query
@@ -161,8 +206,12 @@ func getReposByRepositorySearch(config *config.GitXargsConfig) ([]*github.Reposi
 
 	var allRepos []*github.Repository
 
+	if config.GithubRepositorySearch == "" {
+		return nil, errors.WithStackTrace(types.NoGithubSearchQuerySuppliedErr{})
+	}
+
 	// Build the search query
-	searchQuery := config.GithubSearchQuery
+	searchQuery := config.GithubRepositorySearch
 
 	// If a specific organization is provided, add it to the query
 	if config.GithubOrg != "" {
@@ -237,12 +286,12 @@ func getReposByCodeSearch(config *config.GitXargsConfig) ([]*github.Repository, 
 	var allRepos []*github.Repository
 	repoMap := make(map[string]*github.Repository) // To avoid duplicates
 
-	if config.GithubSearchQuery == "" {
+	if config.GithubCodeSearch == "" {
 		return allRepos, errors.WithStackTrace(types.NoGithubSearchQuerySuppliedErr{})
 	}
 
 	// Build the search query
-	searchQuery := config.GithubSearchQuery
+	searchQuery := config.GithubCodeSearch
 
 	// If a specific organization is provided, add it to the query
 	if config.GithubOrg != "" {
@@ -312,55 +361,4 @@ func getReposByCodeSearch(config *config.GitXargsConfig) ([]*github.Repository, 
 	config.Stats.TrackMultiple(stats.FetchedViaGithubAPI, allRepos)
 
 	return allRepos, nil
-}
-
-// isCodeSearchQuery determines if a query should use code search instead of repository search
-// Code search queries typically contain file-specific qualifiers like path:, filename:, extension:
-// or content search terms without repository-specific qualifiers
-func isCodeSearchQuery(query string) bool {
-	codeSearchIndicators := []string{
-		"path:",
-		"filename:",
-		"extension:",
-		"in:file",
-		"in:path",
-	}
-
-	for _, indicator := range codeSearchIndicators {
-		if strings.Contains(query, indicator) {
-			return true
-		}
-	}
-
-	// If the query doesn't contain typical repository search qualifiers and isn't obviously
-	// a repository search, it's likely a code search
-	repoSearchIndicators := []string{
-		"language:",
-		"topic:",
-		"is:public",
-		"is:private",
-		"is:internal",
-		"archived:",
-		"fork:",
-		"mirror:",
-		"template:",
-		"stars:",
-		"forks:",
-		"size:",
-		"pushed:",
-		"created:",
-		"updated:",
-	}
-
-	hasRepoIndicator := false
-	for _, indicator := range repoSearchIndicators {
-		if strings.Contains(query, indicator) {
-			hasRepoIndicator = true
-			break
-		}
-	}
-
-	// If it has no repository indicators and contains text that could be code content,
-	// treat it as code search
-	return !hasRepoIndicator
 }
