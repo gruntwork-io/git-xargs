@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gruntwork-io/git-xargs/auth"
 	"github.com/gruntwork-io/git-xargs/config"
@@ -207,7 +208,7 @@ func getReposByRepositorySearch(config *config.GitXargsConfig) ([]*github.Reposi
 	var allRepos []*github.Repository
 
 	if config.GithubRepositorySearch == "" {
-		return nil, errors.WithStackTrace(types.NoGithubSearchQuerySuppliedErr{})
+		return nil, errors.WithStackTrace(types.NoGithubRepositorySearchQuerySuppliedErr{})
 	}
 
 	// Build the search query
@@ -248,11 +249,33 @@ func getReposByRepositorySearch(config *config.GitXargsConfig) ([]*github.Reposi
 					// Track repos to skip because of archived status for our final run report
 					config.Stats.TrackSingle(stats.ReposArchivedSkipped, repo)
 				} else {
-					reposToAdd = append(reposToAdd, repo)
+					// Ensure complete repository data before adding
+					completeRepo, err := ensureCompleteRepositoryData(config, repo)
+					if err != nil {
+						logger.WithFields(logrus.Fields{
+							"Repo":  repo.GetFullName(),
+							"Error": err,
+						}).Debug("Error fetching complete repository data")
+						// Continue with original repo data
+						completeRepo = repo
+					}
+					reposToAdd = append(reposToAdd, completeRepo)
 				}
 			}
 		} else {
-			reposToAdd = repos
+			// Ensure complete repository data for all repos
+			for _, repo := range repos {
+				completeRepo, err := ensureCompleteRepositoryData(config, repo)
+				if err != nil {
+					logger.WithFields(logrus.Fields{
+						"Repo":  repo.GetFullName(),
+						"Error": err,
+					}).Debug("Error fetching complete repository data")
+					// Continue with original repo data
+					completeRepo = repo
+				}
+				reposToAdd = append(reposToAdd, completeRepo)
+			}
 		}
 
 		allRepos = append(allRepos, reposToAdd...)
@@ -287,7 +310,7 @@ func getReposByCodeSearch(config *config.GitXargsConfig) ([]*github.Repository, 
 	repoMap := make(map[string]*github.Repository) // To avoid duplicates
 
 	if config.GithubCodeSearch == "" {
-		return allRepos, errors.WithStackTrace(types.NoGithubSearchQuerySuppliedErr{})
+		return allRepos, errors.WithStackTrace(types.NoGithubCodeSearchQuerySuppliedErr{})
 	}
 
 	// Build the search query
@@ -342,9 +365,18 @@ func getReposByCodeSearch(config *config.GitXargsConfig) ([]*github.Repository, 
 		opt.Page = resp.NextPage
 	}
 
-	// Convert map to slice
+	// Convert map to slice and ensure complete repository data
 	for _, repo := range repoMap {
-		allRepos = append(allRepos, repo)
+		completeRepo, err := ensureCompleteRepositoryData(config, repo)
+		if err != nil {
+			logger.WithFields(logrus.Fields{
+				"Repo":  repo.GetFullName(),
+				"Error": err,
+			}).Debug("Error fetching complete repository data")
+			// Continue with original repo data
+			completeRepo = repo
+		}
+		allRepos = append(allRepos, completeRepo)
 	}
 
 	repoCount := len(allRepos)
@@ -361,4 +393,49 @@ func getReposByCodeSearch(config *config.GitXargsConfig) ([]*github.Repository, 
 	config.Stats.TrackMultiple(stats.FetchedViaGithubAPI, allRepos)
 
 	return allRepos, nil
+}
+
+// ensureCompleteRepositoryData fetches complete repository information using GitHub's Get Repository API
+// This is needed because search results may not include all fields (like CloneURL) that are required
+func ensureCompleteRepositoryData(config *config.GitXargsConfig, repo *github.Repository) (*github.Repository, error) {
+	if repo == nil || repo.FullName == nil {
+		return repo, nil
+	}
+
+	// Check if we already have the essential fields - if so, no need to make additional API call
+	if repo.CloneURL != nil && repo.HTMLURL != nil && repo.URL != nil {
+		return repo, nil
+	}
+
+	logger := logging.GetLogger("git-xargs")
+
+	// Parse owner and repo name from FullName
+	parts := strings.Split(*repo.FullName, "/")
+	if len(parts) != 2 {
+		logger.WithFields(logrus.Fields{
+			"FullName": *repo.FullName,
+		}).Debug("Invalid repository FullName format, skipping complete data fetch")
+		return repo, nil
+	}
+
+	owner := parts[0]
+	repoName := parts[1]
+
+	// Fetch complete repository data
+	completeRepo, _, err := config.GithubClient.Repositories.Get(context.Background(), owner, repoName)
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"Owner": owner,
+			"Repo":  repoName,
+			"Error": err,
+		}).Debug("Failed to fetch complete repository data, using search result as-is")
+		return repo, nil // Return original repo if we can't fetch complete data
+	}
+
+	logger.WithFields(logrus.Fields{
+		"Owner": owner,
+		"Repo":  repoName,
+	}).Debug("Fetched complete repository data via Get Repository API")
+
+	return completeRepo, nil
 }

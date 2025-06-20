@@ -121,3 +121,15 @@ type NoReposFoundFromSearchErr struct {
 func (err NoReposFoundFromSearchErr) Error() string {
 	return fmt.Sprintf("No repos found for the search query: %s", err.Query)
 }
+
+type NoGithubRepositorySearchQuerySuppliedErr struct{}
+
+func (NoGithubRepositorySearchQuerySuppliedErr) Error() string {
+	return fmt.Sprint("You must pass a valid GitHub repository search query via the --github-repository-search flag")
+}
+
+type NoGithubCodeSearchQuerySuppliedErr struct{}
+
+func (NoGithubCodeSearchQuerySuppliedErr) Error() string {
+	return fmt.Sprint("You must pass a valid GitHub code search query via the --github-code-search flag")
+}
