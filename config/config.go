@@ -28,6 +28,8 @@ type GitXargsConfig struct {
 	TeamReviewers                 []string
 	ReposFile                     string
 	GithubOrg                     string
+	GithubRepositorySearch        string
+	GithubCodeSearch              string
 	RepoSlice                     []string
 	RepoFromStdIn                 []string
 	Args                          []string
@@ -61,6 +63,8 @@ func NewGitXargsConfig() *GitXargsConfig {
 		TeamReviewers:                 []string{},
 		ReposFile:                     "",
 		GithubOrg:                     "",
+		GithubRepositorySearch:        "",
+		GithubCodeSearch:              "",
 		RepoSlice:                     []string{},
 		RepoFromStdIn:                 []string{},
 		Args:                          []string{},

@@ -21,15 +21,30 @@ const (
 	ExplicitReposOnCommandLine RepoSelectionCriteria = "repo-flag"
 	ReposFilePath              RepoSelectionCriteria = "repos-file"
 	GithubOrganization         RepoSelectionCriteria = "github-org"
+	GithubRepositorySearch     RepoSelectionCriteria = "github-repository-search"
+	GithubCodeSearch           RepoSelectionCriteria = "github-code-search"
+	GithubCombinedSearch       RepoSelectionCriteria = "github-combined-search"
 )
 
 // getPreferredOrderOfRepoSelections codifies the order in which flags will be preferred when the user supplied more
 // than one:
-// 1. --github-org is a string representing the GitHub org to page through via API for all repos.
-// 2. --repos is a string representing a filepath to a repos file
-// 3. --repo is a string slice flag that can be called multiple times
-// 4. stdin allows you to pipe repos in from other CLI tools
+// 1. Both --github-repository-search and --github-code-search (intersection of both)
+// 2. --github-repository-search for repository-based searches
+// 3. --github-code-search for code-based searches
+// 4. --github-org is a string representing the GitHub org to page through via API for all repos.
+// 5. --repos is a string representing a filepath to a repos file
+// 6. --repo is a string slice flag that can be called multiple times
+// 7. stdin allows you to pipe repos in from other CLI tools
 func getPreferredOrderOfRepoSelections(config *config.GitXargsConfig) RepoSelectionCriteria {
+	if config.GithubRepositorySearch != "" && config.GithubCodeSearch != "" {
+		return GithubCombinedSearch
+	}
+	if config.GithubRepositorySearch != "" {
+		return GithubRepositorySearch
+	}
+	if config.GithubCodeSearch != "" {
+		return GithubCodeSearch
+	}
 	if config.GithubOrg != "" {
 		return GithubOrganization
 	}
@@ -72,6 +87,33 @@ func selectReposViaInput(config *config.GitXargsConfig) (*RepoSelection, error) 
 		GithubOrganizationName: config.GithubOrg,
 	}
 	switch getPreferredOrderOfRepoSelections(config) {
+	case GithubRepositorySearch:
+		config.Stats.SetSelectionMode(string(GithubRepositorySearch))
+
+		return &RepoSelection{
+			SelectionType:          GithubRepositorySearch,
+			AllowedRepos:           []*types.AllowedRepo{},
+			GithubOrganizationName: "",
+		}, nil
+
+	case GithubCodeSearch:
+		config.Stats.SetSelectionMode(string(GithubCodeSearch))
+
+		return &RepoSelection{
+			SelectionType:          GithubCodeSearch,
+			AllowedRepos:           []*types.AllowedRepo{},
+			GithubOrganizationName: "",
+		}, nil
+
+	case GithubCombinedSearch:
+		config.Stats.SetSelectionMode(string(GithubCombinedSearch))
+
+		return &RepoSelection{
+			SelectionType:          GithubCombinedSearch,
+			AllowedRepos:           []*types.AllowedRepo{},
+			GithubOrganizationName: "",
+		}, nil
+
 	case ExplicitReposOnCommandLine:
 		config.Stats.SetSelectionMode(string(ExplicitReposOnCommandLine))
 
@@ -199,6 +241,51 @@ func OperateOnRepos(config *config.GitXargsConfig) error {
 	}
 
 	switch repoSelection.GetCriteria() {
+
+	case GithubRepositorySearch:
+		// If githubRepositorySearch is set, use the GitHub Search API to find matching repositories
+		reposFetchedFromSearch, err := getReposBySearch(config)
+		if err != nil {
+			logger.WithFields(logrus.Fields{
+				"Error": err,
+				"Query": config.GithubRepositorySearch,
+			}).Debug("Failure searching for repos using GitHub Search API")
+			return err
+		}
+		// We gather all the repos by searching them from the GitHub API
+		reposToIterate = reposFetchedFromSearch
+
+		logger.Debugf("Using GitHub repository search query: %s as source of repositories. Searching through GitHub API for repos.", config.GithubRepositorySearch)
+
+	case GithubCodeSearch:
+		// If githubCodeSearch is set, use the GitHub Search API to find matching repositories
+		reposFetchedFromSearch, err := getReposBySearch(config)
+		if err != nil {
+			logger.WithFields(logrus.Fields{
+				"Error": err,
+				"Query": config.GithubCodeSearch,
+			}).Debug("Failure searching for repos using GitHub Search API")
+			return err
+		}
+		// We gather all the repos by searching them from the GitHub API
+		reposToIterate = reposFetchedFromSearch
+
+		logger.Debugf("Using GitHub code search query: %s as source of repositories. Searching through GitHub API for repos.", config.GithubCodeSearch)
+
+	case GithubCombinedSearch:
+		// If githubCombinedSearch is set, use the GitHub Search API to find matching repositories
+		reposFetchedFromSearch, err := getReposBySearch(config)
+		if err != nil {
+			logger.WithFields(logrus.Fields{
+				"Error": err,
+				"Query": config.GithubRepositorySearch + " " + config.GithubCodeSearch,
+			}).Debug("Failure searching for repos using GitHub Search API")
+			return err
+		}
+		// We gather all the repos by searching them from the GitHub API
+		reposToIterate = reposFetchedFromSearch
+
+		logger.Debugf("Using GitHub combined search query: %s as source of repositories. Searching through GitHub API for repos.", config.GithubRepositorySearch+" "+config.GithubCodeSearch)
 
 	case GithubOrganization:
 		// If githubOrganization is set, the user did not provide a flat file or explicit repos via the -repo(s) flags, so we're just looking up all the GitHub
