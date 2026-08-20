@@ -597,6 +597,14 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 	}
 
+	if config.HasAssignees() {
+		assignees := config.Assignees
+		_, _, assigneeErr := config.GithubClient.Issues.AddAssignees(context.Background(), *pr.Repo.GetOwner().Login, pr.Repo.GetName(), githubPR.GetNumber(), assignees)
+		if assigneeErr != nil {
+			config.Stats.TrackSingle(stats.AddAssigneesErr, pr.Repo)
+		}
+	}
+
 	if config.Draft {
 		config.Stats.TrackDraftPullRequest(pr.Repo.GetName(), githubPR.GetHTMLURL())
 	} else {
