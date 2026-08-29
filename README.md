@@ -426,6 +426,24 @@ echo "gruntwork-io/terragrunt gruntwork-io/terratest" | git-xargs \
   "$(pwd)/scripts/update-copyright-year.sh"
 ```
 
+### Option #5: Select repos via the GitHub Search API
+
+The repository scope can be narrowed down by using the GitHub Search API. This allows you to select repositories based on various criteria, such as language, topics, or other metadata or file content.
+
+- `--github-repository-search` to select repositories based on the [GitHub Repository Search API](https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories)
+- `--github-code-search` to select repositories based on the [GitHub Code Search API](https://docs.github.com/en/search-github/github-code-search/understanding-github-code-search-syntax)
+- `--github-org` still can be used, it will add `org:<name>` to the search query
+
+If both, `--github-repository-search` and `--github-code-search` are provided, the repositories will be filtered by both criteria.
+
+```
+git-xargs \
+  --github-org <your-github-org> \
+  --github-repository-search "is:private language:go" \
+  --github-code-search "filename:Dockerfile ubuntu" \
+  "$(pwd)/scripts/update-copyright-year.sh"
+```
+
 ## Notable flags
 
 `git-xargs` exposes several flags that allow you to customize its behavior to better suit your needs. For the latest info on flags, you should run `git-xargs --help`. However, a couple of the flags are worth explaining more in depth here:

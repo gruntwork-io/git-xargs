@@ -30,6 +30,8 @@ const (
 	DefaultSecondsBetweenPRs             = 1
 	DefaultMaxPullRequestRetries         = 3
 	DefaultSecondsToWaitWhenRateLimited  = 60
+	GithubRepositorySearchFlagName       = "github-repository-search"
+	GithubCodeSearchFlagName             = "github-code-search"
 )
 
 var (
@@ -119,5 +121,13 @@ var (
 	GenericKeepClonedRepositoriesFlag = cli.BoolFlag{
 		Name:  KeepClonedRepositoriesFlagName,
 		Usage: "By default, git-xargs deletes the cloned repositories from the temp directory after the command has finished running, to save space on your machine. Pass this flag to prevent git-xargs from deleting the cloned repositories.",
+	}
+	GenericGithubRepositorySearchFlag = cli.StringFlag{
+		Name:  GithubRepositorySearchFlagName,
+		Usage: "GitHub repository search query to find repositories (e.g., 'language:go', 'is:private', 'topic:docker'). See GitHub repository search syntax for more options.",
+	}
+	GenericGithubCodeSearchFlag = cli.StringFlag{
+		Name:  GithubCodeSearchFlagName,
+		Usage: "GitHub code search query to find repositories containing matching code (e.g., 'path:Dockerfile', 'filename:package.json', 'extension:py print'). Repositories will be extracted from code search results. See GitHub code search syntax for more options.",
 	}
 )
