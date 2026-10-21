@@ -1,6 +1,6 @@
 module github.com/gruntwork-io/git-xargs
 
-go 1.25.0
+go 1.27.3
 
 require (
 	github.com/go-git/go-git/v5 v5.19.2
