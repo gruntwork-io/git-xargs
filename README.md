@@ -273,11 +273,11 @@ When the log level is set to `debug` you should see new error output similar to 
 
 ```
 Total 195 (delta 159), reused 27 (delta 11), pack-reused 17  Repo=terraform-aws-eks
-[git-xargs] DEBU[2021-06-29T12:11:31-04:00] Created branch                                Branc
+DEBU[2021-06-29T12:11:31-04:00] Created branch                                Branc
 h Name=refs/heads/master Repo=terraform-aws-eks
-[git-xargs] DEBU[2021-06-29T12:11:31-04:00] Error creating new branch                     Error
+DEBU[2021-06-29T12:11:31-04:00] Error creating new branch                     Error
 ="a branch named \"refs/heads/master\" already exists" Repo=terraform-aws-eks
-[git-xargs] DEBU[2021-06-29T12:11:31-04:00] Error encountered while processing repo       Error
+DEBU[2021-06-29T12:11:31-04:00] Error encountered while processing repo       Error
 ="a branch named \"refs/heads/master\" already exists" Repo name=terraform-aws-eks
 
 ```

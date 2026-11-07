@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/gruntwork-io/git-xargs/cmd"
 	"github.com/gruntwork-io/git-xargs/common"
-	"github.com/gruntwork-io/go-commons/entrypoint"
-	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -30,15 +30,15 @@ func initCli(cliContext *cli.Context) error {
 	logLevel := cliContext.String(LogLevelFlag.Name)
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
-		return errors.WithStackTrace(err)
+		return err
 	}
-	logging.SetGlobalLogLevel(level)
+	logrus.SetLevel(level)
+	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
 	return nil
 }
 
 func setupApp() *cli.App {
-	app := entrypoint.NewApp()
-	entrypoint.HelpTextLineWidth = 120
+	app := cli.NewApp()
 
 	// Override the CLI FlagEnvHinter, so it only returns the Usage text of the Flag and doesn't append the envVar text. Original func https://github.com/urfave/cli/blob/master/flag.go#L652
 	cli.FlagEnvHinter = func(envVar, str string) string {
@@ -46,6 +46,7 @@ func setupApp() *cli.App {
 	}
 
 	app.Name = "git-xargs"
+	app.Usage = "Make updates across multiple Github repositories with a single command"
 	app.Author = "Gruntwork <www.gruntwork.io>"
 
 	app.Description = "git-xargs is a command-line tool (CLI) for making updates across multiple Github repositories with a single command."
@@ -88,7 +89,8 @@ func setupApp() *cli.App {
 
 // main should only setup the CLI flags and help texts.
 func main() {
-	app := setupApp()
-
-	entrypoint.RunApp(app)
+	if err := setupApp().Run(os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
+		os.Exit(1)
+	}
 }

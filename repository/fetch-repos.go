@@ -8,16 +8,14 @@ import (
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/git-xargs/stats"
 	"github.com/gruntwork-io/git-xargs/types"
-	"github.com/gruntwork-io/go-commons/errors"
 
 	"github.com/google/go-github/v43/github"
-	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/sirupsen/logrus"
 )
 
 // getFileDefinedRepos converts user-supplied repositories to GitHub API response objects that can be further processed
 func getFileDefinedRepos(GithubClient auth.GithubClient, allowedRepos []*types.AllowedRepo, tracker *stats.RunStats) ([]*github.Repository, error) {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	var allRepos []*github.Repository
 
@@ -49,7 +47,7 @@ func getFileDefinedRepos(GithubClient auth.GithubClient, allowedRepos []*types.A
 				tracker.TrackSingle(stats.RepoNotExists, missingRepo)
 				continue
 			} else {
-				return allRepos, errors.WithStackTrace(err)
+				return allRepos, err
 			}
 		}
 
@@ -68,13 +66,13 @@ func getFileDefinedRepos(GithubClient auth.GithubClient, allowedRepos []*types.A
 // getReposByOrg takes the string name of a GitHub organization and pages through the API to fetch all of its repositories
 func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) {
 
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	// Page through all of the organization's repos, collecting them in this slice
 	var allRepos []*github.Repository
 
 	if config.GithubOrg == "" {
-		return allRepos, errors.WithStackTrace(types.NoGithubOrgSuppliedErr{})
+		return allRepos, types.NoGithubOrgSuppliedErr{}
 	}
 
 	opt := &github.RepositoryListByOrgOptions{
@@ -87,7 +85,7 @@ func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) 
 		var reposToAdd []*github.Repository
 		repos, resp, err := config.GithubClient.Repositories.ListByOrg(context.Background(), config.GithubOrg, opt)
 		if err != nil {
-			return allRepos, errors.WithStackTrace(err)
+			return allRepos, err
 		}
 
 		// github.RepositoryListByOrgOptions doesn't seem to be able to filter out archived repos
@@ -120,7 +118,7 @@ func getReposByOrg(config *config.GitXargsConfig) ([]*github.Repository, error) 
 	repoCount := len(allRepos)
 
 	if repoCount == 0 {
-		return nil, errors.WithStackTrace(types.NoReposFoundErr{GithubOrg: config.GithubOrg})
+		return nil, types.NoReposFoundErr{GithubOrg: config.GithubOrg}
 	}
 
 	logger.WithFields(logrus.Fields{

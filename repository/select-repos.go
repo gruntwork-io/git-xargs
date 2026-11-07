@@ -8,8 +8,6 @@ import (
 	"github.com/gruntwork-io/git-xargs/stats"
 	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/git-xargs/util"
-	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/go-commons/logging"
 
 	"github.com/sirupsen/logrus"
 )
@@ -160,7 +158,7 @@ func selectReposViaRepoFlag(inputRepos []string) ([]*types.AllowedRepo, []string
 	}
 
 	if len(allowedRepos) < 1 {
-		return allowedRepos, malformedRepos, errors.WithStackTrace(types.NoRepoFlagTargetsValid{})
+		return allowedRepos, malformedRepos, types.NoRepoFlagTargetsValid{}
 	}
 
 	return allowedRepos, malformedRepos, nil
@@ -186,7 +184,7 @@ func fetchUserProvidedReposViaGithubAPI(githubClient auth.GithubClient, rs RepoS
 // repos via go-github, so that we're only ever dealing with pointers to github.Repositories going forward.
 func OperateOnRepos(config *config.GitXargsConfig) error {
 
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	// The set of GitHub repositories the tool will actually process
 	var reposToIterate []*github.Repository
@@ -238,7 +236,7 @@ func OperateOnRepos(config *config.GitXargsConfig) error {
 
 	default:
 		// We've got no repos to iterate on, so return an error
-		return errors.WithStackTrace(types.NoValidReposFoundAfterFilteringErr{})
+		return types.NoValidReposFoundAfterFilteringErr{}
 	}
 
 	// Track the repos selected for processing
