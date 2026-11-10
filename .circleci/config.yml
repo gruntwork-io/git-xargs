@@ -63,14 +63,14 @@ jobs:
   deploy:
     <<: *env
     macos:
-      xcode: 15.3.0
-    resource_class: macos.m1.medium.gen1
+      xcode: 15.4.0
+    resource_class: m4pro.medium
     steps:
       - checkout
       - attach_workspace:
           at: .
       - go/install:
-          version: "1.20.5"
+          version: "1.27.3"
       - run:
           name: Install sign-binary-helpers
           command: |
