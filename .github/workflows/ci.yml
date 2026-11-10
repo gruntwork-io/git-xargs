@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -28,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -42,9 +46,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          # These binaries are released, so build them without a restored cache.
+          cache: false
       - name: Build binaries
         env:
           CGO_ENABLED: "0"
@@ -75,6 +83,8 @@ jobs:
       GON_VERSION: v0.0.37
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
           name: bin
@@ -106,8 +116,10 @@ jobs:
           echo "$MACOS_CERTIFICATE" | base64 -d > "$RUNNER_TEMP/certificate.p12"
           security import "$RUNNER_TEMP/certificate.p12" -f pkcs12 -k "$keychain" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           rm "$RUNNER_TEMP/certificate.p12"
-          curl -fsSL -o "$RUNNER_TEMP/devidg2.der" http://certs.apple.com/devidg2.der
-          sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "$RUNNER_TEMP/devidg2.der"
+          # Developer ID G2 intermediate. It chains to the system-trusted Apple Root CA, so it needs no trust settings.
+          curl -fsSL -o "$RUNNER_TEMP/DeveloperIDG2CA.cer" https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          echo "f16cd3c54c7f83cea4bf1a3e6a0819c8aaa8e4a1528fd144715f350643d2df3a  $RUNNER_TEMP/DeveloperIDG2CA.cer" | shasum -a 256 -c -
+          security import "$RUNNER_TEMP/DeveloperIDG2CA.cer" -k "$keychain"
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
 
           for arch in amd64 arm64; do
