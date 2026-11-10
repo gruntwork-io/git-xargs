@@ -21,15 +21,13 @@ import (
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/git-xargs/stats"
 	"github.com/gruntwork-io/git-xargs/types"
-	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/go-commons/logging"
 )
 
 // cloneLocalRepository clones a remote GitHub repo via SSH to a local temporary directory so that the supplied command
 // can be run against the repo locally and any git changes handled thereafter. The local directory has
 // git-xargs-<repo-name> appended to it to make it easier to find when you are looking for it while debugging
 func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository) (string, *git.Repository, error) {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 	config.CloneJobsLimiter <- struct{}{}
 
 	logger.WithFields(logrus.Fields{
@@ -42,7 +40,7 @@ func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository
 			"Error": tmpDirErr,
 			"Repo":  repo.GetName(),
 		}).Debug("Failed to create temporary directory to hold repo")
-		return repositoryDir, nil, errors.WithStackTrace(tmpDirErr)
+		return repositoryDir, nil, tmpDirErr
 	}
 
 	gitProgressBuffer := bytes.NewBuffer(nil)
@@ -70,7 +68,7 @@ func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository
 		// Track failure to clone for our final run report
 		config.Stats.TrackSingle(stats.RepoFailedToClone, repo)
 
-		return repositoryDir, nil, errors.WithStackTrace(err)
+		return repositoryDir, nil, err
 	}
 
 	config.Stats.TrackSingle(stats.RepoSuccessfullyCloned, repo)
@@ -81,7 +79,7 @@ func cloneLocalRepository(config *config.GitXargsConfig, repo *github.Repository
 // getLocalRepoHeadRef looks up the HEAD reference of the locally cloned git repository, which is required by
 // downstream operations such as branching
 func getLocalRepoHeadRef(config *config.GitXargsConfig, localRepository *git.Repository, repo *github.Repository) (*plumbing.Reference, error) {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	ref, headErr := localRepository.Head()
 	if headErr != nil {
@@ -92,21 +90,21 @@ func getLocalRepoHeadRef(config *config.GitXargsConfig, localRepository *git.Rep
 
 		config.Stats.TrackSingle(stats.GetHeadRefFailed, repo)
 
-		return nil, errors.WithStackTrace(headErr)
+		return nil, headErr
 	}
 	return ref, nil
 }
 
 // executeCommand runs the user-supplied command against the given repository
 func executeCommand(config *config.GitXargsConfig, repositoryDir string, repo *github.Repository) error {
-	return executeCommandWithLogger(config, repositoryDir, repo, logging.GetLogger("git-xargs"))
+	return executeCommandWithLogger(config, repositoryDir, repo, logrus.StandardLogger())
 }
 
 // executeCommandWithLogger runs the user-supplied command against the given repository, and sends the log output
 // to the given logger
 func executeCommandWithLogger(config *config.GitXargsConfig, repositoryDir string, repo *github.Repository, logger *logrus.Logger) error {
 	if len(config.Args) < 1 {
-		return errors.WithStackTrace(types.NoCommandSuppliedErr{})
+		return types.NoCommandSuppliedErr{}
 	}
 
 	cmdArgs := config.Args
@@ -134,7 +132,7 @@ func executeCommandWithLogger(config *config.GitXargsConfig, repositoryDir strin
 		}).Debug("Error getting output of command execution")
 		// Track the command error against the repo
 		config.Stats.TrackSingle(stats.CommandErrorOccurredDuringExecution, repo)
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	return nil
@@ -142,7 +140,7 @@ func executeCommandWithLogger(config *config.GitXargsConfig, repositoryDir strin
 
 // getLocalWorkTree looks up the working tree of the locally cloned repository and returns it if possible, or an error
 func getLocalWorkTree(repositoryDir string, localRepository *git.Repository, repo *github.Repository) (*git.Worktree, error) {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	worktree, worktreeErr := localRepository.Worktree()
 
@@ -153,14 +151,14 @@ func getLocalWorkTree(repositoryDir string, localRepository *git.Repository, rep
 			"Dir":   repositoryDir,
 		}).Debug("Error looking up local repository's worktree")
 
-		return nil, errors.WithStackTrace(worktreeErr)
+		return nil, worktreeErr
 	}
 	return worktree, nil
 }
 
 // checkoutLocalBranch creates a local branch specific to this tool in the locally checked out copy of the repo in the /tmp folder
 func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository) (plumbing.ReferenceName, error) {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	// BranchName is a global variable that is set in cmd/root.go. It is override-able by the operator via the --branch-name or -b flag. It defaults to "git-xargs"
 
@@ -195,7 +193,7 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 			// Track the error checking out the branch
 			config.Stats.TrackSingle(stats.BranchCheckoutFailed, remoteRepository)
 
-			return branchName, errors.WithStackTrace(checkoutErr)
+			return branchName, checkoutErr
 		}
 	}
 
@@ -234,7 +232,7 @@ func checkoutLocalBranch(config *config.GitXargsConfig, ref *plumbing.Reference,
 		// Track the error pulling the latest from the remote branch
 		config.Stats.TrackSingle(stats.BranchRemotePullFailed, remoteRepository)
 
-		return branchName, errors.WithStackTrace(pullErr)
+		return branchName, pullErr
 	}
 
 	return branchName, nil
@@ -250,7 +248,7 @@ func updateRepo(config *config.GitXargsConfig,
 	localRepository *git.Repository,
 	branchName string,
 ) error {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	status, statusErr := worktree.Status()
 
@@ -263,7 +261,7 @@ func updateRepo(config *config.GitXargsConfig,
 
 		// Track the status check failure
 		config.Stats.TrackSingle(stats.WorktreeStatusCheckFailedCommand, remoteRepository)
-		return errors.WithStackTrace(statusErr)
+		return statusErr
 	}
 
 	// If there are no changes, we log it, track it, and return
@@ -302,7 +300,7 @@ func updateRepo(config *config.GitXargsConfig,
 // commitLocalChanges will check for any changes in worktree as a result of script execution, and if any are present,
 // add any untracked, deleted or modified files and create a commit using the supplied or default commit message.
 func commitLocalChanges(status git.Status, config *config.GitXargsConfig, repositoryDir string, worktree *git.Worktree, remoteRepository *github.Repository, localRepository *git.Repository) error {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	// If there are changes, we need to stage, add and commit them
 	logger.WithFields(logrus.Fields{
@@ -326,7 +324,7 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 				}).Debug("Error adding file to git stage")
 				// Track the file staging failure
 				config.Stats.TrackSingle(stats.WorktreeAddFileFailed, remoteRepository)
-				return errors.WithStackTrace(addErr)
+				return addErr
 			}
 		}
 	}
@@ -349,7 +347,7 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 		// If we reach this point, we were unable to commit our changes, so we'll
 		// continue rather than attempt to push an empty branch and open an empty PR
 		config.Stats.TrackSingle(stats.CommitChangesFailed, remoteRepository)
-		return errors.WithStackTrace(commitErr)
+		return commitErr
 	}
 
 	// If --skip-pull-requests was passed, track the repos whose changes were committed directly to the main branch
@@ -363,7 +361,7 @@ func commitLocalChanges(status git.Status, config *config.GitXargsConfig, reposi
 // pushLocalBranch pushes the branch in the local clone of the /tmp/ directory repository to the GitHub remote origin
 // so that a pull request can be opened against it via the GitHub API
 func pushLocalBranch(config *config.GitXargsConfig, remoteRepository *github.Repository, localRepository *git.Repository) error {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	if config.DryRun {
 		logger.WithFields(logrus.Fields{
@@ -391,7 +389,7 @@ func pushLocalBranch(config *config.GitXargsConfig, remoteRepository *github.Rep
 
 		// Track the push failure
 		config.Stats.TrackSingle(stats.PushBranchFailed, remoteRepository)
-		return errors.WithStackTrace(pushErr)
+		return pushErr
 	}
 
 	logger.WithFields(logrus.Fields{
@@ -409,7 +407,7 @@ func pushLocalBranch(config *config.GitXargsConfig, remoteRepository *github.Rep
 // Attempt to open a pull request via the GitHub API, of the supplied branch specific to this tool, against the main
 // branch for the remote origin
 func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) error {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	// If the current request has already exhausted the configured number of PR retries, short-circuit
 	if pr.Retries > config.PullRequestRetries {
@@ -441,7 +439,7 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 
 		// Track pull request open failure
 		config.Stats.TrackSingle(stats.PullRequestOpenErr, pr.Repo)
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	if pullRequestAlreadyExists {
@@ -574,7 +572,7 @@ func openPullRequest(config *config.GitXargsConfig, pr types.OpenPrRequest) erro
 			"Base":  repoDefaultBranch,
 			"Body":  descriptionToUse,
 		}).Debug(prErrorMessage)
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	// There was no error opening the pull request
@@ -617,7 +615,7 @@ func pullRequestAlreadyExistsForBranch(config *config.GitXargsConfig, repo *gith
 
 	prs, _, err := config.GithubClient.PullRequests.List(context.Background(), *repo.GetOwner().Login, repo.GetName(), opts)
 	if err != nil {
-		return false, errors.WithStackTrace(err)
+		return false, err
 	}
 
 	return len(prs) > 0, nil

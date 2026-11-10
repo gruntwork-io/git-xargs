@@ -14,8 +14,7 @@ import (
 	gitxargs_io "github.com/gruntwork-io/git-xargs/io"
 	"github.com/gruntwork-io/git-xargs/repository"
 	"github.com/gruntwork-io/git-xargs/types"
-	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/go-commons/logging"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -112,7 +111,7 @@ func parseSliceFromReader(reader io.Reader) ([]string, error) {
 	}
 
 	err := scanner.Err()
-	return out, errors.WithStackTrace(err)
+	return out, err
 }
 
 // handleRepoProcessing encapsulates the main processing logic for the supplied repos and printing the run report that
@@ -144,11 +143,11 @@ func sanityCheckInputs(config *config.GitXargsConfig) error {
 	}
 
 	if len(config.Args) < 1 {
-		return errors.WithStackTrace(types.NoArgumentsPassedErr{})
+		return types.NoArgumentsPassedErr{}
 	}
 
 	if err := gitxargs_io.EnsureValidOptionsPassed(config); err != nil {
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	return nil
@@ -161,7 +160,7 @@ func RunGitXargs(c *cli.Context) error {
 		return cli.ShowAppHelp(c)
 	}
 
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	logger.Info("git-xargs running...")
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/go-github/v43/github"
 	"github.com/gruntwork-io/git-xargs/types"
-	"github.com/gruntwork-io/go-commons/errors"
 	"golang.org/x/oauth2"
 )
 
@@ -73,7 +72,7 @@ func ConfigureGithubClient() GithubClient {
 // EnsureGithubOauthTokenSet is a sanity check that a value is exported for GITHUB_OAUTH_TOKEN
 func EnsureGithubOauthTokenSet() error {
 	if os.Getenv("GITHUB_OAUTH_TOKEN") == "" {
-		return errors.WithStackTrace(types.NoGithubOauthTokenProvidedErr{})
+		return types.NoGithubOauthTokenProvidedErr{}
 	}
 	return nil
 }

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/gruntwork-io/git-xargs/types"
-	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,7 +18,7 @@ const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 // up the repo via the GitHub API because that's slow, and we do it later when converting repo names to GitHub response structs.
 func ConvertStringToAllowedRepo(repoInput string) *types.AllowedRepo {
 
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	// The regex for all common special characters to remove from the repo lines in the allowed repos file
 	charRegex := regexp.MustCompile(`['",!]`)

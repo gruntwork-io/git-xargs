@@ -8,7 +8,6 @@ import (
 	"github.com/google/go-github/v43/github"
 	"github.com/gruntwork-io/git-xargs/config"
 	"github.com/gruntwork-io/git-xargs/types"
-	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 )
@@ -16,7 +15,7 @@ import (
 // openPullRequestsWithThrottling calls the method to open a pull request after waiting on the internal ticker channel, which
 // reflects the value of the --seconds-between-prs flag
 func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr types.OpenPrRequest) error {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 	logger.Debugf("pullRequestWorker received pull request job. Delay: %d seconds. Retries: %d for repo: %s on branch: %s\n", pr.Delay, pr.Retries, pr.Repo.GetName(), pr.Branch)
 
 	// Space out open PR calls to GitHub API to avoid being aggressively rate-limited. By waiting on the ticker,
@@ -39,7 +38,7 @@ func openPullRequestsWithThrottling(gitxargsConfig *config.GitXargsConfig, pr ty
 // the GitHub API's rate limiting mechanisms
 // See https://github.com/gruntwork-io/git-xargs/issues/53 for more information
 func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Repository) error {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	p, progressBarErr := pterm.DefaultProgressbar.WithTotal(len(repos)).WithTitle("Processing repos").Start()
 	if progressBarErr != nil {
@@ -74,7 +73,7 @@ func ProcessRepos(gitxargsConfig *config.GitXargsConfig, repos []*github.Reposit
 // cleanupTempDir removes the temporary directory that was created for the local clone of the repo
 // It logs a debug-level error if the directory could not be removed, but does not return an error
 func cleanupTempDir(repositoryDir string) {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 	removeErr := os.RemoveAll(repositoryDir)
 	if removeErr != nil {
 		logger.WithFields(logrus.Fields{
@@ -94,7 +93,7 @@ func cleanupTempDir(repositoryDir string) {
 // 8. Track all successfully opened pull requests via the stats tracker so that we can print them out as part of our final
 // run report that is displayed in table format to the operator following each run
 func processRepo(config *config.GitXargsConfig, repo *github.Repository) error {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	// Create a new temporary directory in the default temp directory of the system, but append
 	// git-xargs-<repo-name> to it so that it's easier to find when you're looking for it

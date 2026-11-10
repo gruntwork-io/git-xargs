@@ -7,7 +7,6 @@ import (
 
 	"github.com/gruntwork-io/git-xargs/types"
 	"github.com/gruntwork-io/git-xargs/util"
-	"github.com/gruntwork-io/go-commons/logging"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,7 +14,7 @@ import (
 // It expects repos to be defined one per line in the following format: `gruntwork-io/cloud-nuke` with optional commas.
 // Stray single and double quotes are also handled and stripped out if they are encountered, and spacing is irrelevant.
 func ProcessAllowedRepos(filepath string) ([]*types.AllowedRepo, error) {
-	logger := logging.GetLogger("git-xargs")
+	logger := logrus.StandardLogger()
 
 	var allowedRepos []*types.AllowedRepo
 
