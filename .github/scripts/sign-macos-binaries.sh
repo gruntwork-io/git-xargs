@@ -12,6 +12,9 @@ set -euo pipefail
 #
 # Usage: sign-macos-binaries.sh
 
+# shellcheck source=sha256.sh
+source "$(dirname "${BASH_SOURCE[0]}")/sha256.sh"
+
 # Apple's Developer ID G2 intermediate. It chains to the system-trusted Apple Root CA, so it needs no trust settings.
 readonly DEVELOPER_ID_G2_URL="https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer"
 readonly DEVELOPER_ID_G2_SHA256="f16cd3c54c7f83cea4bf1a3e6a0819c8aaa8e4a1528fd144715f350643d2df3a"
@@ -55,7 +58,7 @@ function import_certificates {
 	rm "$tmp_dir/certificate.p12"
 
 	curl -fsSL -o "$tmp_dir/DeveloperIDG2CA.cer" "$DEVELOPER_ID_G2_URL"
-	echo "$DEVELOPER_ID_G2_SHA256  $tmp_dir/DeveloperIDG2CA.cer" | shasum -a 256 -c -
+	verify_sha256 "$DEVELOPER_ID_G2_SHA256" "$tmp_dir/DeveloperIDG2CA.cer"
 	security import "$tmp_dir/DeveloperIDG2CA.cer" -k "$keychain"
 
 	security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"

@@ -11,10 +11,13 @@ set -euo pipefail
 #
 # Usage: publish-release.sh <tag>
 
+# shellcheck source=sha256.sh
+source "$(dirname "${BASH_SOURCE[0]}")/sha256.sh"
+
 function main {
 	local -r tag="$1"
 
-	(cd bin && shasum -a 256 -- * >SHA256SUMS)
+	(cd bin && sha256 -- * >SHA256SUMS)
 
 	if ! gh release view "$tag" >/dev/null 2>&1; then
 		gh release create "$tag" --verify-tag --draft --title "$tag" --notes ""

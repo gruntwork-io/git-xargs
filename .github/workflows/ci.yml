@@ -26,7 +26,7 @@ jobs:
         run: pre-commit run --all-files --show-diff-on-failure
       - name: Run shellcheck
         if: ${{ !cancelled() }}
-        run: shellcheck .github/scripts/*.sh
+        run: shellcheck -x -P SCRIPTDIR .github/scripts/*.sh
       - name: Run shfmt
         if: ${{ !cancelled() }}
         run: shfmt -d .github/scripts
@@ -44,10 +44,6 @@ jobs:
           cache_save: ${{ github.ref == 'refs/heads/master' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # The tests commit to a disposable local repo, which needs a git identity.
-      - run: |
-          git config --global user.email "grunty@gruntwork.io"
-          git config --global user.name "Grunty"
       - run: go test -v -timeout 5m ./...
 
   build:
@@ -60,6 +56,8 @@ jobs:
       - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
         with:
           version: 2026.11.0
+          # Release binaries are built from a fresh tool install.
+          cache: ${{ github.ref_type != 'tag' }}
           cache_save: ${{ github.ref == 'refs/heads/master' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +88,7 @@ jobs:
           name: bin
           path: bin
       - name: Install gon
-        run: .github/scripts/install-gon.sh v0.0.37
+        run: .github/scripts/install-gon.sh v0.0.37 2c5fbd2368f8ead818113c6fca3f6d7b78f5eafcf0160d412482209484d52c1a
       - name: Sign and notarize macOS binaries
         env:
           AC_PASSWORD: ${{ secrets.MACOS_AC_PASSWORD }}
