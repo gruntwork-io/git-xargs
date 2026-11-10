@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go install golang.org/x/tools/cmd/goimports@v0.24.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - uses: pre-commit/action@v3.0.1
+
+  test:
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      # The tests commit to a disposable local repo, which needs a git identity.
+      - run: |
+          git config --global user.email "grunty@gruntwork.io"
+          git config --global user.name "Grunty"
+      - run: go test -v -timeout 5m ./...
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build binaries
+        env:
+          CGO_ENABLED: "0"
+          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          for target in darwin/amd64 darwin/arm64 linux/386 linux/amd64 linux/arm64 windows/386 windows/amd64; do
+            os="${target%/*}"
+            arch="${target#*/}"
+            ext=""
+            if [ "$os" = "windows" ]; then ext=".exe"; fi
+            GOOS="$os" GOARCH="$arch" go build -ldflags "-X main.VERSION=${VERSION}" -o "bin/git-xargs_${os}_${arch}${ext}" .
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin
+          path: bin
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: macos-latest
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    env:
+      GON_VERSION: v0.0.37
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bin
+          path: bin
+      - name: Install gon
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/gon.zip" "https://github.com/Bearer/gon/releases/download/${GON_VERSION}/gon_macos.zip"
+          unzip -o "$RUNNER_TEMP/gon.zip" gon -d "$RUNNER_TEMP"
+          sudo mv "$RUNNER_TEMP/gon" /usr/local/bin/gon
+      - name: Sign and notarize macOS binaries
+        env:
+          AC_PASSWORD: ${{ secrets.MACOS_AC_PASSWORD }}
+          AC_PROVIDER: ${{ secrets.MACOS_AC_PROVIDER }}
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          for var in AC_PASSWORD AC_PROVIDER MACOS_CERTIFICATE MACOS_CERTIFICATE_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              echo "::error::The secret for $var is not set."
+              exit 1
+            fi
+          done
+
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security default-keychain -s "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          echo "$MACOS_CERTIFICATE" | base64 -d > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -f pkcs12 -k "$keychain" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/certificate.p12"
+          curl -fsSL -o "$RUNNER_TEMP/devidg2.der" http://certs.apple.com/devidg2.der
+          sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "$RUNNER_TEMP/devidg2.der"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
+
+          for arch in amd64 arm64; do
+            gon -log-level=info ".gon_${arch}.hcl"
+            unzip -o "git-xargs_darwin_${arch}.zip" -d bin
+            codesign --verify --verbose "bin/git-xargs_darwin_${arch}"
+          done
+      - run: cd bin && shasum -a 256 -- * > SHA256SUMS
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --notes ""
+          fi
+          gh release upload "$RELEASE_TAG" bin/* --clobber

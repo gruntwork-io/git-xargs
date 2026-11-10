@@ -10,10 +10,10 @@ import (
 	"github.com/urfave/cli"
 )
 
-// VERSION is set at build time using -ldflags parameters. For example, we typically set this flag in circle.yml
-// to the latest Git tag when building our Go apps:
+// VERSION is set at build time using -ldflags parameters. For example, .github/workflows/ci.yml sets this flag
+// to the Git tag when building release binaries:
 //
-// build-go-binaries --app-name my-app --dest-path bin --ld-flags "-X main.VERSION=$CIRCLE_TAG"
+// go build -ldflags "-X main.VERSION=v1.2.3"
 //
 // For more info, see: http://stackoverflow.com/a/11355611/483528
 var VERSION string

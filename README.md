@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/gruntwork-io/git-xargs)](https://goreportcard.com/report/github.com/gruntwork-io/git-xargs)
-[![gruntwork-io](https://circleci.com/gh/gruntwork-io/git-xargs.svg?style=svg)](https://circleci.com/gh/gruntwork-io/git-xargs)
+[![CI](https://github.com/gruntwork-io/git-xargs/actions/workflows/ci.yml/badge.svg)](https://github.com/gruntwork-io/git-xargs/actions/workflows/ci.yml)
 [![Homebrew](https://img.shields.io/badge/dynamic/json.svg?url=https://formulae.brew.sh/api/formula/git-xargs.json&query=$.versions.stable&label=homebrew)](https://formulae.brew.sh/formula/git-xargs)
 
 # Table of contents
