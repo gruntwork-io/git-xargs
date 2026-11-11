@@ -1,5 +1,5 @@
 [tools]
-go = "1.27.3"
+go = "1.27.4"
 "go:golang.org/x/tools/cmd/goimports" = "0.24.0"
 pre-commit = "4.6.2"
 shellcheck = "0.11.0"
