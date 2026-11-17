@@ -59,7 +59,14 @@ function import_certificates {
 
 	curl -fsSL -o "$tmp_dir/DeveloperIDG2CA.cer" "$DEVELOPER_ID_G2_URL"
 	verify_sha256 "$DEVELOPER_ID_G2_SHA256" "$tmp_dir/DeveloperIDG2CA.cer"
-	security import "$tmp_dir/DeveloperIDG2CA.cer" -k "$keychain"
+	# GitHub's macOS runner images already have this intermediate, and importing it again fails with "already exists".
+	local import_output
+	if ! import_output="$(security import "$tmp_dir/DeveloperIDG2CA.cer" -k "$keychain" 2>&1)"; then
+		if [[ $import_output != *"already exists"* ]]; then
+			echo "$import_output" >&2
+			return 1
+		fi
+	fi
 
 	security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
 }
