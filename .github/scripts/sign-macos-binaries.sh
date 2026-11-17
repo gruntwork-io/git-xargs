@@ -51,6 +51,8 @@ function import_certificates {
 
 	security create-keychain -p "$keychain_password" "$keychain"
 	security default-keychain -s "$keychain"
+	# New keychains lock after 5 minutes. Notarizing one binary takes longer, and codesign then hangs on an unlock prompt.
+	security set-keychain-settings "$keychain"
 	security unlock-keychain -p "$keychain_password" "$keychain"
 
 	echo "$MACOS_CERTIFICATE" | base64 -d >"$tmp_dir/certificate.p12"
