@@ -87,6 +87,16 @@ func (m mockGithubPullRequestService) RequestReviewers(ctx context.Context, owne
 	return m.PullRequest, m.Response, nil
 }
 
+// This mocks the Issue service in go-github that is used in production to call the associated GitHub endpoint
+type mockgithubIssuesService struct {
+	Issue    *github.Issue
+	Response *github.Response
+}
+
+func (m mockgithubIssuesService) AddAssignees(ctx context.Context, owner, repo string, number int, assignees []string) (*github.Issue, *github.Response, error) {
+	return m.Issue, m.Response, nil
+}
+
 // This mocks the Repositories service in go-github that is used in production to call the associated GitHub endpoint
 type mockGithubRepositoriesService struct {
 	Repository   *github.Repository
@@ -134,6 +144,10 @@ func ConfigureMockGithubClient() auth.GithubClient {
 		PullRequest: &github.PullRequest{
 			HTMLURL: &testHTMLUrl,
 		},
+		Response: &github.Response{},
+	}
+	client.Issues = mockgithubIssuesService{
+		Issue:    &github.Issue{},
 		Response: &github.Response{},
 	}
 
